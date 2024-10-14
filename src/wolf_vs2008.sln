@@ -1,23 +1,32 @@
 ﻿
-Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 16
-VisualStudioVersion = 16.0.34114.132
-MinimumVisualStudioVersion = 10.0.40219.1
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Splines", "splines\Splines.vcxproj", "{AA96579B-0F16-4614-8453-0B03C8B39A46}"
+Microsoft Visual Studio Solution File, Format Version 10.00
+# Visual C++ Express 2008
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Splines", "splines\Splines.vcproj", "{AA96579B-0F16-4614-8453-0B03C8B39A46}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "botlib", "botlib\botlib.vcxproj", "{86691FDD-E0C6-4D71-9FFD-E0F30F19AA3E}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "botlib", "botlib\botlib.vcproj", "{86691FDD-E0C6-4D71-9FFD-E0F30F19AA3E}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "cgame", "cgame\cgame.vcxproj", "{A981B743-DF98-4346-AA89-5DECB39C165D}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "cgame", "cgame\cgame.vcproj", "{A981B743-DF98-4346-AA89-5DECB39C165D}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "extractfuncs", "extractfuncs\extractfuncs.vcxproj", "{0FC559FD-6DCD-4A81-B286-688F79286AEF}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "extractfuncs", "extractfuncs\extractfuncs.vcproj", "{0FC559FD-6DCD-4A81-B286-688F79286AEF}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "game", "game\game.vcxproj", "{99EE8E3F-250E-4082-A92E-C7BC6202FDFE}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "game", "game\game.vcproj", "{99EE8E3F-250E-4082-A92E-C7BC6202FDFE}"
+	ProjectSection(ProjectDependencies) = postProject
+		{0FC559FD-6DCD-4A81-B286-688F79286AEF} = {0FC559FD-6DCD-4A81-B286-688F79286AEF}
+	EndProjectSection
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "renderer", "renderer\renderer.vcxproj", "{F45A4F73-0EA1-4EB2-9829-154964ADEC6A}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "renderer", "renderer\renderer.vcproj", "{F45A4F73-0EA1-4EB2-9829-154964ADEC6A}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ui", "ui\ui.vcxproj", "{9FC6663B-403B-4429-90C3-4CE12E5D0619}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ui", "ui\ui.vcproj", "{9FC6663B-403B-4429-90C3-4CE12E5D0619}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "wolf", "wolf.vcxproj", "{47CCBCAD-2A5C-4A70-8504-371F2EC29CBE}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "wolf", "wolf.vcproj", "{47CCBCAD-2A5C-4A70-8504-371F2EC29CBE}"
+	ProjectSection(ProjectDependencies) = postProject
+		{F45A4F73-0EA1-4EB2-9829-154964ADEC6A} = {F45A4F73-0EA1-4EB2-9829-154964ADEC6A}
+		{A981B743-DF98-4346-AA89-5DECB39C165D} = {A981B743-DF98-4346-AA89-5DECB39C165D}
+		{99EE8E3F-250E-4082-A92E-C7BC6202FDFE} = {99EE8E3F-250E-4082-A92E-C7BC6202FDFE}
+		{9FC6663B-403B-4429-90C3-4CE12E5D0619} = {9FC6663B-403B-4429-90C3-4CE12E5D0619}
+		{86691FDD-E0C6-4D71-9FFD-E0F30F19AA3E} = {86691FDD-E0C6-4D71-9FFD-E0F30F19AA3E}
+		{AA96579B-0F16-4614-8453-0B03C8B39A46} = {AA96579B-0F16-4614-8453-0B03C8B39A46}
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -60,8 +69,5 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
-	EndGlobalSection
-	GlobalSection(ExtensibilityGlobals) = postSolution
-		SolutionGuid = {A96B0B91-E6B3-46F8-B4DF-7158A1F254E0}
 	EndGlobalSection
 EndGlobal
