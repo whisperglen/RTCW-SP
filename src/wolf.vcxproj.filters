@@ -9,6 +9,9 @@
       <UniqueIdentifier>{ca2cf4c0-5cdb-43a6-9e9d-4d53581f241e}</UniqueIdentifier>
       <Extensions>h;hpp;hxx;hm;inl;fi;fd</Extensions>
     </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{0a459870-53b9-452c-a6b3-c1a2a6020b2e}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="client\cl_cgame.c">
@@ -256,5 +259,13 @@
     <ClInclude Include="win32\win_local.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="win32\resource.h">
+      <Filter>Resource Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="win32\winquake.rc">
+      <Filter>Resource Files</Filter>
+    </ResourceCompile>
   </ItemGroup>
 </Project>

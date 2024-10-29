@@ -49,7 +49,8 @@ frame.
 
 static float frontlerp, backlerp;
 static float torsoFrontlerp, torsoBacklerp;
-static int             *triangles, *boneRefs, *pIndexes;
+static int* triangles, * boneRefs;
+static glIndex_t * pIndexes;
 static int indexes;
 static int baseIndex, baseVertex, oldIndexes;
 static int numVerts;
@@ -1251,9 +1252,14 @@ void RB_SurfaceAnim( mdsSurface_t *surface ) {
 //DBG_SHOWTIME
 
 	if ( render_count == surface->numVerts ) {
-		memcpy( pIndexes, triangles, sizeof( triangles[0] ) * indexes );
+		glIndex_t* dest = pIndexes;
+		int* src = triangles;
+		for (int i = 0; i < indexes; i++, dest++, src++)
+		{
+			*dest = *src;
+		}
 		if ( baseVertex ) {
-			int *indexesEnd;
+			glIndex_t *indexesEnd;
 			for ( indexesEnd = pIndexes + indexes ; pIndexes < indexesEnd ; pIndexes++ ) {
 				*pIndexes += baseVertex;
 			}

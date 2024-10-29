@@ -2455,9 +2455,9 @@ static void UI_DrawGLInfo( rectDef_t *rect, int font, float scale, vec4_t color,
 	const char *lines[64];
 	int y, numLines, i;
 
-	Text_Paint( rect->x + 2, rect->y, font, scale, color, va( "VENDOR: %s", uiInfo.uiDC.glconfig.vendor_string ), 0, 30, textStyle );
-	Text_Paint( rect->x + 2, rect->y + 15, font, scale, color, va( "VERSION: %s: %s", uiInfo.uiDC.glconfig.version_string,uiInfo.uiDC.glconfig.renderer_string ), 0, 30, textStyle );
-	Text_Paint( rect->x + 2, rect->y + 30, font, scale, color, va( "PIXELFORMAT: color(%d-bits) Z(%d-bits) stencil(%d-bits)", uiInfo.uiDC.glconfig.colorBits, uiInfo.uiDC.glconfig.depthBits, uiInfo.uiDC.glconfig.stencilBits ), 0, 30, textStyle );
+	Text_Paint( rect->x + 2, rect->y, font, scale, color, va( "VENDOR: %s", uiInfo.uiDC.glconfig.vendor_string ), 0, rect->w - 20, textStyle );
+	Text_Paint( rect->x + 2, rect->y + 15, font, scale, color, va( "VERSION: %s: %s", uiInfo.uiDC.glconfig.version_string,uiInfo.uiDC.glconfig.renderer_string ), 0, rect->w - 20, textStyle );
+	Text_Paint( rect->x + 2, rect->y + 30, font, scale, color, va( "PIXELFORMAT: color(%d-bits) Z(%d-bits) stencil(%d-bits)", uiInfo.uiDC.glconfig.colorBits, uiInfo.uiDC.glconfig.depthBits, uiInfo.uiDC.glconfig.stencilBits ), 0, rect->w - 20, textStyle );
 
 	// build null terminated extension strings
 	Q_strncpyz( buff, uiInfo.uiDC.glconfig.extensions_string, 4096 );
@@ -2472,6 +2472,8 @@ static void UI_DrawGLInfo( rectDef_t *rect, int font, float scale, vec4_t color,
 		// track start of valid string
 		if ( *eptr && *eptr != ' ' ) {
 			lines[numLines++] = eptr;
+			if (numLines >= 64)
+				break;
 		}
 
 		while ( *eptr && *eptr != ' ' )
