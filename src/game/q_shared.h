@@ -103,6 +103,7 @@ If you have questions concerning this license or the applicable additional terms
 #include <time.h>
 #include <ctype.h>
 #include <limits.h>
+#include <float.h>
 
 #endif
 
@@ -116,8 +117,16 @@ If you have questions concerning this license or the applicable additional terms
 // this is the define for determining if we have an asm version of a C function
 #if ( defined _M_IX86 || defined __i386__ ) && !defined __sun__  && !defined __LCC__
 #define id386   1
+#if _M_IX86_FP >= 2
+#define idx86sse   1
+#endif
 #else
 #define id386   0
+#define idx86sse   0
+#endif
+
+#if idx86sse
+#include <intrin.h>
 #endif
 
 // for windows fastcall option
@@ -489,10 +498,36 @@ extern vec3_t axisDefault[3];
 #define CHECK_NAN_VEC
 #endif
 
-float Q_fabs( float f );
-float Q_rsqrt( float f );       // reciprocal square root
+#define Q_fabs fabsf
+/**
+* reciprocal square root
+*/
+#if idx86sse
+static ID_INLINE float Q_rsqrt(float number)
+{
+	__m128 number_f;
+	float ret;
 
-#define SQRTFAST( x ) ( 1.0f / Q_rsqrt( x ) )
+	if (number == 0.f)
+		return 1.f / FLT_MIN;
+
+	number_f = _mm_set_ss(number);
+
+	number_f = _mm_rsqrt_ss(number_f);
+
+	_mm_store_ss(&ret, number_f);
+	return ret;
+}
+#else
+static ID_INLINE float Q_rsqrt(float number)
+{
+	if (number == 0.f)
+		return 1.f / FLT_MIN;
+	return 1.f / sqrtf(number);
+}
+#endif
+
+//#define SQRTFAST( x ) ( 1.0f / Q_rsqrt( x ) )
 
 signed char ClampChar( int i );
 signed short ClampShort( int i );

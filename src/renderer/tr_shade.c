@@ -433,7 +433,7 @@ static void ProjectDlightTexture( void ) {
 	byte clipBits[SHADER_MAX_VERTEXES];
 	MAC_STATIC float texCoordsArray[SHADER_MAX_VERTEXES][2];
 	byte colorArray[SHADER_MAX_VERTEXES][4];
-	unsigned hitIndexes[SHADER_MAX_INDEXES];
+	glIndex_t hitIndexes[SHADER_MAX_INDEXES];
 	int numIndexes;
 	float scale;
 	float radius;
@@ -529,7 +529,7 @@ static void ProjectDlightTexture( void ) {
 		// build a list of triangles that need light
 		numIndexes = 0;
 		for ( i = 0 ; i < tess.numIndexes ; i += 3 ) {
-			int a, b, c;
+			glIndex_t a, b, c;
 
 			a = tess.indexes[i];
 			b = tess.indexes[i + 1];

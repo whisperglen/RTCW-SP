@@ -226,6 +226,7 @@
     <ClInclude Include="server\server.h" />
     <ClInclude Include="ui\keycodes.h" />
     <ClInclude Include="ui\ui_public.h" />
+    <ClInclude Include="win32\resource.h" />
     <ClInclude Include="win32\win_local.h" />
   </ItemGroup>
   <ItemGroup>
@@ -253,6 +254,9 @@
       <Project>{9fc6663b-403b-4429-90c3-4ce12e5d0619}</Project>
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="win32\winquake.rc" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
