@@ -1,0 +1,3 @@
+[submodule "test/perftesthelpers"]
+	path = test/perftesthelpers
+	url = git@github.com:whisperglen/perftesthelpers_idtech3.git
