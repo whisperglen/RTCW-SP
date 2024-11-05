@@ -9,6 +9,7 @@ src/extractfuncs/extractfuncs.exe
 ### revert ignore with:        git update-index --no-skip-worktree  <file>
 #src/game/g_func_decs.h
 #src/game/g_funcs.h #
+src/renderer_opengl
 
 # User-specific files
 *.rsuser
