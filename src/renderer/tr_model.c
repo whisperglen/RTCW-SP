@@ -93,6 +93,8 @@ asked for again.
 ====================
 */
 qhandle_t RE_RegisterModel( const char *name ) {
+	function_called(__func__);
+
 	model_t     *mod;
 	unsigned    *buf;
 	int lod;
@@ -1298,6 +1300,8 @@ static qboolean R_LoadMDS( model_t *mod, void *buffer, const char *mod_name ) {
 ** RE_BeginRegistration
 */
 void RE_BeginRegistration( glconfig_t *glconfigOut ) {
+	function_called(__func__);
+
 	ri.Hunk_Clear();    // (SA) MEM NOTE: not in missionpack
 
 	R_Init();
@@ -1501,6 +1505,8 @@ R_LerpTag
 ================
 */
 int R_LerpTag( orientation_t *tag, const refEntity_t *refent, const char *tagNameIn, int startIndex ) {
+	function_called(__func__);
+
 	md3Tag_t    *start, *end;
 	md3Tag_t ustart, uend;
 	int i;
@@ -1649,6 +1655,8 @@ R_ModelBounds
 ====================
 */
 void R_ModelBounds( qhandle_t handle, vec3_t mins, vec3_t maxs ) {
+	function_called(__func__);
+
 	model_t     *model;
 	md3Header_t *header;
 	md3Frame_t  *frame;

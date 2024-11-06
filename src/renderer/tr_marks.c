@@ -476,6 +476,8 @@ R_MarkFragments
 */
 int R_MarkFragments( int orientation, const vec3_t *points, const vec3_t projection,
 					 int maxPoints, vec3_t pointBuffer, int maxFragments, markFragment_t *fragmentBuffer ) {
+	function_called(__func__);
+
 	int numsurfaces, numPlanes;
 	int i, j, k, m, n;
 	surfaceType_t   *surfaces[4096];

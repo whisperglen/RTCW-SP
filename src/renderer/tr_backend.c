@@ -603,6 +603,8 @@ void RB_ZombieFXInit( void ) {
 }
 
 void RB_ZombieFXAddNewHit( int entityNum, const vec3_t hitPos, const vec3_t hitDir ) {
+	function_called(__func__);
+
 	int part = 0;
 
 // disabled for E3, are we still going to use this?
@@ -1138,6 +1140,8 @@ Used for cinematics.
 =============
 */
 void RE_StretchRaw( int x, int y, int w, int h, int cols, int rows, const byte *data, int client, qboolean dirty ) {
+	function_called(__func__);
+
 	int i, j;
 	int start, end;
 
@@ -1205,6 +1209,8 @@ void RE_StretchRaw( int x, int y, int w, int h, int cols, int rows, const byte *
 
 
 void RE_UploadCinematic( int w, int h, int cols, int rows, const byte *data, int client, qboolean dirty ) {
+	function_called(__func__);
+
 
 	GL_Bind( tr.scratchImage[client] );
 
@@ -1558,9 +1564,9 @@ const void  *RB_SwapBuffers( const void *data ) {
 		qglFinish();
 	}
 
-	GLimp_LogComment( "***************** RB_SwapBuffers *****************\n\n\n" );
+	GPUimp_LogComment( "***************** RB_SwapBuffers *****************\n\n\n" );
 
-	GLimp_EndFrame();
+	GPUimp_EndFrame();
 
 	backEnd.projection2D = qfalse;
 
@@ -1630,7 +1636,7 @@ void RB_RenderThread( void ) {
 	// wait for either a rendering command or a quit command
 	while ( 1 ) {
 		// sleep until we have work to do
-		data = GLimp_RendererSleep();
+		data = GPUimp_RendererSleep();
 
 		if ( !data ) {
 			return; // all done, renderer is shutting down

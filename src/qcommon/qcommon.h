@@ -1069,4 +1069,7 @@ extern huffman_t clientHuffTables;
 #define CL_ENCODE_START     12
 #define CL_DECODE_START     4
 
+void function_called(const char *name);
+void functions_dump();
+
 #endif // _QCOMMON_H_

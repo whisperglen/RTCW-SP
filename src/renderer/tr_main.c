@@ -220,6 +220,8 @@ R_SetFog
 ==============
 */
 void R_SetFog( int fogvar, int var1, int var2, float r, float g, float b, float density ) {
+	function_called(__func__);
+
 	if ( fogvar != FOG_CMD_SWITCHFOG ) {   // just set the parameters and return
 
 		if ( var1 == 0 && var2 == 0 ) {    // clear this fog

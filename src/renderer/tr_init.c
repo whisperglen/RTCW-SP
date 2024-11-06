@@ -277,17 +277,17 @@ static void AssertCvarRange( cvar_t *cv, float minVal, float maxVal, qboolean sh
 ** InitOpenGL
 **
 ** This function is responsible for initializing a valid OpenGL subsystem.  This
-** is done by calling GLimp_Init (which gives us a working OGL subsystem) then
+** is done by calling GPUimp_Init (which gives us a working OGL subsystem) then
 ** setting variables, checking GL constants, and reporting the gfx system config
 ** to the user.
 */
-static void InitOpenGL( void ) {
+static void InitGPU( void ) {
 	char renderer_buffer[1024];
 
 	//
 	// initialize OS specific portions of the renderer
 	//
-	// GLimp_Init directly or indirectly references the following cvars:
+	// GPUimp_Init directly or indirectly references the following cvars:
 	//		- r_fullscreen
 	//		- r_glDriver
 	//		- r_mode
@@ -299,7 +299,7 @@ static void InitOpenGL( void ) {
 	if ( glConfig.vidWidth == 0 ) {
 		GLint temp;
 
-		GLimp_Init();
+		GPUimp_Init();
 
 		strcpy( renderer_buffer, glConfig.renderer_string );
 		Q_strlwr( renderer_buffer );
@@ -788,7 +788,7 @@ void GL_SetDefaultState( void ) {
 	qglEnable( GL_SCISSOR_TEST );
 	qglDisable( GL_CULL_FACE );
 	qglDisable( GL_BLEND );
-
+	
 //----(SA)	added.
 	// ATI pn_triangles
 	if ( qglPNTrianglesiATI ) {
@@ -816,7 +816,7 @@ void GL_SetDefaultState( void ) {
 		glConfig.maxAnisotropy = maxAnisotropy;
 
 		// set when rendering
-//	   qglTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, glConfig.maxAnisotropy);
+		//qglTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, glConfig.maxAnisotropy);
 	}
 
 //----(SA)	end
@@ -922,6 +922,7 @@ void GfxInfo_f( void ) {
 	if ( glConfig.smpActive ) {
 		ri.Printf( PRINT_ALL, "Using dual processor acceleration\n" );
 	}
+	ri.Printf(PRINT_ALL, "swapInterval %s\n", enablestrings[r_swapInterval->integer > 0]);
 	if ( r_finish->integer ) {
 		ri.Printf( PRINT_ALL, "Forcing glFinish\n" );
 	}
@@ -1044,7 +1045,7 @@ void R_Register( void ) {
 	r_dlightBacks = ri.Cvar_Get( "r_dlightBacks", "1", CVAR_ARCHIVE );
 	r_finish = ri.Cvar_Get( "r_finish", "0", CVAR_ARCHIVE );
 	r_textureMode = ri.Cvar_Get( "r_textureMode", "GL_LINEAR_MIPMAP_NEAREST", CVAR_ARCHIVE );
-	r_swapInterval = ri.Cvar_Get( "r_swapInterval", "0", CVAR_ARCHIVE );
+	r_swapInterval = ri.Cvar_Get( "r_swapInterval", "1", CVAR_ARCHIVE );
 #ifdef __MACOS__
 	r_gamma = ri.Cvar_Get( "r_gamma", "1.2", CVAR_ARCHIVE );
 #else
@@ -1232,7 +1233,7 @@ void R_Init( void ) {
 	}
 	R_ToggleSmpFrame();
 
-	InitOpenGL();
+	InitGPU();
 
 	R_InitImages();
 
@@ -1262,6 +1263,7 @@ RE_Shutdown
 ===============
 */
 void RE_Shutdown( qboolean destroyWindow ) {
+	function_called(__func__);
 
 	ri.Printf( PRINT_ALL, "RE_Shutdown( %i )\n", destroyWindow );
 
@@ -1313,7 +1315,7 @@ void RE_Shutdown( qboolean destroyWindow ) {
 
 	// shut down platform specific OpenGL stuff
 	if ( destroyWindow ) {
-		GLimp_Shutdown();
+		GPUimp_Shutdown();
 
 		// Ridah, release the virtual memory
 		R_Hunk_End();
@@ -1322,6 +1324,8 @@ void RE_Shutdown( qboolean destroyWindow ) {
 	}
 
 	tr.registered = qfalse;
+
+	functions_dump();
 }
 
 
@@ -1333,6 +1337,8 @@ Touch all images to make sure they are resident
 =============
 */
 void RE_EndRegistration( void ) {
+	function_called(__func__);
+
 	R_SyncRenderThread();
 	if ( !Sys_LowPhysicalMemory() ) {
 		RB_ShowImages();
