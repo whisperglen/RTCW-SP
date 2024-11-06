@@ -10,6 +10,7 @@ src/extractfuncs/extractfuncs.exe
 #src/game/g_func_decs.h
 #src/game/g_funcs.h #
 src/renderer_opengl
+src/win32/*.res
 
 # User-specific files
 *.rsuser
@@ -31,7 +32,8 @@ mono_crash.*
 [Rr]eleases/
 x64/
 x86/
-[Ww][Ii][Nn]32/
+#[Ww][Ii][Nn]32/
+[W][Ii][Nn]32/
 [Aa][Rr][Mm]/
 [Aa][Rr][Mm]64/
 bld/
