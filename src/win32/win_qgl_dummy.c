@@ -40,6 +40,8 @@ If you have questions concerning this license or the applicable additional terms
 #include "../renderer/tr_local.h"
 #include "glw_win.h"
 
+static glwstate_t glw_state;
+
 void QGL_DMY_EnableLogging( qboolean enable );
 
 int ( WINAPI * qwglSwapIntervalEXT )( int interval );
@@ -1435,7 +1437,7 @@ static void APIENTRY logGetDoublev( GLenum pname, GLdouble *params ) {
 
 static GLenum APIENTRY logGetError( void ) {
 	SIG( "glGetError" );
-	return qtrue; //dllGetError();
+	return GL_NO_ERROR; //dllGetError();
 }
 
 static void APIENTRY logGetFloatv( GLenum pname, GLfloat *params ) {
@@ -2881,7 +2883,7 @@ void QGL_DMY_Shutdown( void ) {
 	qwglSwapBuffers              = NULL;
 }
 
-static BOOL func_true() { return TRUE; }
+BOOL WINAPI func_true_vv(void *_p0, void *_p1) { return TRUE; }
 
 #define GR_NUM_BOARDS 0x0f
 
@@ -3260,28 +3262,28 @@ qboolean QGL_DMY_Init( const char *dllname ) {
 	qglVertexPointer = logVertexPointer;
 	qglViewport = logViewport;
 
-	qwglCopyContext             = GPA( "wglCopyContext" );
-	qwglCreateContext           = GPA( "wglCreateContext" );
-	qwglCreateLayerContext      = GPA( "wglCreateLayerContext" );
-	qwglDeleteContext           = GPA( "wglDeleteContext" );
-	qwglDescribeLayerPlane      = GPA( "wglDescribeLayerPlane" );
-	qwglGetCurrentContext       = GPA( "wglGetCurrentContext" );
-	qwglGetCurrentDC            = GPA( "wglGetCurrentDC" );
-	qwglGetLayerPaletteEntries  = GPA( "wglGetLayerPaletteEntries" );
-	qwglGetProcAddress          = GPA( "wglGetProcAddress" );
-	qwglMakeCurrent             = (void*)func_true; // GPA("wglMakeCurrent");
-	qwglRealizeLayerPalette     = GPA( "wglRealizeLayerPalette" );
-	qwglSetLayerPaletteEntries  = GPA( "wglSetLayerPaletteEntries" );
-	qwglShareLists              = GPA( "wglShareLists" );
-	qwglSwapLayerBuffers        = GPA( "wglSwapLayerBuffers" );
-	qwglUseFontBitmaps          = GPA( "wglUseFontBitmapsA" );
-	qwglUseFontOutlines         = GPA( "wglUseFontOutlinesA" );
+	qwglCopyContext             = 0;//GPA( "wglCopyContext" );
+	qwglCreateContext           = 0;//GPA( "wglCreateContext" );
+	qwglCreateLayerContext      = 0;//GPA( "wglCreateLayerContext" );
+	qwglDeleteContext           = 0;//GPA( "wglDeleteContext" );
+	qwglDescribeLayerPlane      = 0;//GPA( "wglDescribeLayerPlane" );
+	qwglGetCurrentContext       = 0;//GPA( "wglGetCurrentContext" );
+	qwglGetCurrentDC            = 0;//GPA( "wglGetCurrentDC" );
+	qwglGetLayerPaletteEntries  = 0;//GPA( "wglGetLayerPaletteEntries" );
+	qwglGetProcAddress          = 0;//GPA( "wglGetProcAddress" );
+	qwglMakeCurrent             = func_true_vv; // GPA("wglMakeCurrent");
+	qwglRealizeLayerPalette     = 0;//GPA( "wglRealizeLayerPalette" );
+	qwglSetLayerPaletteEntries  = 0;//GPA( "wglSetLayerPaletteEntries" );
+	qwglShareLists              = 0;//GPA( "wglShareLists" );
+	qwglSwapLayerBuffers        = 0;//GPA( "wglSwapLayerBuffers" );
+	qwglUseFontBitmaps          = 0;//GPA( "wglUseFontBitmapsA" );
+	qwglUseFontOutlines         = 0;//GPA( "wglUseFontOutlinesA" );
 
-	qwglChoosePixelFormat       = GPA( "wglChoosePixelFormat" );
-	qwglDescribePixelFormat     = GPA( "wglDescribePixelFormat" );
-	qwglGetPixelFormat          = GPA( "wglGetPixelFormat" );
-	qwglSetPixelFormat          = GPA( "wglSetPixelFormat" );
-	qwglSwapBuffers             = GPA( "wglSwapBuffers" );
+	qwglChoosePixelFormat       = 0;//GPA( "wglChoosePixelFormat" );
+	qwglDescribePixelFormat     = 0;//GPA( "wglDescribePixelFormat" );
+	qwglGetPixelFormat          = 0;//GPA( "wglGetPixelFormat" );
+	qwglSetPixelFormat          = 0;//GPA( "wglSetPixelFormat" );
+	qwglSwapBuffers             = 0;//GPA( "wglSwapBuffers" );
 
 	qwglSwapIntervalEXT         = 0;
 	qglActiveTextureARB         = 0;

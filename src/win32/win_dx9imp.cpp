@@ -72,8 +72,8 @@ typedef struct
 	FILE *log_fp;
 } dx9state_t;
 
-extern "C" void WG_CheckHardwareGamma(void);
-extern "C" void WG_RestoreGamma(void);
+static void DX9imp_CheckHardwareGamma(void);
+static void DX9imp_RestoreGamma(void);
 
 typedef enum {
 	RSERR_OK,
@@ -188,7 +188,6 @@ static int GLW_ChoosePFD(HDC hDC, PIXELFORMATDESCRIPTOR *pPFD) {
 
 	// count number of PFDs
 	if (glConfig.driverType > GLDRV_ICD) {
-		maxPFD = qwglDescribePixelFormat(hDC, 1, sizeof(PIXELFORMATDESCRIPTOR), &pfds[0]);
 	}
 	else
 	{
@@ -205,7 +204,6 @@ static int GLW_ChoosePFD(HDC hDC, PIXELFORMATDESCRIPTOR *pPFD) {
 	for (i = 1; i <= maxPFD; i++)
 	{
 		if (glConfig.driverType > GLDRV_ICD) {
-			qwglDescribePixelFormat(hDC, i, sizeof(PIXELFORMATDESCRIPTOR), &pfds[i]);
 		}
 		else
 		{
@@ -543,11 +541,8 @@ static int GLW_MakeContext(PIXELFORMATDESCRIPTOR *pPFD) {
 		ri.Printf(PRINT_ALL, "...PIXELFORMAT %d selected\n", pixelformat);
 
 		if (glConfig.driverType > GLDRV_ICD) {
-			qwglDescribePixelFormat(dx9imp_state.hDC, pixelformat, sizeof(*pPFD), pPFD);
-			if (qwglSetPixelFormat(dx9imp_state.hDC, pixelformat, pPFD) == FALSE) {
-				ri.Printf(PRINT_ALL, "...qwglSetPixelFormat failed\n");
-				return TRY_PFD_FAIL_SOFT;
-			}
+			ri.Printf(PRINT_ALL, "...qwglSetPixelFormat failed\n");
+			return TRY_PFD_FAIL_SOFT;
 		}
 		else
 		{
@@ -1436,13 +1431,11 @@ void DX9imp_EndFrame(void) {
 	// don't flip if drawing to front buffer
 	if (Q_stricmp(r_drawBuffer->string, "GL_FRONT") != 0) {
 		if (glConfig.driverType > GLDRV_ICD) {
-			if (!qwglSwapBuffers(dx9imp_state.hDC)) {
 				ri.Error(ERR_FATAL, "GLimp_EndFrame() - SwapBuffers() failed!\n");
-			}
 		}
 		else
 		{
-			SwapBuffers(dx9imp_state.hDC);
+			qdx.device->Present(NULL, NULL, NULL, NULL);
 		}
 	}
 
@@ -1559,7 +1552,7 @@ void DX9imp_Init(void) {
 	ri.Cvar_Set("r_lastValidRenderer", glConfig.renderer_string);
 
 	GLW_InitExtensions();
-	WG_CheckHardwareGamma();
+	DX9imp_CheckHardwareGamma();
 }
 
 /*
@@ -1574,21 +1567,14 @@ void DX9imp_Shutdown(void) {
 	int retVal;
 
 	// FIXME: Brian, we need better fallbacks from partially initialized failures
-	if (!qwglMakeCurrent) {
-		return;
-	}
+	//if (!qwglMakeCurrent) {
+	//	return;
+	//}
 
 	ri.Printf(PRINT_ALL, "Shutting down OpenGL subsystem\n");
 
 	// restore gamma.  We do this first because 3Dfx's extension needs a valid OGL subsystem
-	WG_RestoreGamma();
-
-	// set current context to NULL
-	if (qwglMakeCurrent) {
-		retVal = qwglMakeCurrent(NULL, NULL) != 0;
-
-		ri.Printf(PRINT_ALL, "...wglMakeCurrent( NULL, NULL ): %s\n", success[retVal]);
-	}
+	DX9imp_RestoreGamma();
 
 	// delete HGLRC
 	//if (dx9imp_state.hGLRC) {
@@ -1652,7 +1638,122 @@ void DX9imp_LogComment(char *comment) {
 	}
 }
 
+static D3DGAMMARAMP s_oldHardwareGamma;
+static bool gammaCalibrate = false;
+void DX9imp_CheckHardwareGamma(void) {
+
+	// non-3Dfx standalone drivers don't support gamma changes, period
+	if (glConfig.driverType == GLDRV_STANDALONE) {
+		return;
+	}
+
+	if (!r_ignorehwgamma->integer) {
+		if (0 != (qdx.caps.Caps2 & D3DCAPS2_FULLSCREENGAMMA))
+		{
+			glConfig.deviceSupportsGamma = qtrue;
+			if (0 != (qdx.caps.Caps2 & D3DCAPS2_CANCALIBRATEGAMMA))
+			{
+				gammaCalibrate = true;
+			}
+
+			qdx.device->GetGammaRamp(0, &s_oldHardwareGamma);
+
+			if (glConfig.deviceSupportsGamma) {
+				//
+				// do a sanity check on the gamma values
+				//
+				if ((s_oldHardwareGamma.red[255] <= s_oldHardwareGamma.red[0]) ||
+					(s_oldHardwareGamma.green[255] <= s_oldHardwareGamma.green[0]) ||
+					(s_oldHardwareGamma.blue[255] <= s_oldHardwareGamma.blue[0])) {
+					glConfig.deviceSupportsGamma = qfalse;
+					ri.Printf(PRINT_WARNING, "WARNING: device has broken gamma support, generated gamma.dat\n");
+				}
+
+				//
+				// make sure that we didn't have a prior crash in the game, and if so we need to
+				// restore the gamma values to at least a linear value
+				//
+				if ((s_oldHardwareGamma.red[181] == 255)) {
+					int g;
+
+					ri.Printf(PRINT_WARNING, "WARNING: suspicious gamma tables, using linear ramp for restoration\n");
+
+					for (g = 0; g < 255; g++)
+					{
+						s_oldHardwareGamma.red[g] = g;
+						s_oldHardwareGamma.green[g] = g;
+						s_oldHardwareGamma.blue[g] = g;
+					}
+				}
+			}
+		}
+	}
+}
+#undef HIBYTE
+
 void DX9imp_SetGamma(unsigned char red[256], unsigned char green[256], unsigned char blue[256]) {
+	D3DGAMMARAMP table;
+	int i, j;
+	int ret;
+
+	if (!glConfig.deviceSupportsGamma || r_ignorehwgamma->integer) {
+		return;
+	}
+
+	//mapGammaMax();
+
+	for (i = 0; i < 256; i++) {
+		table.red[i] = /*(((unsigned short)red[i]) << 8) |*/ red[i];
+		table.green[i] = /*(((unsigned short)green[i]) << 8) |*/ green[i];
+		table.blue[i] = /*(((unsigned short)blue[i]) << 8) |*/ blue[i];
+	}
+
+#if 0
+	// Win2K puts this odd restriction on gamma ramps...
+	OSVERSIONINFO vinfo;
+	vinfo.dwOSVersionInfoSize = sizeof(vinfo);
+	GetVersionEx(&vinfo);
+	if (vinfo.dwMajorVersion == 5 && vinfo.dwPlatformId == VER_PLATFORM_WIN32_NT) {
+		Com_DPrintf("performing W2K gamma clamp.\n");
+		for (j = 0; j < 3; j++) {
+			for (i = 0; i < 128; i++) {
+				if (table[j][i] > ((128 + i) << 8)) {
+					table[j][i] = (128 + i) << 8;
+				}
+			}
+			if (table[j][127] > 254 << 8) {
+				table[j][127] = 254 << 8;
+			}
+		}
+	}
+	else {
+		Com_DPrintf("skipping W2K gamma clamp.\n");
+	}
+#endif
+
+	// enforce constantly increasing
+	for (i = 1; i < 256; i++) {
+		if (table.red[i] < table.red[i - 1]) {
+			table.red[i] = table.red[i - 1];
+		}
+		if (table.green[i] < table.green[i - 1]) {
+			table.green[i] = table.green[i - 1];
+		}
+		if (table.blue[i] < table.blue[i - 1]) {
+			table.blue[i] = table.blue[i - 1];
+		}
+	}
+
+	qdx.device->SetGammaRamp(0, gammaCalibrate ? D3DSGR_CALIBRATE : D3DSGR_NO_CALIBRATION, &table);
+}
+
+void DX9imp_RestoreGamma(void) {
+	if (glConfig.deviceSupportsGamma) {
+		if (qdx.device)
+		{
+			qdx.device->SetGammaRamp(0, gammaCalibrate ? D3DSGR_CALIBRATE : D3DSGR_NO_CALIBRATION, &s_oldHardwareGamma);
+		}
+	}
 }
 
 /*
@@ -1673,7 +1774,7 @@ void GLimp_RenderThreadWrapper(void) {
 	glimpRenderThread();
 
 	// unbind the context before we die
-	qwglMakeCurrent(dx9imp_state.hDC, NULL);
+	//qwglMakeCurrent(dx9imp_state.hDC, NULL);
 }
 
 /*
@@ -1712,9 +1813,9 @@ static int wglErrors;
 void *DX9imp_RendererSleep(void) {
 	void    *data;
 
-	if (!qwglMakeCurrent(dx9imp_state.hDC, NULL)) {
-		wglErrors++;
-	}
+	//if (!qwglMakeCurrent(dx9imp_state.hDC, NULL)) {
+	//	wglErrors++;
+	//}
 
 	ResetEvent(renderActiveEvent);
 
@@ -1723,9 +1824,9 @@ void *DX9imp_RendererSleep(void) {
 
 	WaitForSingleObject(renderCommandsEvent, INFINITE);
 
-	if (!qwglMakeCurrent(dx9imp_state.hDC, dx9imp_state.hGLRC)) {
-		wglErrors++;
-	}
+	//if (!qwglMakeCurrent(dx9imp_state.hDC, dx9imp_state.hGLRC)) {
+	//	wglErrors++;
+	//}
 
 	ResetEvent(renderCompletedEvent);
 	ResetEvent(renderCommandsEvent);
@@ -1742,18 +1843,18 @@ void *DX9imp_RendererSleep(void) {
 void DX9imp_FrontEndSleep(void) {
 	WaitForSingleObject(renderCompletedEvent, INFINITE);
 
-	if (!qwglMakeCurrent(dx9imp_state.hDC, dx9imp_state.hGLRC)) {
-		wglErrors++;
-	}
+	//if (!qwglMakeCurrent(dx9imp_state.hDC, dx9imp_state.hGLRC)) {
+	//	wglErrors++;
+	//}
 }
 
 
 void DX9imp_WakeRenderer(void *data) {
 	smpData = data;
 
-	if (!qwglMakeCurrent(dx9imp_state.hDC, NULL)) {
-		wglErrors++;
-	}
+	//if (!qwglMakeCurrent(dx9imp_state.hDC, NULL)) {
+	//	wglErrors++;
+	//}
 
 	// after this, the renderer can continue through GLimp_RendererSleep
 	SetEvent(renderCommandsEvent);
@@ -1777,8 +1878,11 @@ D3DFORMAT texture_format(UINT in, UINT *bits)
 		b = 16;
 		break;
 	case GL_COMPRESSED_RGBA_S3TC_DXT5_EXT:
-		ret = D3DFMT_DXT5;
-		b = 8;
+		//todo: compress texture
+		//ret = D3DFMT_DXT5;
+		//b = 8;
+		ret = D3DFMT_A8R8G8B8;
+		b = 32;
 		break;
 	case GL_RGB8:
 		ret = D3DFMT_X8R8G8B8;
