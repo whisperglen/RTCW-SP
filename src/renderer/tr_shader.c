@@ -86,6 +86,8 @@ static long generateHashValue( const char *fname ) {
 }
 
 void R_RemapShader( const char *shaderName, const char *newShaderName, const char *timeOffset ) {
+	function_called(__func__);
+
 	char strippedName[MAX_QPATH];
 	int hash;
 	shader_t    *sh, *sh2;
@@ -1830,7 +1832,7 @@ static qboolean CollapseMultitexture( void ) {
 	int i;
 	textureBundle_t tmpBundle;
 
-	if ( !qglActiveTextureARB ) {
+	if ( !glConfig.maxActiveTextures) {
 		return qfalse;
 	}
 
@@ -2744,6 +2746,8 @@ way to ask for different implicit lighting modes (vertex, lightmap, etc)
 ====================
 */
 qhandle_t RE_RegisterShader( const char *name ) {
+	function_called(__func__);
+
 	shader_t    *sh;
 
 	if ( strlen( name ) >= MAX_QPATH ) {
@@ -2774,6 +2778,8 @@ For menu graphics that should never be picmiped
 ====================
 */
 qhandle_t RE_RegisterShaderNoMip( const char *name ) {
+	function_called(__func__);
+
 	shader_t    *sh;
 
 	if ( strlen( name ) >= MAX_QPATH ) {

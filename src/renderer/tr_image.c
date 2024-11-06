@@ -846,7 +846,7 @@ static void Upload32(   unsigned *data,
 	}
 done:
 
-	if ( mipmap ) {
+	if ( mipmap ) {//todo: anisotropy here
 		qglTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, gl_filter_min );
 		qglTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, gl_filter_max );
 	} else
@@ -2387,7 +2387,7 @@ void R_SetColorMappings( void ) {
 	}
 
 	if ( glConfig.deviceSupportsGamma ) {
-		GLimp_SetGamma( s_gammatable, s_gammatable, s_gammatable );
+		GPUimp_SetGamma( s_gammatable, s_gammatable, s_gammatable );
 	}
 }
 
@@ -2557,6 +2557,8 @@ RE_GetSkinModel
 ==============
 */
 qboolean RE_GetSkinModel( qhandle_t skinid, const char *type, char *name ) {
+	function_called(__func__);
+
 	int i;
 	skin_t      *bar;
 
@@ -2588,6 +2590,8 @@ RE_GetShaderFromModel
 ==============
 */
 qhandle_t RE_GetShaderFromModel( qhandle_t modelid, int surfnum, int withlightmap ) {
+	function_called(__func__);
+
 	model_t     *model;
 	bmodel_t    *bmodel;
 	msurface_t  *surf;
@@ -2643,6 +2647,8 @@ RE_RegisterSkin
 ===============
 */
 qhandle_t RE_RegisterSkin( const char *name ) {
+	function_called(__func__);
+
 	qhandle_t hSkin;
 	skin_t      *skin;
 	skinSurface_t   *surf;

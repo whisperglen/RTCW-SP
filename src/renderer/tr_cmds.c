@@ -91,7 +91,7 @@ void R_InitCommandBuffers( void ) {
 	glConfig.smpActive = qfalse;
 	if ( r_smp->integer ) {
 		ri.Printf( PRINT_ALL, "Trying SMP acceleration...\n" );
-		if ( GLimp_SpawnRenderThread( RB_RenderThread ) ) {
+		if ( GPUimp_SpawnRenderThread( RB_RenderThread ) ) {
 			ri.Printf( PRINT_ALL, "...succeeded.\n" );
 			glConfig.smpActive = qtrue;
 		} else {
@@ -108,7 +108,7 @@ R_ShutdownCommandBuffers
 void R_ShutdownCommandBuffers( void ) {
 	// kill the rendering thread
 	if ( glConfig.smpActive ) {
-		GLimp_WakeRenderer( NULL );
+		GPUimp_WakeRenderer( NULL );
 		glConfig.smpActive = qfalse;
 	}
 }
@@ -147,7 +147,7 @@ void R_IssueRenderCommands( qboolean runPerformanceCounters ) {
 		}
 
 		// sleep until the renderer has completed
-		GLimp_FrontEndSleep();
+		GPUimp_FrontEndSleep();
 	}
 
 	// at this point, the back end thread is idle, so it is ok
@@ -162,7 +162,7 @@ void R_IssueRenderCommands( qboolean runPerformanceCounters ) {
 		if ( !glConfig.smpActive ) {
 			RB_ExecuteRenderCommands( cmdList->cmds );
 		} else {
-			GLimp_WakeRenderer( cmdList );
+			GPUimp_WakeRenderer( cmdList );
 		}
 	}
 }
@@ -187,7 +187,7 @@ void R_SyncRenderThread( void ) {
 	if ( !glConfig.smpActive ) {
 		return;
 	}
-	GLimp_FrontEndSleep();
+	GPUimp_FrontEndSleep();
 }
 
 /*
@@ -249,6 +249,8 @@ Passing NULL will set the color to white
 =============
 */
 void    RE_SetColor( const float *rgba ) {
+	function_called(__func__);
+
 	setColorCommand_t   *cmd;
 
 	cmd = R_GetCommandBuffer( sizeof( *cmd ) );
@@ -276,6 +278,8 @@ RE_StretchPic
 */
 void RE_StretchPic( float x, float y, float w, float h,
 					float s1, float t1, float s2, float t2, qhandle_t hShader ) {
+	function_called(__func__);
+
 	stretchPicCommand_t *cmd;
 
 	cmd = R_GetCommandBuffer( sizeof( *cmd ) );
@@ -303,6 +307,8 @@ RE_StretchPicGradient
 */
 void RE_StretchPicGradient( float x, float y, float w, float h,
 							float s1, float t1, float s2, float t2, qhandle_t hShader, const float *gradientColor, int gradientType ) {
+	function_called(__func__);
+
 	stretchPicCommand_t *cmd;
 
 	cmd = R_GetCommandBuffer( sizeof( *cmd ) );
@@ -344,6 +350,8 @@ for each RE_EndFrame
 ====================
 */
 void RE_BeginFrame( stereoFrame_t stereoFrame ) {
+	function_called(__func__);
+
 	drawBufferCommand_t *cmd;
 
 	if ( !tr.registered ) {
@@ -527,6 +535,8 @@ Returns the number of msec spent in the back end
 =============
 */
 void RE_EndFrame( int *frontEndMsec, int *backEndMsec ) {
+	function_called(__func__);
+
 	swapBuffersCommand_t    *cmd;
 
 	if ( !tr.registered ) {

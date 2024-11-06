@@ -90,6 +90,8 @@ RE_ClearScene
 ====================
 */
 void RE_ClearScene( void ) {
+	function_called(__func__);
+
 	r_firstSceneDlight = r_numdlights;
 	r_firstSceneCorona = r_numcoronas;
 	r_firstSceneEntity = r_numentities;
@@ -133,6 +135,8 @@ RE_AddPolyToScene
 =====================
 */
 void RE_AddPolyToScene( qhandle_t hShader, int numVerts, const polyVert_t *verts ) {
+	function_called(__func__);
+
 	srfPoly_t   *poly;
 	int i;
 	int fogIndex;
@@ -213,6 +217,8 @@ void RE_AddPolysToScene( qhandle_t hShader, int numVerts, const polyVert_t *vert
 	vec3_t bounds[2];
 	int j;
 
+	function_called(__func__);
+
 	if ( !tr.registered ) {
 		return;
 	}
@@ -291,6 +297,8 @@ RE_AddRefEntityToScene
 =====================
 */
 void RE_AddRefEntityToScene( const refEntity_t *ent ) {
+	function_called(__func__);
+
 	if ( !tr.registered ) {
 		return;
 	}
@@ -316,6 +324,8 @@ RE_AddLightToScene
 =====================
 */
 void RE_AddLightToScene( const vec3_t org, float intensity, float r, float g, float b, int overdraw ) {
+	function_called(__func__);
+
 	dlight_t    *dl;
 
 	if ( !tr.registered ) {
@@ -375,6 +385,8 @@ RE_AddCoronaToScene
 ==============
 */
 void RE_AddCoronaToScene( const vec3_t org, float r, float g, float b, float scale, int id, int flags ) {
+	function_called(__func__);
+
 	corona_t    *cor;
 
 	if ( !tr.registered ) {
@@ -406,13 +418,15 @@ to handle mirrors,
 @@@@@@@@@@@@@@@@@@@@@
 */
 void RE_RenderScene( const refdef_t *fd ) {
+	function_called(__func__);
+
 	viewParms_t parms;
 	int startTime;
 
 	if ( !tr.registered ) {
 		return;
 	}
-	GLimp_LogComment( "====== RE_RenderScene =====\n" );
+	GPUimp_LogComment( "====== RE_RenderScene =====\n" );
 
 	if ( r_norefresh->integer ) {
 		return;

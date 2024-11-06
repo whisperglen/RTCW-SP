@@ -323,6 +323,15 @@
     <ClCompile Include="..\ft2\ttsbit.c">
       <Filter>FreeType2\Source Files No. 2</Filter>
     </ClCompile>
+    <ClCompile Include="..\win32\win_dx9imp.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\win32\win_qgl_dummy.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="helpers.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="anorms256.h">
@@ -555,6 +564,9 @@
     </ClInclude>
     <ClInclude Include="..\ft2\tttypes.h">
       <Filter>FreeType2\Header Files No. 2</Filter>
+    </ClInclude>
+    <ClInclude Include="qdx9.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

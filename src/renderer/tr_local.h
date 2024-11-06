@@ -35,7 +35,8 @@ If you have questions concerning this license or the applicable additional terms
 #include "../qcommon/qfiles.h"
 #include "../qcommon/qcommon.h"
 #include "tr_public.h"
-#include "qgl.h"
+#include "qgl.h" //todo: rem
+#include "qdx9.h"
 
 #define GL_INDEX_IS_UINT 1
 #if GL_INDEX_IS_UINT
@@ -90,6 +91,9 @@ typedef struct {
 	vec3_t viewOrigin;          // viewParms->or.origin in local coordinates
 	float modelMatrix[16];
 } orientationr_t;
+
+//offset for texnum values
+#define TEXNUM_OFFSET 1024
 
 typedef struct image_s {
 	char imgName[MAX_QPATH];            // game path, including extension
@@ -1261,6 +1265,7 @@ void R_RotateForEntity( const trRefEntity_t * ent, const viewParms_t * viewParms
 */
 void    GL_Bind( image_t *image );
 void    GL_SetDefaultState( void );
+ID_INLINE
 void    GL_SelectTexture( int unit );
 void    GL_TextureMode( const char *string );
 void    GL_CheckErrors( void );
@@ -1377,6 +1382,32 @@ IMPLEMENTATION SPECIFIC FUNCTIONS
 
 ====================================================================
 */
+#ifndef R_USE_GL
+#define R_USE_GL 1
+#endif
+#if R_USE_GL
+#define GPUimp_Init GLimp_Init
+#define GPUimp_Shutdown GLimp_Shutdown
+#define GPUimp_EndFrame GLimp_EndFrame
+
+#define GPUimp_SpawnRenderThread GLimp_SpawnRenderThread
+#define GPUimp_RendererSleep GLimp_RendererSleep
+#define GPUimp_FrontEndSleep GLimp_FrontEndSleep
+#define GPUimp_WakeRenderer GLimp_WakeRenderer
+#define GPUimp_LogComment GLimp_LogComment
+#define GPUimp_SetGamma GLimp_SetGamma
+#else //USE_DX9
+#define GPUimp_Init DX9imp_Init
+#define GPUimp_Shutdown DX9imp_Shutdown
+#define GPUimp_EndFrame DX9imp_EndFrame
+
+#define GPUimp_SpawnRenderThread DX9imp_SpawnRenderThread
+#define GPUimp_RendererSleep DX9imp_RendererSleep
+#define GPUimp_FrontEndSleep DX9imp_FrontEndSleep
+#define GPUimp_WakeRenderer DX9imp_WakeRenderer
+#define GPUimp_LogComment DX9imp_LogComment
+#define GPUimp_SetGamma DX9imp_SetGamma
+#endif
 
 void        GLimp_Init( void );
 void        GLimp_Shutdown( void );
@@ -1392,6 +1423,21 @@ void        GLimp_LogComment( char *comment );
 void GLimp_SetGamma( unsigned char red[256],
 					 unsigned char green[256],
 					 unsigned char blue[256] );
+
+void        DX9imp_Init(void);
+void        DX9imp_Shutdown(void);
+void        DX9imp_EndFrame(void);
+
+qboolean DX9imp_SpawnRenderThread(void(*function)(void));
+void        *DX9imp_RendererSleep(void);
+void        DX9imp_FrontEndSleep(void);
+void        DX9imp_WakeRenderer(void *data);
+
+void        DX9imp_LogComment(char *comment);
+
+void DX9imp_SetGamma(unsigned char red[256],
+	unsigned char green[256],
+	unsigned char blue[256]);
 
 
 /*

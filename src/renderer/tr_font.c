@@ -334,6 +334,8 @@ float readFloat() {
 }
 
 void RE_RegisterFont( const char *fontName, int pointSize, fontInfo_t *font ) {
+	function_called(__func__);
+
 #ifdef BUILD_FREETYPE
 	FT_Face face;
 	int j, k, xOut, yOut, lastStart, imageNumber;
