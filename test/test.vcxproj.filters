@@ -21,5 +21,14 @@
     <ClCompile Include="rsqrt.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="boxonplane.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="commem.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="snapvector.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>
