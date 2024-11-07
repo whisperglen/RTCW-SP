@@ -54,8 +54,9 @@ static void LoadJPG( const char *name, byte **pic, int *width, int *height );
 static byte s_intensitytable[256];
 static unsigned char s_gammatable[256];
 
-int gl_filter_min = GL_LINEAR_MIPMAP_NEAREST;
-int gl_filter_max = GL_LINEAR;
+int gl_filter_min = D3DTEXF_LINEAR;
+int gl_filter_max = D3DTEXF_LINEAR;
+int gl_filter_mip = D3DTEXF_POINT;
 
 #define FILE_HASH_SIZE      4096
 static image_t*        hashTable[FILE_HASH_SIZE];
@@ -117,16 +118,16 @@ void R_GammaCorrect( byte *buffer, int bufSize ) {
 
 typedef struct {
 	char *name;
-	int minimize, maximize;
+	int minimize, mip, maximize;
 } textureMode_t;
 
 textureMode_t modes[] = {
-	{"GL_NEAREST", GL_NEAREST, GL_NEAREST},
-	{"GL_LINEAR", GL_LINEAR, GL_LINEAR},
-	{"GL_NEAREST_MIPMAP_NEAREST", GL_NEAREST_MIPMAP_NEAREST, GL_NEAREST},
-	{"GL_LINEAR_MIPMAP_NEAREST", GL_LINEAR_MIPMAP_NEAREST, GL_LINEAR},
-	{"GL_NEAREST_MIPMAP_LINEAR", GL_NEAREST_MIPMAP_LINEAR, GL_NEAREST},
-	{"GL_LINEAR_MIPMAP_LINEAR", GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR}
+	{"GL_NEAREST", D3DTEXF_POINT, D3DTEXF_POINT, D3DTEXF_POINT},
+	{"GL_LINEAR", D3DTEXF_LINEAR, D3DTEXF_LINEAR, D3DTEXF_LINEAR},
+	{"GL_NEAREST_MIPMAP_NEAREST", D3DTEXF_POINT, D3DTEXF_POINT, D3DTEXF_POINT},
+	{"GL_LINEAR_MIPMAP_NEAREST", D3DTEXF_LINEAR, D3DTEXF_POINT, D3DTEXF_LINEAR},
+	{"GL_NEAREST_MIPMAP_LINEAR", D3DTEXF_POINT, D3DTEXF_LINEAR, D3DTEXF_POINT},
+	{"GL_LINEAR_MIPMAP_LINEAR", D3DTEXF_LINEAR, D3DTEXF_LINEAR, D3DTEXF_LINEAR}
 };
 
 /*
@@ -171,29 +172,38 @@ void GL_TextureMode( const char *string ) {
 		}
 	}
 
-	// hack to prevent trilinear from being set on voodoo,
-	// because their driver freaks...
-	if ( i == 5 && glConfig.hardwareType == GLHW_3DFX_2D3D ) {
-		ri.Printf( PRINT_ALL, "Refusing to set trilinear on a voodoo.\n" );
-		i = 3;
-	}
-
-
 	if ( i == 6 ) {
 		ri.Printf( PRINT_ALL, "bad filter name\n" );
 		return;
 	}
 
 	gl_filter_min = modes[i].minimize;
+	gl_filter_mip = modes[i].mip;
 	gl_filter_max = modes[i].maximize;
+
+	if (r_ext_texture_filter_anisotropic->integer > 1)
+	{
+		if (gl_filter_min == D3DTEXF_LINEAR)
+			gl_filter_min = D3DTEXF_ANISOTROPIC;
+		if (gl_filter_max == D3DTEXF_LINEAR)
+			gl_filter_max = D3DTEXF_ANISOTROPIC;
+	}
 
 	// change all the existing mipmap texture objects
 	for ( i = 0 ; i < tr.numImages ; i++ ) {
 		glt = tr.images[ i ];
 		if ( glt->mipmap ) {
 			GL_Bind( glt );
-			qglTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, gl_filter_min );
-			qglTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, gl_filter_max );
+			//qglTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, gl_filter_min );
+			//qglTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, gl_filter_max );
+			qdx_textureobj_t *opt = qdx_texobj_acc(glt->texnum - TEXNUM_OFFSET);
+			if (opt)
+			{
+				opt->flt_min = gl_filter_min;
+				opt->flt_mip = gl_filter_mip;
+				opt->flt_mag = gl_filter_max;
+			}
+			//todo: apply texture sampler params?
 		}
 	}
 }
@@ -600,7 +610,7 @@ Upload32
 
 ===============
 */
-static void Upload32(   unsigned *data,
+static void Upload32(   int texnum, unsigned *data,
 						int width, int height,
 						qboolean mipmap,
 						qboolean picmip,
@@ -787,7 +797,8 @@ static void Upload32(   unsigned *data,
 	if ( ( scaled_width == width ) &&
 		 ( scaled_height == height ) ) {
 		if ( !mipmap ) {
-			qglTexImage2D( GL_TEXTURE_2D, 0, internalFormat, scaled_width, scaled_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data );
+			qdx_texobj_upload(TRUE, texnum - TEXNUM_OFFSET, mipmap, 0, internalFormat, scaled_width, scaled_height, data);
+			//qglTexImage2D( GL_TEXTURE_2D, 0, internalFormat, scaled_width, scaled_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data );
 			*pUploadWidth = scaled_width;
 			*pUploadHeight = scaled_height;
 			*format = internalFormat;
@@ -818,7 +829,8 @@ static void Upload32(   unsigned *data,
 	*pUploadHeight = scaled_height;
 	*format = internalFormat;
 
-	qglTexImage2D( GL_TEXTURE_2D, 0, internalFormat, scaled_width, scaled_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, scaledBuffer );
+	qdx_texobj_upload(TRUE, texnum - TEXNUM_OFFSET, mipmap, 0, internalFormat, scaled_width, scaled_height, scaledBuffer);
+	//qglTexImage2D( GL_TEXTURE_2D, 0, internalFormat, scaled_width, scaled_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, scaledBuffer );
 
 	if ( mipmap ) {
 		int miplevel;
@@ -841,18 +853,29 @@ static void Upload32(   unsigned *data,
 				R_BlendOverTexture( (byte *)scaledBuffer, scaled_width * scaled_height, mipBlendColors[miplevel] );
 			}
 
-			qglTexImage2D( GL_TEXTURE_2D, miplevel, internalFormat, scaled_width, scaled_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, scaledBuffer );
+			qdx_texobj_upload(FALSE, texnum - TEXNUM_OFFSET, mipmap, miplevel, internalFormat, scaled_width, scaled_height, scaledBuffer);
+			//qglTexImage2D( GL_TEXTURE_2D, miplevel, internalFormat, scaled_width, scaled_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, scaledBuffer );
 		}
 	}
 done:
 
-	if ( mipmap ) {//todo: anisotropy here
-		qglTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, gl_filter_min );
-		qglTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, gl_filter_max );
-	} else
 	{
-		qglTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
-		qglTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
+		qdx_textureobj_t *opt = qdx_texobj_acc(texnum - TEXNUM_OFFSET);
+		if (mipmap) {
+			opt->flt_min = gl_filter_min;
+			opt->flt_mip = gl_filter_mip;
+			opt->flt_mag = gl_filter_max;
+			opt->anisotropy = Com_Clamp(1, glConfig.maxAnisotropy, r_ext_texture_filter_anisotropic->integer);
+			//qglTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, gl_filter_min);
+			//qglTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, gl_filter_max);
+		}
+		else
+		{
+			opt->flt_min = opt->flt_mag = D3DTEXF_LINEAR;
+			opt->anisotropy = Com_Clamp(1, glConfig.maxAnisotropy, r_ext_texture_filter_anisotropic->integer);
+			//qglTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+			//qglTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		}
 	}
 
 	GL_CheckErrors();
@@ -908,7 +931,7 @@ image_t *R_CreateImageExt( const char *name, const byte *pic, int width, int hei
 	// Ridah
 	image = tr.images[tr.numImages] = R_CacheImageAlloc( sizeof( image_t ) );
 
-	image->texnum = 1024 + tr.numImages;
+	image->texnum = TEXNUM_OFFSET + tr.numImages;
 
 	// Ridah
 	if ( r_cacheShaders->integer ) {
@@ -928,19 +951,19 @@ image_t *R_CreateImageExt( const char *name, const byte *pic, int width, int hei
 	image->wrapClampMode = glWrapClampMode;
 
 	// lightmaps are always allocated on TMU 1
-	if ( qglActiveTextureARB && isLightmap ) {
+	if ( glConfig.maxActiveTextures && isLightmap ) {
 		image->TMU = 1;
 	} else {
 		image->TMU = 0;
 	}
 
-	if ( qglActiveTextureARB ) {
+	if ( glConfig.maxActiveTextures ) {
 		GL_SelectTexture( image->TMU );
 	}
 
 	GL_Bind( image );
 
-	Upload32( (unsigned *)pic,
+	Upload32( image->texnum, (unsigned *)pic,
 			  image->width, image->height,
 			  image->mipmap,
 			  allowPicmip,
@@ -951,8 +974,13 @@ image_t *R_CreateImageExt( const char *name, const byte *pic, int width, int hei
 			  &image->uploadHeight,
 			  noCompress );
 
-	qglTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, glWrapClampMode );
-	qglTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, glWrapClampMode );
+	qdx_textureobj_t *opt = qdx_texobj_acc(image->texnum);
+	if (opt)
+	{
+		opt->wrap_u = opt->wrap_v = qdx_texture_wrapmode(glWrapClampMode);
+	}
+	//qglTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, glWrapClampMode );
+	//qglTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, glWrapClampMode );
 
 	qglBindTexture( GL_TEXTURE_2D, 0 );
 
@@ -2230,7 +2258,7 @@ static void R_CreateFogImage( void ) {
 	borderColor[2] = 1.0;
 	borderColor[3] = 1;
 
-	qglTexParameterfv( GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderColor );
+	qglTexParameterfv( GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderColor ); //todo: this does not apply, texture was unbound in CreateImage
 }
 
 /*
@@ -2423,7 +2451,8 @@ void R_DeleteTextures( void ) {
 	int i;
 
 	for ( i = 0; i < tr.numImages ; i++ ) {
-		qglDeleteTextures( 1, &tr.images[i]->texnum );
+		//qglDeleteTextures( 1, &tr.images[i]->texnum );
+		qdx_texobj_delete(tr.images[i]->texnum - TEXNUM_OFFSET);
 	}
 	memset( tr.images, 0, sizeof( tr.images ) );
 	// Ridah
@@ -2431,14 +2460,17 @@ void R_DeleteTextures( void ) {
 	// done.
 
 	memset( glState.currenttextures, 0, sizeof( glState.currenttextures ) );
-	if ( qglBindTexture ) {
-		if ( qglActiveTextureARB ) {
+	if ( qdx.device ) {
+		if ( glConfig.maxActiveTextures ) {
 			GL_SelectTexture( 1 );
-			qglBindTexture( GL_TEXTURE_2D, 0 );
+			//qglBindTexture( GL_TEXTURE_2D, 0 );
+			qdx_texobj_apply(-1, 1);
 			GL_SelectTexture( 0 );
-			qglBindTexture( GL_TEXTURE_2D, 0 );
+			//qglBindTexture( GL_TEXTURE_2D, 0 );
+			qdx_texobj_apply(-1, 0);
 		} else {
-			qglBindTexture( GL_TEXTURE_2D, 0 );
+			//qglBindTexture( GL_TEXTURE_2D, 0 );
+			qdx_texobj_apply(-1, 0);
 		}
 	}
 }
@@ -3503,21 +3535,25 @@ R_PurgeImage
 */
 void R_PurgeImage( image_t *image ) {
 
-	texnumImages[image->texnum - 1024] = NULL;
+	texnumImages[image->texnum - TEXNUM_OFFSET] = NULL;
 
-	qglDeleteTextures( 1, &image->texnum );
+	//qglDeleteTextures( 1, &image->texnum );
+	qdx_texobj_delete(image->texnum - TEXNUM_OFFSET);
 
 	R_CacheImageFree( image );
 
 	memset( glState.currenttextures, 0, sizeof( glState.currenttextures ) );
-	if ( qglBindTexture ) {
-		if ( qglActiveTextureARB ) {
+	if ( qdx.device ) {
+		if ( glConfig.maxActiveTextures ) {
 			GL_SelectTexture( 1 );
-			qglBindTexture( GL_TEXTURE_2D, 0 );
+			//qglBindTexture( GL_TEXTURE_2D, 0 );
+			qdx_texobj_apply(-1, 1);
 			GL_SelectTexture( 0 );
-			qglBindTexture( GL_TEXTURE_2D, 0 );
+			//qglBindTexture( GL_TEXTURE_2D, 0 );
+			qdx_texobj_apply(-1, 0);
 		} else {
-			qglBindTexture( GL_TEXTURE_2D, 0 );
+			//qglBindTexture( GL_TEXTURE_2D, 0 );
+			qdx_texobj_apply(-1, 0);
 		}
 	}
 }
@@ -3588,14 +3624,17 @@ void R_BackupImages( void ) {
 	tr.numImages = 0;
 
 	memset( glState.currenttextures, 0, sizeof( glState.currenttextures ) );
-	if ( qglBindTexture ) {
-		if ( qglActiveTextureARB ) {
+	if ( qdx.device ) {
+		if ( glConfig.maxActiveTextures ) {
 			GL_SelectTexture( 1 );
-			qglBindTexture( GL_TEXTURE_2D, 0 );
+			//qglBindTexture( GL_TEXTURE_2D, 0 );
+			qdx_texobj_apply(-1, 1);
 			GL_SelectTexture( 0 );
-			qglBindTexture( GL_TEXTURE_2D, 0 );
+			//qglBindTexture( GL_TEXTURE_2D, 0 );
+			qdx_texobj_apply(-1, 0);
 		} else {
-			qglBindTexture( GL_TEXTURE_2D, 0 );
+			//qglBindTexture( GL_TEXTURE_2D, 0 );
+			qdx_texobj_apply(-1, 0);
 		}
 	}
 }
@@ -3676,7 +3715,7 @@ void R_FindFreeTexnum( image_t *inImage ) {
 		} else {
 			last_i = 0;
 		}
-		inImage->texnum = 1024 + i;
+		inImage->texnum = TEXNUM_OFFSET + i;
 		texnumImages[i] = inImage;
 	} else {
 		ri.Error( ERR_DROP, "R_FindFreeTexnum: MAX_DRAWIMAGES hit\n" );

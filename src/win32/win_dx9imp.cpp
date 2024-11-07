@@ -109,7 +109,7 @@ extern "C" void     QGL_DMY_Shutdown(void);
 // variable declarations
 //
 dx9state_t dx9imp_state;
-struct qdx9 qdx;
+struct qdx9_state qdx;
 
 cvar_t  *r_allowSoftwareGL;     // don't abort out if the pixelformat claims software
 cvar_t  *r_maskMinidriver;      // allow a different dll name to be treated as if it were opengl32.dll
@@ -1130,11 +1130,11 @@ static void GLW_InitExtensions(void) {
 	//----(SA)	end
 
 	if (!r_allowExtensions->integer) {
-		ri.Printf(PRINT_ALL, "*** IGNORING OPENGL EXTENSIONS ***\n");
+		ri.Printf(PRINT_ALL, "*** IGNORING DX9 EXTENSIONS ***\n");
 		return;
 	}
 
-	ri.Printf(PRINT_ALL, "Initializing OpenGL extensions\n");
+	ri.Printf(PRINT_ALL, "Initializing DX9 extensions\n");
 
 	// GL_S3_s3tc
 	// RF, check for GL_EXT_texture_compression_s3tc
@@ -1263,37 +1263,42 @@ static void GLW_InitExtensions(void) {
 			//}
 		}
 		else {
-			ri.Printf(PRINT_ALL, "...ignoring GL_ATI_pn_triangles\n");
+			ri.Printf(PRINT_ALL, "...ignoring ATI_pn_triangles\n");
 			ri.Cvar_Set("r_ext_ATI_pntriangles", "0");
 		}
 	}
 	else {
-		ri.Printf(PRINT_ALL, "...GL_ATI_pn_triangles not found\n");
+		ri.Printf(PRINT_ALL, "...ATI_pn_triangles not found\n");
 		ri.Cvar_Set("r_ext_ATI_pntriangles", "0");
 	}
 
 
 
 	// GL_EXT_texture_filter_anisotropic
-	if (0 != (qdx.caps.TextureFilterCaps & (D3DPTFILTERCAPS_MINFANISOTROPIC | D3DPTFILTERCAPS_MAGFANISOTROPIC))) {
+	glConfig.anisotropicAvailable = qfalse;
+	if (0 != (qdx.caps.TextureFilterCaps & (D3DPTFILTERCAPS_MINFANISOTROPIC | D3DPTFILTERCAPS_MAGFANISOTROPIC)))
+	{
 		if (r_ext_texture_filter_anisotropic->integer) {
-			//			glConfig.anisotropicAvailable = qtrue;
-			//			ri.Printf( PRINT_ALL, "...using GL_EXT_texture_filter_anisotropic\n" );
-
-						// always ignored.  unsupported.
-			glConfig.anisotropicAvailable = qfalse;
-			ri.Printf(PRINT_ALL, "...disabling texture_filter_anisotropic\n");
-			ri.Cvar_Set("r_ext_texture_filter_anisotropic", "0");
-
+			glConfig.maxAnisotropy = qdx.caps.MaxAnisotropy;
+			if (glConfig.maxAnisotropy <= 0) {
+				ri.Printf(PRINT_ALL, "...texture_filter_anisotropic not properly supported!\n");
+				ri.Cvar_Set("r_ext_texture_filter_anisotropic", "0");
+				glConfig.maxAnisotropy = 0;
+			}
+			else
+			{
+				ri.Printf(PRINT_ALL, "...using texture_filter_anisotropic (max: %i)\n", glConfig.maxAnisotropy);
+				glConfig.anisotropicAvailable = qtrue;
+			}
 		}
-		else {
-			glConfig.anisotropicAvailable = qfalse;
+		else
+		{
 			ri.Printf(PRINT_ALL, "...ignoring texture_filter_anisotropic\n");
-			ri.Cvar_Set("r_ext_texture_filter_anisotropic", "0");
 		}
 	}
-	else {
-		//		ri.Printf( PRINT_ALL, "...GL_EXT_texture_filter_anisotropic not found\n" );
+	else
+	{
+		ri.Printf(PRINT_ALL, "...texture_filter_anisotropic not found\n");
 		ri.Cvar_Set("r_ext_texture_filter_anisotropic", "0");
 	}
 
@@ -1431,10 +1436,13 @@ void DX9imp_EndFrame(void) {
 	// don't flip if drawing to front buffer
 	if (Q_stricmp(r_drawBuffer->string, "GL_FRONT") != 0) {
 		if (glConfig.driverType > GLDRV_ICD) {
+			//if (!qwglSwapBuffers(dx9imp_state.hDC)) {
 				ri.Error(ERR_FATAL, "GLimp_EndFrame() - SwapBuffers() failed!\n");
+			//}
 		}
 		else
 		{
+			//SwapBuffers(dx9imp_state.hDC);
 			qdx.device->Present(NULL, NULL, NULL, NULL);
 		}
 	}
@@ -1571,7 +1579,7 @@ void DX9imp_Shutdown(void) {
 	//	return;
 	//}
 
-	ri.Printf(PRINT_ALL, "Shutting down OpenGL subsystem\n");
+	ri.Printf(PRINT_ALL, "Shutting down DX9 subsystem\n");
 
 	// restore gamma.  We do this first because 3Dfx's extension needs a valid OGL subsystem
 	DX9imp_RestoreGamma();
@@ -1693,8 +1701,7 @@ void DX9imp_CheckHardwareGamma(void) {
 
 void DX9imp_SetGamma(unsigned char red[256], unsigned char green[256], unsigned char blue[256]) {
 	D3DGAMMARAMP table;
-	int i, j;
-	int ret;
+	int i;
 
 	if (!glConfig.deviceSupportsGamma || r_ignorehwgamma->integer) {
 		return;
@@ -1862,7 +1869,46 @@ void DX9imp_WakeRenderer(void *data) {
 	WaitForSingleObject(renderActiveEvent, INFINITE);
 }
 
-D3DFORMAT texture_format(UINT in, UINT *bits)
+D3DTEXTUREADDRESS qdx_texture_wrapmode(int gl_mode)
+{
+	D3DTEXTUREADDRESS ret = D3DTADDRESS_WRAP;
+
+	switch (gl_mode)
+	{
+	case GL_CLAMP:
+		ret = D3DTADDRESS_CLAMP;
+		break;
+	case GL_REPEAT:
+		ret = D3DTADDRESS_WRAP;
+		break;
+	}
+
+	return ret;
+}
+
+UINT qdx_texture_fmtbits(D3DFORMAT fmt)
+{
+	UINT b = 0;
+
+	switch (fmt)
+	{
+	case D3DFMT_A8R8G8B8:
+	case D3DFMT_X8R8G8B8:
+		b = 32;
+		break;
+	case D3DFMT_A4R4G4B4:
+	case D3DFMT_R5G6B5:
+		b = 16;
+		break;
+	case D3DFMT_DXT5:
+		b = 8;
+		break;
+	}
+
+	return b;
+}
+
+D3DFORMAT qdx_texture_format(UINT in)
 {
 	D3DFORMAT ret = D3DFMT_UNKNOWN;
 	UINT b = 0;
@@ -1902,20 +1948,16 @@ D3DFORMAT texture_format(UINT in, UINT *bits)
 		break;
 	}
 
-	if (bits) *bits = b;
-
 	return ret;
 }
 
-static textureobj_t textures[MAX_DRAWIMAGES] = { 0 };
-
-void textureobj_upload(int id, int usemips, int miplvl, int format, int width, int height, const byte *data)
+void qdx_texobj_upload(BOOL createNew, int id, BOOL usemips, int miplvl, int format, int width, int height, const void *data)
 {
 	HRESULT res;
 	IDirect3DTexture9 *tex = 0;
 	int levels = 1;
-	UINT elembits;
-	D3DFORMAT dxfmt = texture_format(format, &elembits);
+	D3DFORMAT dxfmt = qdx_texture_format(format);
+	UINT elembits = qdx_texture_fmtbits(dxfmt);
 
 	if (usemips)
 	{
@@ -1928,7 +1970,8 @@ void textureobj_upload(int id, int usemips, int miplvl, int format, int width, i
 			levels++;
 		}
 	}
-	if (miplvl == 0)
+	tex = (IDirect3DTexture9*)qdx_texobj_get(id).obj;
+	if (createNew || (miplvl == 0 && tex == 0))
 	{
 		res = qdx.device->CreateTexture(width, height, levels, 0, dxfmt, D3DPOOL_MANAGED, &tex, NULL);
 		if (FAILED(res))
@@ -1936,11 +1979,23 @@ void textureobj_upload(int id, int usemips, int miplvl, int format, int width, i
 			ri.Printf(PRINT_ERROR, "Texture creation fail: fmt%d w%d h%d l%d c%d\n", dxfmt, width, height, levels, HRESULT_CODE(res));
 			return;
 		}
-		textureobj_map(id, tex);
+		qdx_texobj_map(id, tex);
 	}
 	else
 	{
-		tex = (IDirect3DTexture9*)textureobj_get(id);
+		if (tex == 0)
+		{
+			ri.Printf(PRINT_ERROR, "Texture not found: fmt%d w%d h%d l%d\n", dxfmt, width, height, levels);
+			return;
+		}
+	}
+
+	if (dxfmt == D3DFMT_UNKNOWN)
+	{
+		D3DSURFACE_DESC desc;
+		tex->GetLevelDesc(0, &desc);
+		dxfmt = desc.Format;
+		elembits = qdx_texture_fmtbits(dxfmt);
 	}
 
 	D3DLOCKED_RECT lr;
@@ -1951,24 +2006,19 @@ void textureobj_upload(int id, int usemips, int miplvl, int format, int width, i
 		if (dxfmt == D3DFMT_A8R8G8B8)
 		{
 			uint32_t *out = (uint32_t*)lr.pBits;
-			const uint32_t *in = (const uint32_t*)data;
-			for (int i = 0; i < elems; i++, out++, in++)
+			const byte *in = (const byte*)data;
+			for (int i = 0; i < elems; i++, out++, in+=4)
 			{
-				UINT abgr = *in;
-				UINT bgrx = abgr << 8;
-				UINT bgra = (abgr >> 24) | bgrx;
-				*out = bgra;
+				*out = D3DCOLOR_ARGB(in[3], in[0], in[1], in[2]);
 			}
 		}
 		if (dxfmt == D3DFMT_X8R8G8B8)
 		{
 			uint32_t *out = (uint32_t*)lr.pBits;
-			const uint32_t *in = (const uint32_t*)data;
-			for (int i = 0; i < elems; i++, out++, in++)
+			const byte *in = (const byte*)data;
+			for (int i = 0; i < elems; i++, out++, in+=4)
 			{
-				UINT abgr = *in;
-				UINT bgrx = abgr << 8;
-				*out = bgrx;
+				*out = D3DCOLOR_XRGB(in[0], in[1], in[2]);
 			}
 		}
 		else if (dxfmt == D3DFMT_A4R4G4B4)
@@ -1977,11 +2027,11 @@ void textureobj_upload(int id, int usemips, int miplvl, int format, int width, i
 			const byte *in = (const byte*)data;
 			for (int i = 0; i < elems; i++, out++, in+=4)
 			{
-				UINT r = (in[0] * 15 / 255) << 4;
-				UINT g = (in[1] * 15 / 255) << 8;
-				UINT b = (in[2] * 15 / 255) << 12;
-				UINT a = (in[3] * 15 / 255);
-				*out = (r | g | b | a);
+				UINT r = (in[0] * 15 / 255) << 8;
+				UINT g = (in[1] * 15 / 255) << 4;
+				UINT b = (in[2] * 15 / 255) << 0;
+				UINT a = (in[3] * 15 / 255) << 12;
+				*out = ( a | r | g | b);
 			}
 		}
 		else if (dxfmt == D3DFMT_R5G6B5)
@@ -1990,9 +2040,9 @@ void textureobj_upload(int id, int usemips, int miplvl, int format, int width, i
 			const byte *in = (const byte*)data;
 			for (int i = 0; i < elems; i++, out++, in+=4)
 			{
-				UINT r = (in[0] * 31 / 255);
+				UINT r = (in[0] * 31 / 255) << 11;
 				UINT g = (in[1] * 63 / 255) << 5;
-				UINT b = (in[2] * 31 / 255) << 11;
+				UINT b = (in[2] * 31 / 255) << 0;
 				*out = (r | g | b);
 			}
 		}
@@ -2010,39 +2060,141 @@ void textureobj_upload(int id, int usemips, int miplvl, int format, int width, i
 	}
 }
 
-void textureobj_map(int id, textureobj_t tex)
+/*
+textureobject::textureobject(): obj(0), sampler(0), flt_min(D3DTEXF_POINT), flt_mip(D3DTEXF_NONE), flt_mag(D3DTEXF_POINT), anisotropy(1),
+			wrap_u(D3DTADDRESS_WRAP), wrap_v(D3DTADDRESS_WRAP), border(D3DCOLOR_ARGB(0, 0, 0, 0))
+{}*/
+
+static qdx_textureobj_t textures[MAX_DRAWIMAGES] = { 0 };
+static qdx_textureobj_t g_cleartex = { 0, 0, D3DTEXF_POINT, D3DTEXF_NONE, D3DTEXF_POINT, 1, D3DTADDRESS_WRAP, D3DTADDRESS_WRAP, D3DCOLOR_ARGB(0, 0, 0, 0) };
+
+void qdx_texobj_map(int id, textureptr_t tex)
 {
 	if (id >= 0 && id < ARRAYSIZE(textures))
 	{
-		if (textures[id] != 0)
-			textures[id]->Release();
-		textures[id] = tex;
+		if (textures[id].obj != 0)
+		{
+			textures[id].obj->Release();
+			textures[id] = g_cleartex;
+		}
+		textures[id].obj = tex;
 	}
 }
 
-textureobj_t textureobj_get(int id)
+qdx_textureobj_t qdx_texobj_get(int id)
 {
-	textureobj_t ret = 0;
+	qdx_textureobj_t ret;
 
-	if (id >=0 && id < ARRAYSIZE(textures))
+	if (id >= 0 && id < ARRAYSIZE(textures))
 	{
 		ret = textures[id];
+	}
+	else
+	{
+		ret = g_cleartex;
 	}
 
 	return ret;
 }
 
-void textureobj_delete(int id)
+qdx_textureobj_t* qdx_texobj_acc(int id)
 {
-	textureobj_t ret = 0;
+	qdx_textureobj_t *ret = 0;
 
 	if (id >= 0 && id < ARRAYSIZE(textures))
 	{
-		ret = textures[id];
+		ret = &textures[id];
+	}
+
+	return ret;
+}
+
+void qdx_texobj_delete(int id)
+{
+	textureptr_t ret = 0;
+
+	if (id >= 0 && id < ARRAYSIZE(textures))
+	{
+		ret = textures[id].obj;
 		if (ret)
 		{
-			textures[id] = 0;
+			textures[id] = g_cleartex;
 			ret->Release();
 		}
 	}
+}
+
+void qdx_texobj_apply(int id, int sampler)
+{
+	qdx_textureobj_t opt = qdx_texobj_get(id);
+	int sampler_id = sampler >= 0 ? sampler : opt.sampler;
+
+	if (qdx.device)
+	{
+		qdx.device->SetTexture(sampler, opt.obj);
+		qdx.device->SetSamplerState(sampler, D3DSAMP_MINFILTER, opt.flt_min);
+		qdx.device->SetSamplerState(sampler, D3DSAMP_MIPFILTER, opt.flt_mip);
+		qdx.device->SetSamplerState(sampler, D3DSAMP_MAGFILTER, opt.flt_mag);
+		qdx.device->SetSamplerState(sampler, D3DSAMP_MAXANISOTROPY, opt.anisotropy);
+		qdx.device->SetSamplerState(sampler, D3DSAMP_ADDRESSU, opt.wrap_u);
+		qdx.device->SetSamplerState(sampler, D3DSAMP_ADDRESSV, opt.wrap_v);
+		qdx.device->SetSamplerState(sampler, D3DSAMP_BORDERCOLOR, opt.border);
+	}
+}
+
+struct fvf_state
+{
+	UINT bits;
+	void *vertexes;
+	void *normals;
+	void *colors;
+	void *texcoord[2];
+} g_fvfs = { 0 };
+
+void qdx_fvf_enable(int bits)
+{
+	g_fvfs.bits |= bits;
+}
+
+void qdx_fvf_disable(int bits)
+{
+	g_fvfs.bits &= ~bits;
+}
+
+void qdx_fvf_assemble()
+{
+	switch (g_fvfs.bits)
+	{
+	case FVF_VERTCOL:
+		break;
+	}
+}
+
+#define ON_FAIL_RET_NULL(X) if(FAILED(X)) { return NULL; }
+#define ON_FAIL_RETURN(X) if(FAILED(X)) { return; }
+
+qdx_vbuffer_t qdx_vbuffer_upload(UINT fvfid, UINT size, void *data)
+{
+	LPDIRECT3DVERTEXBUFFER9 v_buffer;
+
+	ON_FAIL_RET_NULL(
+	qdx.device->CreateVertexBuffer(size,
+		0,
+		fvfid,
+		D3DPOOL_MANAGED,
+		&v_buffer,
+		NULL));
+
+	VOID* pVoid;
+
+	ON_FAIL_RET_NULL(v_buffer->Lock(0, 0, (void**)&pVoid, 0));
+	memcpy(pVoid, data, size);
+	v_buffer->Unlock();
+
+	return v_buffer;
+}
+
+void qdx_vbuffer_release(qdx_vbuffer_t buf)
+{
+	buf->Release();
 }

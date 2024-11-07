@@ -297,7 +297,6 @@ static void InitGPU( void ) {
 	//
 
 	if ( glConfig.vidWidth == 0 ) {
-		GLint temp;
 
 		GPUimp_Init();
 
@@ -305,8 +304,7 @@ static void InitGPU( void ) {
 		Q_strlwr( renderer_buffer );
 
 		// OpenGL driver constants
-		qglGetIntegerv( GL_MAX_TEXTURE_SIZE, &temp );
-		glConfig.maxTextureSize = temp;
+		glConfig.maxTextureSize = min(qdx.caps.MaxTextureWidth, qdx.caps.MaxTextureHeight);
 
 		// stubbed or broken drivers may have reported 0...
 		if ( glConfig.maxTextureSize <= 0 ) {
@@ -750,51 +748,63 @@ void R_ScreenShotJPEG_f( void ) {
 ** GL_SetDefaultState
 */
 void GL_SetDefaultState( void ) {
-	qglClearDepth( 1.0f );
+	//qglClearDepth( 1.0f );
+	qdx.depth_clear = 1.0f;
 
-	qglCullFace( GL_FRONT );
+	//qglCullFace( GL_FRONT );
+	qdx.cull_mode = D3DCULL_CCW; //wolf wants front, then gl says front is ccw (default setting)
 
-	qglColor4f( 1,1,1,1 );
+	//qglColor4f( 1,1,1,1 );
+	qdx.crt_color = D3DCOLOR_ARGB(255, 255, 255, 255);
 
 	// initialize downstream texture unit if we're running
 	// in a multitexture environment
-	if ( qglActiveTextureARB ) {
+	if (glConfig.maxActiveTextures) {
 		GL_SelectTexture( 1 );
 		GL_TextureMode( r_textureMode->string );
 		GL_TexEnv( GL_MODULATE );
-		qglDisable( GL_TEXTURE_2D );
+		//qglDisable( GL_TEXTURE_2D );
 		GL_SelectTexture( 0 );
 	}
 
-	qglEnable( GL_TEXTURE_2D );
+	//qglEnable( GL_TEXTURE_2D );
 	GL_TextureMode( r_textureMode->string );
 	GL_TexEnv( GL_MODULATE );
 
-	qglShadeModel( GL_SMOOTH );
-	qglDepthFunc( GL_LEQUAL );
+	//qglShadeModel( GL_SMOOTH );
+	//qglDepthFunc( GL_LEQUAL );
+	IDirect3DDevice9_SetRenderState(qdx.device, D3DRS_SHADEMODE, D3DSHADE_GOURAUD);
+	IDirect3DDevice9_SetRenderState(qdx.device, D3DRS_ZFUNC, D3DCMP_LESSEQUAL);
 
 	// the vertex array is always enabled, but the color and texture
 	// arrays are enabled and disabled around the compiled vertex array call
-	qglEnableClientState( GL_VERTEX_ARRAY );
+	//qglEnableClientState( GL_VERTEX_ARRAY );
 
 	//
 	// make sure our GL state vector is set correctly
 	//
 	glState.glStateBits = GLS_DEPTHTEST_DISABLE | GLS_DEPTHMASK_TRUE;
 
-	qglPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
-	qglDepthMask( GL_TRUE );
-	qglDisable( GL_DEPTH_TEST );
-	qglEnable( GL_SCISSOR_TEST );
-	qglDisable( GL_CULL_FACE );
-	qglDisable( GL_BLEND );
+	//qglPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
+	//qglDepthMask( GL_TRUE );
+	//qglDisable( GL_DEPTH_TEST );
+	//qglEnable( GL_SCISSOR_TEST );
+	//qglDisable( GL_CULL_FACE );
+	//qglDisable( GL_BLEND );
+	IDirect3DDevice9_SetRenderState(qdx.device, D3DRS_FILLMODE, D3DFILL_SOLID);
+	IDirect3DDevice9_SetRenderState(qdx.device, D3DRS_ZWRITEENABLE, TRUE);
+	IDirect3DDevice9_SetRenderState(qdx.device, D3DRS_ZENABLE, FALSE);
+	IDirect3DDevice9_SetRenderState(qdx.device, D3DRS_SCISSORTESTENABLE, TRUE);
+	IDirect3DDevice9_SetRenderState(qdx.device, D3DRS_CULLMODE, D3DCULL_NONE); 
+	IDirect3DDevice9_SetRenderState(qdx.device, D3DRS_ALPHABLENDENABLE, FALSE);
 	
 //----(SA)	added.
 	// ATI pn_triangles
 	if ( qglPNTrianglesiATI ) {
 		int maxtess;
 		// get max supported tesselation
-		qglGetIntegerv( GL_MAX_PN_TRIANGLES_TESSELATION_LEVEL_ATI, (GLint*)&maxtess );
+		//qglGetIntegerv( GL_MAX_PN_TRIANGLES_TESSELATION_LEVEL_ATI, (GLint*)&maxtess );
+		maxtess = qdx.caps.MaxNpatchTessellationLevel;
 #ifdef __MACOS__
 		glConfig.ATIMaxTruformTess = 7;
 #else
@@ -806,18 +816,16 @@ void GL_SetDefaultState( void ) {
 		}
 
 		// set Wolf defaults
-		qglPNTrianglesiATI( GL_PN_TRIANGLES_TESSELATION_LEVEL_ATI, r_ati_truform_tess->value );
+		//qglPNTrianglesiATI( GL_PN_TRIANGLES_TESSELATION_LEVEL_ATI, r_ati_truform_tess->value );
 	}
 
 	if ( glConfig.anisotropicAvailable ) {
-		float maxAnisotropy;
-
-		qglGetFloatv( GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT, &maxAnisotropy );
-		glConfig.maxAnisotropy = maxAnisotropy;
 
 		// set when rendering
 		//qglTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, glConfig.maxAnisotropy);
 	}
+
+	qdx.znear = r_znear->value;
 
 //----(SA)	end
 }
@@ -833,7 +841,8 @@ void GfxInfo_f( void ) {
 	const char *enablestrings[] =
 	{
 		"disabled",
-		"enabled"
+		"enabled",
+		"n/a"
 	};
 	const char *fsstrings[] =
 	{
@@ -841,12 +850,12 @@ void GfxInfo_f( void ) {
 		"fullscreen"
 	};
 
-	ri.Printf( PRINT_ALL, "\nGL_VENDOR: %s\n", glConfig.vendor_string );
-	ri.Printf( PRINT_ALL, "GL_RENDERER: %s\n", glConfig.renderer_string );
-	ri.Printf( PRINT_ALL, "GL_VERSION: %s\n", glConfig.version_string );
-	ri.Printf( PRINT_ALL, "GL_EXTENSIONS: %s\n", glConfig.extensions_string );
-	ri.Printf( PRINT_ALL, "GL_MAX_TEXTURE_SIZE: %d\n", glConfig.maxTextureSize );
-	ri.Printf( PRINT_ALL, "GL_MAX_ACTIVE_TEXTURES_ARB: %d\n", glConfig.maxActiveTextures );
+	ri.Printf( PRINT_ALL, "\nVENDOR: %s\n", glConfig.vendor_string );
+	ri.Printf( PRINT_ALL, "RENDERER: %s\n", glConfig.renderer_string );
+	ri.Printf( PRINT_ALL, "VERSION: %s\n", glConfig.version_string );
+	ri.Printf( PRINT_ALL, "EXTENSIONS: %s\n", glConfig.extensions_string );
+	ri.Printf( PRINT_ALL, "MAX_TEXTURE_SIZE: %d\n", glConfig.maxTextureSize );
+	ri.Printf( PRINT_ALL, "MAX_ACTIVE_TEXTURES_ARB: %d\n", glConfig.maxActiveTextures );
 	ri.Printf( PRINT_ALL, "\nPIXELFORMAT: color(%d-bits) Z(%d-bit) stencil(%d-bits)\n", glConfig.colorBits, glConfig.depthBits, glConfig.stencilBits );
 	ri.Printf( PRINT_ALL, "MODE: %d, %d x %d %s hz:", r_mode->integer, glConfig.vidWidth, glConfig.vidHeight, fsstrings[r_fullscreen->integer == 1] );
 	if ( glConfig.displayFrequency ) {
@@ -870,30 +879,31 @@ void GfxInfo_f( void ) {
 		// default is to use triangles if compiled vertex arrays are present
 		ri.Printf( PRINT_ALL, "rendering primitives: " );
 		primitives = r_primitives->integer;
-		if ( primitives == 0 ) {
-			if ( qglLockArraysEXT ) {
-				primitives = 2;
-			} else {
-				primitives = 1;
-			}
-		}
-		if ( primitives == -1 ) {
-			ri.Printf( PRINT_ALL, "none\n" );
-		} else if ( primitives == 2 ) {
-			ri.Printf( PRINT_ALL, "single glDrawElements\n" );
-		} else if ( primitives == 1 ) {
-			ri.Printf( PRINT_ALL, "multiple glArrayElement\n" );
-		} else if ( primitives == 3 ) {
-			ri.Printf( PRINT_ALL, "multiple glColor4ubv + glTexCoord2fv + glVertex3fv\n" );
-		}
+		ri.Printf(PRINT_ALL, "single DrawIndexedPrimitive\n");
+		//if ( primitives == 0 ) {
+		//	if ( qglLockArraysEXT ) {
+		//		primitives = 2;
+		//	} else {
+		//		primitives = 1;
+		//	}
+		//}
+		//if ( primitives == -1 ) {
+		//	ri.Printf( PRINT_ALL, "none\n" );
+		//} else if ( primitives == 2 ) {
+		//	ri.Printf( PRINT_ALL, "single glDrawElements\n" );
+		//} else if ( primitives == 1 ) {
+		//	ri.Printf( PRINT_ALL, "multiple glArrayElement\n" );
+		//} else if ( primitives == 3 ) {
+		//	ri.Printf( PRINT_ALL, "multiple glColor4ubv + glTexCoord2fv + glVertex3fv\n" );
+		//}
 	}
 
 	ri.Printf( PRINT_ALL, "texturemode: %s\n", r_textureMode->string );
 	ri.Printf( PRINT_ALL, "picmip: %d\n", r_picmip->integer );
 	ri.Printf( PRINT_ALL, "picmip2: %d\n", r_picmip2->integer );
 	ri.Printf( PRINT_ALL, "texture bits: %d\n", r_texturebits->integer );
-	ri.Printf( PRINT_ALL, "multitexture: %s\n", enablestrings[qglActiveTextureARB != 0] );
-	ri.Printf( PRINT_ALL, "compiled vertex arrays: %s\n", enablestrings[qglLockArraysEXT != 0 ] );
+	ri.Printf( PRINT_ALL, "multitexture: %s\n", enablestrings[glConfig.maxActiveTextures != 0] );
+	ri.Printf( PRINT_ALL, "compiled vertex arrays: %s\n", enablestrings[2 ] );
 	ri.Printf( PRINT_ALL, "texenv add: %s\n", enablestrings[glConfig.textureEnvAddAvailable != 0] );
 	ri.Printf( PRINT_ALL, "compressed textures: %s\n", enablestrings[glConfig.textureCompression != TC_NONE] );
 
@@ -912,12 +922,6 @@ void GfxInfo_f( void ) {
 
 	if ( r_vertexLight->integer || glConfig.hardwareType == GLHW_PERMEDIA2 ) {
 		ri.Printf( PRINT_ALL, "HACK: using vertex lightmap approximation\n" );
-	}
-	if ( glConfig.hardwareType == GLHW_RAGEPRO ) {
-		ri.Printf( PRINT_ALL, "HACK: ragePro approximations\n" );
-	}
-	if ( glConfig.hardwareType == GLHW_RIVA128 ) {
-		ri.Printf( PRINT_ALL, "HACK: riva128 approximations\n" );
 	}
 	if ( glConfig.smpActive ) {
 		ri.Printf( PRINT_ALL, "Using dual processor acceleration\n" );
