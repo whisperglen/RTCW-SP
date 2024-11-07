@@ -225,6 +225,8 @@ R_AddDrawSurfCmd
 =============
 */
 void    R_AddDrawSurfCmd( drawSurf_t *drawSurfs, int numDrawSurfs ) {
+	function_called(__func__);
+
 	drawSurfsCommand_t  *cmd;
 
 	cmd = R_GetCommandBuffer( sizeof( *cmd ) );

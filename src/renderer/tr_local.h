@@ -1383,7 +1383,7 @@ IMPLEMENTATION SPECIFIC FUNCTIONS
 ====================================================================
 */
 #ifndef R_USE_GL
-#define R_USE_GL 1
+#define R_USE_GL 0
 #endif
 #if R_USE_GL
 #define GPUimp_Init GLimp_Init

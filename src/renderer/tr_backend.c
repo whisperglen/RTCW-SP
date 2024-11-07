@@ -64,7 +64,8 @@ void GL_Bind( image_t *image ) {
 			image->frameUsed = tr.frameCount;
 		}
 		glState.currenttextures[glState.currenttmu] = texnum;
-		qglBindTexture( GL_TEXTURE_2D, texnum );
+		qdx_texobj_apply(texnum - TEXNUM_OFFSET, glState.currenttmu);
+		//qglBindTexture( GL_TEXTURE_2D, texnum );
 	}
 }
 
@@ -72,23 +73,23 @@ void GL_Bind( image_t *image ) {
 ** GL_SelectTexture
 */
 void GL_SelectTexture( int unit ) {
-	if ( glState.currenttmu == unit ) {
-		return;
-	}
+	//if ( glState.currenttmu == unit ) {
+	//	return;
+	//}
 
-	if ( unit == 0 ) {
-		qglActiveTextureARB( GL_TEXTURE0_ARB );
-		GLimp_LogComment( "glActiveTextureARB( GL_TEXTURE0_ARB )\n" );
-		qglClientActiveTextureARB( GL_TEXTURE0_ARB );
-		GLimp_LogComment( "glClientActiveTextureARB( GL_TEXTURE0_ARB )\n" );
-	} else if ( unit == 1 )   {
-		qglActiveTextureARB( GL_TEXTURE1_ARB );
-		GLimp_LogComment( "glActiveTextureARB( GL_TEXTURE1_ARB )\n" );
-		qglClientActiveTextureARB( GL_TEXTURE1_ARB );
-		GLimp_LogComment( "glClientActiveTextureARB( GL_TEXTURE1_ARB )\n" );
-	} else {
-		ri.Error( ERR_DROP, "GL_SelectTexture: unit = %i", unit );
-	}
+	//if ( unit == 0 ) {
+	//	qglActiveTextureARB( GL_TEXTURE0_ARB );
+	//	GPUimp_LogComment( "glActiveTextureARB( GL_TEXTURE0_ARB )\n" );
+	//	qglClientActiveTextureARB( GL_TEXTURE0_ARB );
+	//	GPUimp_LogComment( "glClientActiveTextureARB( GL_TEXTURE0_ARB )\n" );
+	//} else if ( unit == 1 )   {
+	//	qglActiveTextureARB( GL_TEXTURE1_ARB );
+	//	GPUimp_LogComment( "glActiveTextureARB( GL_TEXTURE1_ARB )\n" );
+	//	qglClientActiveTextureARB( GL_TEXTURE1_ARB );
+	//	GPUimp_LogComment( "glClientActiveTextureARB( GL_TEXTURE1_ARB )\n" );
+	//} else {
+	//	ri.Error( ERR_DROP, "GL_SelectTexture: unit = %i", unit );
+	//}
 
 	glState.currenttmu = unit;
 }
@@ -111,13 +112,15 @@ void GL_BindMultitexture( image_t *image0, GLuint env0, image_t *image1, GLuint 
 		GL_SelectTexture( 1 );
 		image1->frameUsed = tr.frameCount;
 		glState.currenttextures[1] = texnum1;
-		qglBindTexture( GL_TEXTURE_2D, texnum1 );
+		//qglBindTexture( GL_TEXTURE_2D, texnum1 );
+		qdx_texobj_apply(texnum1 - TEXNUM_OFFSET, 1);
 	}
 	if ( glState.currenttextures[0] != texnum0 ) {
 		GL_SelectTexture( 0 );
 		image0->frameUsed = tr.frameCount;
 		glState.currenttextures[0] = texnum0;
-		qglBindTexture( GL_TEXTURE_2D, texnum0 );
+		//qglBindTexture( GL_TEXTURE_2D, texnum0 );
+		qdx_texobj_apply(texnum0 - TEXNUM_OFFSET, 0);
 	}
 }
 
@@ -133,27 +136,35 @@ void GL_Cull( int cullType ) {
 	glState.faceCulling = cullType;
 
 	if ( cullType == CT_TWO_SIDED ) {
-		qglDisable( GL_CULL_FACE );
+		//qglDisable( GL_CULL_FACE );
+		IDirect3DDevice9_SetRenderState(qdx.device, D3DRS_CULLMODE, D3DCULL_NONE);
 	} else
 	{
-		qglEnable( GL_CULL_FACE );
+		//qglEnable( GL_CULL_FACE );
+		D3DCULL mode = D3DCULL_NONE;
+		//front is CCW in GL by default
 
 		if ( cullType == CT_BACK_SIDED ) {
 			if ( backEnd.viewParms.isMirror ) {
-				qglCullFace( GL_FRONT );
+				//qglCullFace( GL_FRONT );
+				mode = D3DCULL_CCW;
 			} else
 			{
-				qglCullFace( GL_BACK );
+				//qglCullFace( GL_BACK );
+				mode = D3DCULL_CW;
 			}
 		} else
 		{
 			if ( backEnd.viewParms.isMirror ) {
-				qglCullFace( GL_BACK );
+				//qglCullFace( GL_BACK );
+				mode = D3DCULL_CW;
 			} else
 			{
-				qglCullFace( GL_FRONT );
+				//qglCullFace( GL_FRONT );
+				mode = D3DCULL_CCW;
 			}
 		}
+		IDirect3DDevice9_SetRenderState(qdx.device, D3DRS_CULLMODE, mode);
 	}
 }
 
@@ -171,16 +182,26 @@ void GL_TexEnv( int env ) {
 	switch ( env )
 	{
 	case GL_MODULATE:
-		qglTexEnvf( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE );
+		//qglTexEnvf( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE );
+		IDirect3DDevice9_SetTextureStageState(qdx.device, glState.currenttmu, D3DTSS_COLOROP, D3DTOP_MODULATE);
+		IDirect3DDevice9_SetTextureStageState(qdx.device, glState.currenttmu, D3DTSS_ALPHAOP, D3DTOP_MODULATE);
 		break;
 	case GL_REPLACE:
-		qglTexEnvf( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE );
+		//qglTexEnvf( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE );
+		IDirect3DDevice9_SetTextureStageState(qdx.device, glState.currenttmu, D3DTSS_COLOROP, D3DTOP_SELECTARG1);
+		IDirect3DDevice9_SetTextureStageState(qdx.device, glState.currenttmu, D3DTSS_ALPHAOP, D3DTOP_SELECTARG1);
 		break;
 	case GL_DECAL:
-		qglTexEnvf( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_DECAL );
+		//qglTexEnvf( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_DECAL );
+		IDirect3DDevice9_SetTextureStageState(qdx.device, glState.currenttmu, D3DTSS_COLORARG1, D3DTA_TEXTURE);
+		IDirect3DDevice9_SetTextureStageState(qdx.device, glState.currenttmu, D3DTSS_COLORARG2, D3DTA_CURRENT);
+		IDirect3DDevice9_SetTextureStageState(qdx.device, glState.currenttmu, D3DTSS_COLOROP, D3DTOP_BLENDTEXTUREALPHA);
+		IDirect3DDevice9_SetTextureStageState(qdx.device, glState.currenttmu, D3DTSS_ALPHAOP, D3DTOP_SELECTARG1);
 		break;
 	case GL_ADD:
-		qglTexEnvf( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_ADD );
+		//qglTexEnvf( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_ADD );
+		IDirect3DDevice9_SetTextureStageState(qdx.device, glState.currenttmu, D3DTSS_COLOROP, D3DTOP_ADD);
+		IDirect3DDevice9_SetTextureStageState(qdx.device, glState.currenttmu, D3DTSS_ALPHAOP, D3DTOP_MODULATE);
 		break;
 	default:
 		ri.Error( ERR_DROP, "GL_TexEnv: invalid env '%d' passed\n", env );
@@ -206,10 +227,12 @@ void GL_State( unsigned long stateBits ) {
 	//
 	if ( diff & GLS_DEPTHFUNC_EQUAL ) {
 		if ( stateBits & GLS_DEPTHFUNC_EQUAL ) {
-			qglDepthFunc( GL_EQUAL );
+			//qglDepthFunc( GL_EQUAL );
+			IDirect3DDevice9_SetRenderState(qdx.device, D3DRS_ZFUNC, D3DCMP_EQUAL);
 		} else
 		{
-			qglDepthFunc( GL_LEQUAL );
+			//qglDepthFunc( GL_LEQUAL );
+			IDirect3DDevice9_SetRenderState(qdx.device, D3DRS_ZFUNC, D3DCMP_LESSEQUAL);
 		}
 	}
 
@@ -223,34 +246,34 @@ void GL_State( unsigned long stateBits ) {
 			switch ( stateBits & GLS_SRCBLEND_BITS )
 			{
 			case GLS_SRCBLEND_ZERO:
-				srcFactor = GL_ZERO;
+				srcFactor = D3DBLEND_ZERO;
 				break;
 			case GLS_SRCBLEND_ONE:
-				srcFactor = GL_ONE;
+				srcFactor = D3DBLEND_ONE;
 				break;
 			case GLS_SRCBLEND_DST_COLOR:
-				srcFactor = GL_DST_COLOR;
+				srcFactor = D3DBLEND_DESTCOLOR;
 				break;
 			case GLS_SRCBLEND_ONE_MINUS_DST_COLOR:
-				srcFactor = GL_ONE_MINUS_DST_COLOR;
+				srcFactor = D3DBLEND_INVDESTCOLOR;
 				break;
 			case GLS_SRCBLEND_SRC_ALPHA:
-				srcFactor = GL_SRC_ALPHA;
+				srcFactor = D3DBLEND_SRCALPHA;
 				break;
 			case GLS_SRCBLEND_ONE_MINUS_SRC_ALPHA:
-				srcFactor = GL_ONE_MINUS_SRC_ALPHA;
+				srcFactor = D3DBLEND_INVSRCALPHA;
 				break;
 			case GLS_SRCBLEND_DST_ALPHA:
-				srcFactor = GL_DST_ALPHA;
+				srcFactor = D3DBLEND_DESTALPHA;
 				break;
 			case GLS_SRCBLEND_ONE_MINUS_DST_ALPHA:
-				srcFactor = GL_ONE_MINUS_DST_ALPHA;
+				srcFactor = D3DBLEND_INVDESTALPHA;
 				break;
 			case GLS_SRCBLEND_ALPHA_SATURATE:
-				srcFactor = GL_SRC_ALPHA_SATURATE;
+				srcFactor = D3DBLEND_SRCALPHASAT;
 				break;
 			default:
-				srcFactor = GL_ONE;     // to get warning to shut up
+				srcFactor = D3DBLEND_ONE;     // to get warning to shut up
 				ri.Error( ERR_DROP, "GL_State: invalid src blend state bits\n" );
 				break;
 			}
@@ -258,40 +281,46 @@ void GL_State( unsigned long stateBits ) {
 			switch ( stateBits & GLS_DSTBLEND_BITS )
 			{
 			case GLS_DSTBLEND_ZERO:
-				dstFactor = GL_ZERO;
+				dstFactor = D3DBLEND_ZERO;
 				break;
 			case GLS_DSTBLEND_ONE:
-				dstFactor = GL_ONE;
+				dstFactor = D3DBLEND_ONE;
 				break;
 			case GLS_DSTBLEND_SRC_COLOR:
-				dstFactor = GL_SRC_COLOR;
+				dstFactor = D3DBLEND_SRCCOLOR;
 				break;
 			case GLS_DSTBLEND_ONE_MINUS_SRC_COLOR:
-				dstFactor = GL_ONE_MINUS_SRC_COLOR;
+				dstFactor = D3DBLEND_INVSRCCOLOR;
 				break;
 			case GLS_DSTBLEND_SRC_ALPHA:
-				dstFactor = GL_SRC_ALPHA;
+				dstFactor = D3DBLEND_SRCALPHA;
 				break;
 			case GLS_DSTBLEND_ONE_MINUS_SRC_ALPHA:
-				dstFactor = GL_ONE_MINUS_SRC_ALPHA;
+				dstFactor = D3DBLEND_INVSRCALPHA;
 				break;
 			case GLS_DSTBLEND_DST_ALPHA:
-				dstFactor = GL_DST_ALPHA;
+				dstFactor = D3DBLEND_DESTALPHA;
 				break;
 			case GLS_DSTBLEND_ONE_MINUS_DST_ALPHA:
-				dstFactor = GL_ONE_MINUS_DST_ALPHA;
+				dstFactor = D3DBLEND_INVDESTALPHA;
 				break;
 			default:
-				dstFactor = GL_ONE;     // to get warning to shut up
+				dstFactor = D3DBLEND_ONE;     // to get warning to shut up
 				ri.Error( ERR_DROP, "GL_State: invalid dst blend state bits\n" );
 				break;
 			}
 
-			qglEnable( GL_BLEND );
-			qglBlendFunc( srcFactor, dstFactor );
+			IDirect3DDevice9_SetRenderState(qdx.device, D3DRS_ALPHABLENDENABLE, TRUE);
+			IDirect3DDevice9_SetRenderState(qdx.device, D3DRS_BLENDOP, D3DBLENDOP_ADD);
+			IDirect3DDevice9_SetRenderState(qdx.device, D3DRS_SRCBLEND, srcFactor);
+			IDirect3DDevice9_SetRenderState(qdx.device, D3DRS_DESTBLEND, dstFactor);
+
+			//qglEnable( GL_BLEND );
+			//qglBlendFunc( srcFactor, dstFactor );
 		} else
 		{
-			qglDisable( GL_BLEND );
+			//qglDisable( GL_BLEND );
+			IDirect3DDevice9_SetRenderState(qdx.device, D3DRS_ALPHABLENDENABLE, FALSE);
 		}
 	}
 
@@ -300,10 +329,12 @@ void GL_State( unsigned long stateBits ) {
 	//
 	if ( diff & GLS_DEPTHMASK_TRUE ) {
 		if ( stateBits & GLS_DEPTHMASK_TRUE ) {
-			qglDepthMask( GL_TRUE );
+			//qglDepthMask( GL_TRUE );
+			IDirect3DDevice9_SetRenderState(qdx.device, D3DRS_ZWRITEENABLE, TRUE);
 		} else
 		{
-			qglDepthMask( GL_FALSE );
+			//qglDepthMask( GL_FALSE );
+			IDirect3DDevice9_SetRenderState(qdx.device, D3DRS_ZWRITEENABLE, FALSE);
 		}
 	}
 
@@ -312,10 +343,12 @@ void GL_State( unsigned long stateBits ) {
 	//
 	if ( diff & GLS_POLYMODE_LINE ) {
 		if ( stateBits & GLS_POLYMODE_LINE ) {
-			qglPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
+			//qglPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
+			IDirect3DDevice9_SetRenderState(qdx.device, D3DRS_FILLMODE, D3DFILL_WIREFRAME);
 		} else
 		{
-			qglPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
+			//qglPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
+			IDirect3DDevice9_SetRenderState(qdx.device, D3DRS_FILLMODE, D3DFILL_SOLID);
 		}
 	}
 
@@ -324,10 +357,12 @@ void GL_State( unsigned long stateBits ) {
 	//
 	if ( diff & GLS_DEPTHTEST_DISABLE ) {
 		if ( stateBits & GLS_DEPTHTEST_DISABLE ) {
-			qglDisable( GL_DEPTH_TEST );
+			//qglDisable( GL_DEPTH_TEST );
+			IDirect3DDevice9_SetRenderState(qdx.device, D3DRS_ZENABLE, FALSE);
 		} else
 		{
-			qglEnable( GL_DEPTH_TEST );
+			//qglEnable( GL_DEPTH_TEST );
+			IDirect3DDevice9_SetRenderState(qdx.device, D3DRS_ZENABLE, TRUE);
 		}
 	}
 
@@ -338,19 +373,29 @@ void GL_State( unsigned long stateBits ) {
 		switch ( stateBits & GLS_ATEST_BITS )
 		{
 		case 0:
-			qglDisable( GL_ALPHA_TEST );
+			//qglDisable( GL_ALPHA_TEST );
+			IDirect3DDevice9_SetRenderState(qdx.device, D3DRS_ALPHATESTENABLE, FALSE);
 			break;
 		case GLS_ATEST_GT_0:
-			qglEnable( GL_ALPHA_TEST );
-			qglAlphaFunc( GL_GREATER, 0.0f );
+			//qglEnable( GL_ALPHA_TEST );
+			IDirect3DDevice9_SetRenderState(qdx.device, D3DRS_ALPHATESTENABLE, TRUE);
+			//qglAlphaFunc( GL_GREATER, 0.0f );
+			IDirect3DDevice9_SetRenderState(qdx.device, D3DRS_ALPHAFUNC, D3DCMP_GREATER);
+			IDirect3DDevice9_SetRenderState(qdx.device, D3DRS_ALPHAREF, 0);
 			break;
 		case GLS_ATEST_LT_80:
-			qglEnable( GL_ALPHA_TEST );
-			qglAlphaFunc( GL_LESS, 0.5f );
+			//qglEnable( GL_ALPHA_TEST );
+			IDirect3DDevice9_SetRenderState(qdx.device, D3DRS_ALPHATESTENABLE, TRUE);
+			//qglAlphaFunc( GL_LESS, 0.5f );
+			IDirect3DDevice9_SetRenderState(qdx.device, D3DRS_ALPHAFUNC, D3DCMP_LESS);
+			IDirect3DDevice9_SetRenderState(qdx.device, D3DRS_ALPHAREF, 127);
 			break;
 		case GLS_ATEST_GE_80:
-			qglEnable( GL_ALPHA_TEST );
-			qglAlphaFunc( GL_GEQUAL, 0.5f );
+			//qglEnable( GL_ALPHA_TEST );
+			IDirect3DDevice9_SetRenderState(qdx.device, D3DRS_ALPHATESTENABLE, TRUE);
+			//qglAlphaFunc( GL_GEQUAL, 0.5f );
+			IDirect3DDevice9_SetRenderState(qdx.device, D3DRS_ALPHAFUNC, D3DCMP_GREATEREQUAL);
+			IDirect3DDevice9_SetRenderState(qdx.device, D3DRS_ALPHAREF, 127);
 			break;
 		default:
 			assert( 0 );
@@ -371,36 +416,51 @@ A player has predicted a teleport, but hasn't arrived yet
 ================
 */
 static void RB_Hyperspace( void ) {
-	float c;
+	//float c;
 
 	if ( !backEnd.isHyperspace ) {
 		// do initialization shit
 	}
 
-	c = ( backEnd.refdef.time & 255 ) / 255.0f;
-	qglClearColor( c, c, c, 1 );
-	qglClear( GL_COLOR_BUFFER_BIT );
+	//c = ( backEnd.refdef.time & 255 ) / 255.0f;
+	//qglClearColor( c, c, c, 1 );
+	//qglClear( GL_COLOR_BUFFER_BIT );
+	DWORD c = backEnd.refdef.time & 255;
+	IDirect3DDevice9_Clear(qdx.device, 0, NULL, D3DCLEAR_ZBUFFER, D3DCOLOR_ARGB(1, c, c, c), 1.0f, 0);
 
 	backEnd.isHyperspace = qtrue;
 }
 
 
 static void SetViewportAndScissor( void ) {
-	qglMatrixMode( GL_PROJECTION );
-	qglLoadMatrixf( backEnd.viewParms.projectionMatrix );
-	qglMatrixMode( GL_MODELVIEW );
+	//qglMatrixMode( GL_PROJECTION );
+	//qglLoadMatrixf( backEnd.viewParms.projectionMatrix );
+	//qglMatrixMode( GL_MODELVIEW );
 
-	// set the window clipping
-	qglViewport(    backEnd.viewParms.viewportX,
+	D3DVIEWPORT9 view = { backEnd.viewParms.viewportX,
 					backEnd.viewParms.viewportY,
 					backEnd.viewParms.viewportWidth,
-					backEnd.viewParms.viewportHeight );
-
-// TODO: insert handling for widescreen?  (when looking through camera)
-	qglScissor(     backEnd.viewParms.viewportX,
+					backEnd.viewParms.viewportHeight,
+					qdx.znear, //todo: check value
+					backEnd.viewParms.zFar };
+	IDirect3DDevice9_SetViewport(qdx.device, &view);
+	RECT scissor = { backEnd.viewParms.viewportX,
 					backEnd.viewParms.viewportY,
 					backEnd.viewParms.viewportWidth,
-					backEnd.viewParms.viewportHeight );
+					backEnd.viewParms.viewportHeight };
+	IDirect3DDevice9_SetScissorRect(qdx.device, &scissor);
+
+//	// set the window clipping
+//	qglViewport(    backEnd.viewParms.viewportX,
+//					backEnd.viewParms.viewportY,
+//					backEnd.viewParms.viewportWidth,
+//					backEnd.viewParms.viewportHeight );
+//
+//// TODO: insert handling for widescreen?  (when looking through camera)
+//	qglScissor(     backEnd.viewParms.viewportX,
+//					backEnd.viewParms.viewportY,
+//					backEnd.viewParms.viewportWidth,
+//					backEnd.viewParms.viewportHeight );
 }
 
 /*
@@ -440,6 +500,8 @@ void RB_BeginDrawingView( void ) {
 
 	// clear relevant buffers
 	clearBits = 0;
+	DWORD clearColor = 0;
+#define qglClearColor(r,g,b,a) clearColor = D3DCOLOR_COLORVALUE((r),(g),(b),(a))
 
 	if ( r_measureOverdraw->integer || r_shadows->integer == 2 ) {
 		clearBits |= GL_STENCIL_BUFFER_BIT;
@@ -521,9 +583,18 @@ void RB_BeginDrawingView( void ) {
 		}
 	}
 
-
+#undef qglClearColor
 	if ( clearBits ) {
-		qglClear( clearBits );
+		DWORD newBits = 0;
+		//qglClear( clearBits );
+		if(clearBits & GL_COLOR_BUFFER_BIT)
+			newBits |= D3DCLEAR_TARGET;
+		if (clearBits & GL_DEPTH_BUFFER_BIT)
+			newBits |= D3DCLEAR_ZBUFFER;
+		if(clearBits & GL_STENCIL_BUFFER_BIT)
+			newBits |= D3DCLEAR_STENCIL;
+
+		IDirect3DDevice9_Clear(qdx.device, 0, NULL, newBits, clearColor, qdx.depth_clear, 0);
 	}
 
 //----(SA)	done
@@ -544,7 +615,7 @@ void RB_BeginDrawingView( void ) {
 	// clip to the plane of the portal
 	if ( backEnd.viewParms.isPortal ) {
 		float plane[4];
-		double plane2[4];
+		float plane2[4];
 
 		plane[0] = backEnd.viewParms.portalPlane.normal[0];
 		plane[1] = backEnd.viewParms.portalPlane.normal[1];
@@ -556,11 +627,16 @@ void RB_BeginDrawingView( void ) {
 		plane2[2] = DotProduct( backEnd.viewParms.or.axis[2], plane );
 		plane2[3] = DotProduct( plane, backEnd.viewParms.or.origin ) - plane[3];
 
-		qglLoadMatrixf( s_flipMatrix );
-		qglClipPlane( GL_CLIP_PLANE0, plane2 );
+		//qglLoadMatrixf( s_flipMatrix ); //todo: check matrix mode stuff
+		//qglClipPlane( GL_CLIP_PLANE0, plane2 );
 		qglEnable( GL_CLIP_PLANE0 );
+		D3DXVECTOR4 out;
+		D3DXVec4Transform(&out, plane2, s_flipMatrix);
+		IDirect3DDevice9_SetClipPlane(qdx.device, 0, &out);
+		IDirect3DDevice9_SetRenderState(qdx.device, D3DRS_CLIPPLANEENABLE, D3DCLIPPLANE0);
 	} else {
 		qglDisable( GL_CLIP_PLANE0 );
+		IDirect3DDevice9_SetRenderState(qdx.device, D3DRS_CLIPPLANEENABLE, 0);
 	}
 }
 
@@ -1107,22 +1183,29 @@ void    RB_SetGL2D( void ) {
 	backEnd.projection2D = qtrue;
 
 	// set 2D virtual screen size
-	qglViewport( 0, 0, glConfig.vidWidth, glConfig.vidHeight );
-	qglScissor( 0, 0, glConfig.vidWidth, glConfig.vidHeight );
-	qglMatrixMode( GL_PROJECTION );
-	qglLoadIdentity();
-	qglOrtho( 0, glConfig.vidWidth, glConfig.vidHeight, 0, 0, 1 );
-	qglMatrixMode( GL_MODELVIEW );
-	qglLoadIdentity();
+	D3DVIEWPORT9 view = { 0, 0, glConfig.vidWidth, glConfig.vidHeight, 0.0f, 1.0f };
+	IDirect3DDevice9_SetViewport(qdx.device, &view);
+	RECT scissor = { 0, 0, glConfig.vidWidth, glConfig.vidHeight };
+	IDirect3DDevice9_SetScissorRect(qdx.device, &scissor);
+	//qglViewport( 0, 0, glConfig.vidWidth, glConfig.vidHeight );
+	//qglScissor( 0, 0, glConfig.vidWidth, glConfig.vidHeight );
+	//qglMatrixMode( GL_PROJECTION );
+	//qglLoadIdentity();
+	//qglOrtho( 0, glConfig.vidWidth, glConfig.vidHeight, 0, 0, 1 );
+	//qglMatrixMode( GL_MODELVIEW );
+	//qglLoadIdentity();
 
 	GL_State( GLS_DEPTHTEST_DISABLE |
 			  GLS_SRCBLEND_SRC_ALPHA |
 			  GLS_DSTBLEND_ONE_MINUS_SRC_ALPHA );
 
-	qglDisable( GL_FOG ); //----(SA)	added
+	//qglDisable( GL_FOG ); //----(SA)	added
+	IDirect3DDevice9_SetRenderState(qdx.device, D3DRS_FOGENABLE, FALSE);
 
-	qglDisable( GL_CULL_FACE );
-	qglDisable( GL_CLIP_PLANE0 );
+	//qglDisable( GL_CULL_FACE );
+	IDirect3DDevice9_SetRenderState(qdx.device, D3DRS_CULLMODE, D3DCULL_NONE);
+	//qglDisable( GL_CLIP_PLANE0 );
+	IDirect3DDevice9_SetRenderState(qdx.device, D3DRS_CLIPPLANEENABLE, 0);
 
 	// set time for 2D shaders
 	backEnd.refdef.time = ri.Milliseconds();
@@ -1169,20 +1252,30 @@ void RE_StretchRaw( int x, int y, int w, int h, int cols, int rows, const byte *
 
 	GL_Bind( tr.scratchImage[client] );
 
+	int texid = tr.scratchImage[client]->texnum - TEXNUM_OFFSET;
 	// if the scratchImage isn't in the format we want, specify it as a new texture
 	if ( cols != tr.scratchImage[client]->width || rows != tr.scratchImage[client]->height ) {
 		tr.scratchImage[client]->width = tr.scratchImage[client]->uploadWidth = cols;
 		tr.scratchImage[client]->height = tr.scratchImage[client]->uploadHeight = rows;
-		qglTexImage2D( GL_TEXTURE_2D, 0, 3, cols, rows, 0, GL_RGBA, GL_UNSIGNED_BYTE, data );
-		qglTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
-		qglTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
-		qglTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP );
-		qglTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP );
+		qdx_texobj_upload(TRUE, texid, FALSE, 0, 3, cols, rows, data);
+		//qglTexImage2D( GL_TEXTURE_2D, 0, 3, cols, rows, 0, GL_RGBA, GL_UNSIGNED_BYTE, data );
+		qdx_textureobj_t *opt = qdx_texobj_acc(texid);
+		if (opt)
+		{
+			opt->flt_min = opt->flt_mag = D3DTEXF_LINEAR;
+			opt->wrap_u = opt->wrap_v = D3DTADDRESS_CLAMP;
+		}
+		qdx_texobj_apply(texid, glState.currenttmu);
+		//qglTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
+		//qglTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
+		//qglTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP );
+		//qglTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP );
 	} else {
 		if ( dirty ) {
 			// otherwise, just subimage upload it so that drivers can tell we are going to be changing
 			// it and don't try and do a texture compression
-			qglTexSubImage2D( GL_TEXTURE_2D, 0, 0, 0, cols, rows, GL_RGBA, GL_UNSIGNED_BYTE, data );
+			//qglTexSubImage2D( GL_TEXTURE_2D, 0, 0, 0, cols, rows, GL_RGBA, GL_UNSIGNED_BYTE, data );
+			qdx_texobj_upload(FALSE, texid, FALSE, 0, 0, cols, rows, data);
 		}
 	}
 
@@ -1193,18 +1286,42 @@ void RE_StretchRaw( int x, int y, int w, int h, int cols, int rows, const byte *
 
 	RB_SetGL2D();
 
-	qglColor3f( tr.identityLight, tr.identityLight, tr.identityLight );
+	D3DCOLOR color = D3DCOLOR_COLORVALUE(tr.identityLight, tr.identityLight, tr.identityLight, 1.0f);
+	//qglColor3f( tr.identityLight, tr.identityLight, tr.identityLight );
 
-	qglBegin( GL_QUADS );
-	qglTexCoord2f( 0.5f / cols,  0.5f / rows );
-	qglVertex2f( x, y );
-	qglTexCoord2f( ( cols - 0.5f ) / cols,  0.5f / rows );
-	qglVertex2f( x + w, y );
-	qglTexCoord2f( ( cols - 0.5f ) / cols, ( rows - 0.5f ) / rows );
-	qglVertex2f( x + w, y + h );
-	qglTexCoord2f( 0.5f / cols, ( rows - 0.5f ) / rows );
-	qglVertex2f( x, y + h );
-	qglEnd();
+	fvf_2dvertcoltex_t rbuf[] =
+	{
+		{ x, y + h, VERT2D_ZVAL, VERT2D_RHVVAL, color, 0.5f / cols, (rows - 0.5f) / rows },
+		{ x, y, VERT2D_ZVAL, VERT2D_RHVVAL, color, 0.5f / cols,  0.5f / rows },
+		{ x + w, y, VERT2D_ZVAL, VERT2D_RHVVAL, color, (cols - 0.5f) / cols,  0.5f / rows },
+		{ x + w, y + h, VERT2D_ZVAL, VERT2D_RHVVAL, color, (cols - 0.5f) / cols, (rows - 0.5f) / rows },
+	};
+
+	//qdx_vbuffer_t b = qdx_vbuffer_upload(FVF_2DVERTCOLTEX, sizeof(rbuf), rbuf);
+
+	DX9_BEGIN_SCENE();
+	
+	IDirect3DDevice9_SetFVF(qdx.device, FVF_2DVERTCOLTEX);
+
+	//IDirect3DDevice9_SetStreamSource(qdx.device, 0, b, 0, sizeof(fvf_2dvertcoltex_t));
+	//IDirect3DDevice9_DrawPrimitive(qdx.device, D3DPT_TRIANGLEFAN, 0, 2);
+
+	IDirect3DDevice9_DrawPrimitiveUP(qdx.device, D3DPT_TRIANGLEFAN, 2, rbuf, sizeof(fvf_2dvertcoltex_t));
+
+	DX9_END_SCENE();
+
+	//qdx_vbuffer_release(b);
+
+	//qglBegin( GL_QUADS );
+	//qglTexCoord2f( 0.5f / cols,  0.5f / rows );
+	//qglVertex2f( x, y );
+	//qglTexCoord2f( ( cols - 0.5f ) / cols,  0.5f / rows );
+	//qglVertex2f( x + w, y );
+	//qglTexCoord2f( ( cols - 0.5f ) / cols, ( rows - 0.5f ) / rows );
+	//qglVertex2f( x + w, y + h );
+	//qglTexCoord2f( 0.5f / cols, ( rows - 0.5f ) / rows );
+	//qglVertex2f( x, y + h );
+	//qglEnd();
 }
 
 
@@ -1214,22 +1331,32 @@ void RE_UploadCinematic( int w, int h, int cols, int rows, const byte *data, int
 
 	GL_Bind( tr.scratchImage[client] );
 
+	int texid = tr.scratchImage[client]->texnum - TEXNUM_OFFSET;
 	// if the scratchImage isn't in the format we want, specify it as a new texture
 	if ( cols != tr.scratchImage[client]->width || rows != tr.scratchImage[client]->height ) {
 		tr.scratchImage[client]->width = tr.scratchImage[client]->uploadWidth = cols;
 		tr.scratchImage[client]->height = tr.scratchImage[client]->uploadHeight = rows;
-		qglTexImage2D( GL_TEXTURE_2D, 0, 3, cols, rows, 0, GL_RGBA, GL_UNSIGNED_BYTE, data );
-		qglTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
-		qglTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
-		qglTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP );
-		qglTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP );
+		qdx_texobj_upload(TRUE, texid, FALSE, 0, GL_RGBA, cols, rows, data);
+		//qglTexImage2D( GL_TEXTURE_2D, 0, 3, cols, rows, 0, GL_RGBA, GL_UNSIGNED_BYTE, data );
+		qdx_textureobj_t *opt = qdx_texobj_acc(texid);
+		if (opt)
+		{
+			opt->flt_min = opt->flt_mag = D3DTEXF_LINEAR;
+			opt->wrap_u = opt->wrap_v = D3DTADDRESS_CLAMP;
+		}
+		//qglTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
+		//qglTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
+		//qglTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP );
+		//qglTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP );
 	} else {
 		if ( dirty ) {
 			// otherwise, just subimage upload it so that drivers can tell we are going to be changing
 			// it and don't try and do a texture compression
-			qglTexSubImage2D( GL_TEXTURE_2D, 0, 0, 0, cols, rows, GL_RGBA, GL_UNSIGNED_BYTE, data );
+			//qglTexSubImage2D( GL_TEXTURE_2D, 0, 0, 0, cols, rows, GL_RGBA, GL_UNSIGNED_BYTE, data );
+			qdx_texobj_upload(FALSE, texid, FALSE, 0, GL_RGBA, cols, rows, data);
 		}
 	}
+	qdx_texobj_apply(texid, glState.currenttmu);
 }
 
 
@@ -1240,6 +1367,8 @@ RB_SetColor
 =============
 */
 const void  *RB_SetColor( const void *data ) {
+	function_called(__func__);
+
 	const setColorCommand_t *cmd;
 
 	cmd = (const setColorCommand_t *)data;
@@ -1258,6 +1387,8 @@ RB_StretchPic
 =============
 */
 const void *RB_StretchPic( const void *data ) {
+	function_called(__func__);
+
 	const stretchPicCommand_t   *cmd;
 	shader_t *shader;
 	int numVerts, numIndexes;
@@ -1334,6 +1465,8 @@ RB_StretchPicGradient
 ==============
 */
 const void *RB_StretchPicGradient( const void *data ) {
+	function_called(__func__);
+
 	const stretchPicCommand_t   *cmd;
 	shader_t *shader;
 	int numVerts, numIndexes;
@@ -1417,6 +1550,8 @@ RB_DrawSurfs
 =============
 */
 const void  *RB_DrawSurfs( const void *data ) {
+	function_called(__func__);
+
 	const drawSurfsCommand_t    *cmd;
 
 	// finish any 2D drawing if needed
@@ -1442,6 +1577,8 @@ RB_DrawBuffer
 =============
 */
 const void  *RB_DrawBuffer( const void *data ) {
+	function_called(__func__);
+
 	const drawBufferCommand_t   *cmd;
 
 	cmd = (const drawBufferCommand_t *)data;
@@ -1450,8 +1587,9 @@ const void  *RB_DrawBuffer( const void *data ) {
 
 	// clear screen for debugging
 	if ( r_clear->integer ) {
-		qglClearColor( 1, 0, 0.5, 1 );
-		qglClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
+		//qglClearColor( 1, 0, 0.5, 1 );
+		//qglClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
+		IDirect3DDevice9_Clear(qdx.device, 0, NULL, D3DCLEAR_TARGET| D3DCLEAR_ZBUFFER, D3DCOLOR_COLORVALUE(1, 0, 0.5, 1), qdx.depth_clear, 0);
 	}
 
 	return (const void *)( cmd + 1 );
@@ -1477,7 +1615,8 @@ void RB_ShowImages( void ) {
 		RB_SetGL2D();
 	}
 
-	qglClear( GL_COLOR_BUFFER_BIT );
+	//qglClear( GL_COLOR_BUFFER_BIT );
+	IDirect3DDevice9_Clear(qdx.device, 0, NULL, D3DCLEAR_TARGET, D3DCOLOR_XRGB(0, 0, 0), qdx.depth_clear, 0);
 
 	qglFinish();
 
@@ -1500,16 +1639,42 @@ void RB_ShowImages( void ) {
 		}
 
 		GL_Bind( image );
-		qglBegin( GL_QUADS );
-		qglTexCoord2f( 0, 0 );
-		qglVertex2f( x, y );
-		qglTexCoord2f( 1, 0 );
-		qglVertex2f( x + w, y );
-		qglTexCoord2f( 1, 1 );
-		qglVertex2f( x + w, y + h );
-		qglTexCoord2f( 0, 1 );
-		qglVertex2f( x, y + h );
-		qglEnd();
+
+		D3DCOLOR color = D3DCOLOR_XRGB(255, 255, 255);
+
+		fvf_2dvertcoltex_t rbuf[] =
+		{
+			{ x, y + h, VERT2D_ZVAL, VERT2D_RHVVAL, 0, 1 },
+			{ x, y, VERT2D_ZVAL, VERT2D_RHVVAL, color, 0, 0 },
+			{ x + w, y, VERT2D_ZVAL, VERT2D_RHVVAL, color, 1,  0 },
+			{ x + w, y + h, VERT2D_ZVAL, VERT2D_RHVVAL, color, 1, 1 },
+		};
+
+		//qdx_vbuffer_t b = qdx_vbuffer_upload(FVF_2DVERTCOLTEX, sizeof(rbuf), rbuf);
+
+		DX9_BEGIN_SCENE();
+
+		IDirect3DDevice9_SetFVF(qdx.device, FVF_2DVERTCOLTEX);
+
+		//IDirect3DDevice9_SetStreamSource(qdx.device, 0, b, 0, sizeof(fvf_2dvertcoltex_t));
+		//IDirect3DDevice9_DrawPrimitive(qdx.device, D3DPT_TRIANGLEFAN, 0, 2);
+
+		IDirect3DDevice9_DrawPrimitiveUP(qdx.device, D3DPT_TRIANGLEFAN, 2, rbuf, sizeof(fvf_2dvertcoltex_t));
+
+		DX9_END_SCENE();
+
+		//qdx_vbuffer_release(b);
+
+		//qglBegin( GL_QUADS );
+		//qglTexCoord2f( 0, 0 );
+		//qglVertex2f( x, y );
+		//qglTexCoord2f( 1, 0 );
+		//qglVertex2f( x + w, y );
+		//qglTexCoord2f( 1, 1 );
+		//qglVertex2f( x + w, y + h );
+		//qglTexCoord2f( 0, 1 );
+		//qglVertex2f( x, y + h );
+		//qglEnd();
 	}
 
 	qglFinish();
@@ -1527,6 +1692,8 @@ RB_SwapBuffers
 =============
 */
 const void  *RB_SwapBuffers( const void *data ) {
+	function_called(__func__);
+
 	const swapBuffersCommand_t  *cmd;
 
 	// finish any 2D drawing if needed
