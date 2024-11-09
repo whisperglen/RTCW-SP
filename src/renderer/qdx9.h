@@ -95,6 +95,9 @@ typedef LPDIRECT3DVERTEXBUFFER9 qdx_vbuffer_t;
 qdx_vbuffer_t qdx_vbuffer_upload(UINT fvfid, UINT size, void *data);
 void qdx_vbuffer_release(qdx_vbuffer_t buf);
 
+
+HRESULT qdx_compress_texture(int width, int height, const void *indata, void *outdata, int inbits, int outpitch);
+
 #ifdef __cplusplus
 } //extern "C"
 #endif

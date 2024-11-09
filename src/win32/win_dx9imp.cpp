@@ -1139,7 +1139,7 @@ static void GLW_InitExtensions(void) {
 	// GL_S3_s3tc
 	// RF, check for GL_EXT_texture_compression_s3tc
 #define TEX_FMT(X) qdx.d3d->CheckDeviceFormat(qdx.adapter_num, D3DDEVTYPE_HAL, qdx.desktop.Format, 0, D3DRTYPE_TEXTURE, (X))
-	if (SUCCEEDED(TEX_FMT(D3DFMT_DXT1)) && SUCCEEDED(TEX_FMT(D3DFMT_DXT3)) && SUCCEEDED(TEX_FMT(D3DFMT_DXT5))) {
+	if (/*SUCCEEDED(TEX_FMT(D3DFMT_DXT1)) && SUCCEEDED(TEX_FMT(D3DFMT_DXT3)) &&*/ SUCCEEDED(TEX_FMT(D3DFMT_DXT5))) {
 		if (r_ext_compressed_textures->integer) {
 			glConfig.textureCompression = TC_EXT_COMP_S3TC;
 			ri.Printf(PRINT_ALL, "...using texture_compression_s3tc\n");
@@ -1911,40 +1911,30 @@ UINT qdx_texture_fmtbits(D3DFORMAT fmt)
 D3DFORMAT qdx_texture_format(UINT in)
 {
 	D3DFORMAT ret = D3DFMT_UNKNOWN;
-	UINT b = 0;
 
 	switch (in)
 	{
 	case GL_RGBA8:
 		ret = D3DFMT_A8R8G8B8;
-		b = 32;
 		break;
 	case GL_RGBA4:
 		ret = D3DFMT_A4R4G4B4;
-		b = 16;
 		break;
 	case GL_COMPRESSED_RGBA_S3TC_DXT5_EXT:
-		//todo: compress texture
-		//ret = D3DFMT_DXT5;
-		//b = 8;
-		ret = D3DFMT_A8R8G8B8;
-		b = 32;
+		ret = D3DFMT_DXT5;
+		//ret = D3DFMT_A8R8G8B8;
 		break;
 	case GL_RGB8:
 		ret = D3DFMT_X8R8G8B8;
-		b = 32;
 		break;
 	case GL_RGB5:
 		ret = D3DFMT_R5G6B5;
-		b = 16;
 		break;
 	case 3:
 		ret = D3DFMT_X8R8G8B8;
-		b = 24;
 		break;
 	case 4:
 		ret = D3DFMT_A8R8G8B8;
-		b = 32;
 		break;
 	}
 
@@ -2012,7 +2002,7 @@ void qdx_texobj_upload(BOOL createNew, int id, BOOL usemips, int miplvl, int for
 				*out = D3DCOLOR_ARGB(in[3], in[0], in[1], in[2]);
 			}
 		}
-		if (dxfmt == D3DFMT_X8R8G8B8)
+		else if (dxfmt == D3DFMT_X8R8G8B8)
 		{
 			uint32_t *out = (uint32_t*)lr.pBits;
 			const byte *in = (const byte*)data;
@@ -2046,9 +2036,18 @@ void qdx_texobj_upload(BOOL createNew, int id, BOOL usemips, int miplvl, int for
 				*out = (r | g | b);
 			}
 		}
+		else if (dxfmt == D3DFMT_DXT5)
+		{
+			HRESULT hr = qdx_compress_texture(width, height, data, lr.pBits, elembits, lr.Pitch);
+			if (FAILED(hr))
+			{
+				ri.Printf(PRINT_ERROR, "Texture compress fail: fmt%d w%d h%d l%d/%d m%d c%d\n", dxfmt, width, height,
+					levels, tex->GetLevelCount(), miplvl, HRESULT_CODE(hr));
+			}
+		}
 		else
 		{
-			//todo DXT5 encoder
+			//well if we do not know the fmmt, elembits is zero, so nothing is set
 			memset(lr.pBits, 0, (elems * elembits) / 8);
 		}
 		tex->UnlockRect(0);
@@ -2197,4 +2196,37 @@ qdx_vbuffer_t qdx_vbuffer_upload(UINT fvfid, UINT size, void *data)
 void qdx_vbuffer_release(qdx_vbuffer_t buf)
 {
 	buf->Release();
+}
+
+
+/**
+* This will load dxgi and dx11 and dx12 headers and contaminate the namespace with all that new directx info;
+*  implement the bare minimum here, or move it to another cpp file.
+*/
+#include "../renderer/DirectXTex/DirectXTex.h"
+
+namespace DirectX {
+	HRESULT CompressBC(
+		const Image& image,
+		const Image& result,
+		uint32_t bcflags,
+		TEX_FILTER_FLAGS srgb,
+		float threshold,
+		const std::function<bool __cdecl(size_t, size_t)>& statusCallback) noexcept;
+}
+
+HRESULT qdx_compress_texture(int width, int height, const void *indata, void *outdata, int inbits, int outpitch)
+{
+	DirectX::Image in, out;
+	in.width = out.width = width;
+	in.height = out.height = height;
+	in.format = DXGI_FORMAT_R8G8B8A8_UNORM;
+	out.format = DXGI_FORMAT_BC3_UNORM;
+	in.rowPitch = 4 * width;
+	in.slicePitch = 4 * width * height;
+	out.rowPitch = outpitch;
+	out.slicePitch = (width * height * inbits) / 8;
+	in.pixels = (uint8_t*)indata;
+	out.pixels = (uint8_t*)outdata;
+	return DirectX::CompressBC(in, out, 0, DirectX::TEX_FILTER_DEFAULT, 0, nullptr);
 }
