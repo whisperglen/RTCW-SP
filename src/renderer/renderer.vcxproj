@@ -114,6 +114,7 @@
     </Bscmake>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <None Include="DirectXTex\DirectXTex.inl" />
     <None Include="ref_trin.def" />
   </ItemGroup>
   <ItemGroup>
@@ -200,6 +201,8 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="..\win32\win_qgl_dummy.c" />
+    <ClCompile Include="DirectXTex\BC.cpp" />
+    <ClCompile Include="DirectXTex\DirectXTexCompress.cpp" />
     <ClCompile Include="helpers.cpp" />
     <ClCompile Include="tr_animation.c" />
     <ClCompile Include="tr_backend.c" />
@@ -301,6 +304,10 @@
     <ClInclude Include="..\win32\resource.h" />
     <ClInclude Include="..\win32\win_local.h" />
     <ClInclude Include="anorms256.h" />
+    <ClInclude Include="DirectXTex\BC.h" />
+    <ClInclude Include="DirectXTex\DirectXTex.h" />
+    <ClInclude Include="DirectXTex\DirectXTexP.h" />
+    <ClInclude Include="DirectXTex\scoped.h" />
     <ClInclude Include="qgl.h" />
     <ClInclude Include="qdx9.h" />
     <ClInclude Include="tr_local.h" />

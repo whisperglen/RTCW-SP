@@ -28,10 +28,16 @@
       <UniqueIdentifier>{10d74e12-dcd2-4171-80f7-40ee66e5a72c}</UniqueIdentifier>
       <Extensions>.h</Extensions>
     </Filter>
+    <Filter Include="Source Files\DirectXTex">
+      <UniqueIdentifier>{c61a6990-3111-40c3-97fe-59e187c05bac}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <None Include="ref_trin.def">
       <Filter>Source Files</Filter>
+    </None>
+    <None Include="DirectXTex\DirectXTex.inl">
+      <Filter>Source Files\DirectXTex</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>
@@ -332,6 +338,12 @@
     <ClCompile Include="helpers.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="DirectXTex\BC.cpp">
+      <Filter>Source Files\DirectXTex</Filter>
+    </ClCompile>
+    <ClCompile Include="DirectXTex\DirectXTexCompress.cpp">
+      <Filter>Source Files\DirectXTex</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="anorms256.h">
@@ -567,6 +579,18 @@
     </ClInclude>
     <ClInclude Include="qdx9.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="DirectXTex\BC.h">
+      <Filter>Source Files\DirectXTex</Filter>
+    </ClInclude>
+    <ClInclude Include="DirectXTex\DirectXTex.h">
+      <Filter>Source Files\DirectXTex</Filter>
+    </ClInclude>
+    <ClInclude Include="DirectXTex\DirectXTexP.h">
+      <Filter>Source Files\DirectXTex</Filter>
+    </ClInclude>
+    <ClInclude Include="DirectXTex\scoped.h">
+      <Filter>Source Files\DirectXTex</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
