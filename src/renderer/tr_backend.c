@@ -64,7 +64,7 @@ void GL_Bind( image_t *image ) {
 			image->frameUsed = tr.frameCount;
 		}
 		glState.currenttextures[glState.currenttmu] = texnum;
-		qdx_texobj_apply(texnum - TEXNUM_OFFSET, glState.currenttmu);
+		qdx_fvf_texid(texnum - TEXNUM_OFFSET, glState.currenttmu);
 		//qglBindTexture( GL_TEXTURE_2D, texnum );
 	}
 }
@@ -113,14 +113,14 @@ void GL_BindMultitexture( image_t *image0, GLuint env0, image_t *image1, GLuint 
 		image1->frameUsed = tr.frameCount;
 		glState.currenttextures[1] = texnum1;
 		//qglBindTexture( GL_TEXTURE_2D, texnum1 );
-		qdx_texobj_apply(texnum1 - TEXNUM_OFFSET, 1);
+		qdx_fvf_texid(texnum1 - TEXNUM_OFFSET, 1);
 	}
 	if ( glState.currenttextures[0] != texnum0 ) {
 		GL_SelectTexture( 0 );
 		image0->frameUsed = tr.frameCount;
 		glState.currenttextures[0] = texnum0;
 		//qglBindTexture( GL_TEXTURE_2D, texnum0 );
-		qdx_texobj_apply(texnum0 - TEXNUM_OFFSET, 0);
+		qdx_fvf_texid(texnum0 - TEXNUM_OFFSET, 0);
 	}
 }
 
@@ -486,6 +486,7 @@ void RB_BeginDrawingView( void ) {
 	// we will need to change the projection matrix before drawing
 	// 2D images again
 	backEnd.projection2D = qfalse;
+	qdx_fvf_set2d(FALSE);
 
 	//
 	// set the modelview matrix for the viewer
@@ -632,11 +633,11 @@ void RB_BeginDrawingView( void ) {
 		qglEnable( GL_CLIP_PLANE0 );
 		D3DXVECTOR4 out;
 		D3DXVec4Transform(&out, plane2, s_flipMatrix);
-		IDirect3DDevice9_SetClipPlane(qdx.device, 0, &out);
-		IDirect3DDevice9_SetRenderState(qdx.device, D3DRS_CLIPPLANEENABLE, D3DCLIPPLANE0);
+		//IDirect3DDevice9_SetClipPlane(qdx.device, 0, &out);
+		//IDirect3DDevice9_SetRenderState(qdx.device, D3DRS_CLIPPLANEENABLE, D3DCLIPPLANE0);
 	} else {
 		qglDisable( GL_CLIP_PLANE0 );
-		IDirect3DDevice9_SetRenderState(qdx.device, D3DRS_CLIPPLANEENABLE, 0);
+		//IDirect3DDevice9_SetRenderState(qdx.device, D3DRS_CLIPPLANEENABLE, 0);
 	}
 }
 
@@ -1181,6 +1182,7 @@ RB_SetGL2D
 */
 void    RB_SetGL2D( void ) {
 	backEnd.projection2D = qtrue;
+	qdx_fvf_set2d(TRUE);
 
 	// set 2D virtual screen size
 	D3DVIEWPORT9 view = { 0, 0, glConfig.vidWidth, glConfig.vidHeight, 0.0f, 1.0f };
@@ -1259,13 +1261,8 @@ void RE_StretchRaw( int x, int y, int w, int h, int cols, int rows, const byte *
 		tr.scratchImage[client]->height = tr.scratchImage[client]->uploadHeight = rows;
 		qdx_texobj_upload(TRUE, texid, FALSE, 0, 3, cols, rows, data);
 		//qglTexImage2D( GL_TEXTURE_2D, 0, 3, cols, rows, 0, GL_RGBA, GL_UNSIGNED_BYTE, data );
-		qdx_textureobj_t *opt = qdx_texobj_acc(texid);
-		if (opt)
-		{
-			opt->flt_min = opt->flt_mag = D3DTEXF_LINEAR;
-			opt->wrap_u = opt->wrap_v = D3DTADDRESS_CLAMP;
-		}
-		qdx_texobj_apply(texid, glState.currenttmu);
+		qdx_texobj_setparam(texid, TEXP_FLT_MIN | TEXP_FLT_MAG, D3DTEXF_LINEAR);
+		qdx_texobj_setparam(texid, TEXP_WRAP_U | TEXP_WRAP_V, D3DTADDRESS_CLAMP);
 		//qglTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
 		//qglTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
 		//qglTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP );
@@ -1291,17 +1288,19 @@ void RE_StretchRaw( int x, int y, int w, int h, int cols, int rows, const byte *
 
 	fvf_2dvertcoltex_t rbuf[] =
 	{
-		{ x, y + h, VERT2D_ZVAL, VERT2D_RHVVAL, color, 0.5f / cols, (rows - 0.5f) / rows },
 		{ x, y, VERT2D_ZVAL, VERT2D_RHVVAL, color, 0.5f / cols,  0.5f / rows },
 		{ x + w, y, VERT2D_ZVAL, VERT2D_RHVVAL, color, (cols - 0.5f) / cols,  0.5f / rows },
 		{ x + w, y + h, VERT2D_ZVAL, VERT2D_RHVVAL, color, (cols - 0.5f) / cols, (rows - 0.5f) / rows },
+		{ x, y + h, VERT2D_ZVAL, VERT2D_RHVVAL, color, 0.5f / cols, (rows - 0.5f) / rows },
 	};
 
 	//qdx_vbuffer_t b = qdx_vbuffer_upload(FVF_2DVERTCOLTEX, sizeof(rbuf), rbuf);
 
 	DX9_BEGIN_SCENE();
 	
-	IDirect3DDevice9_SetFVF(qdx.device, FVF_2DVERTCOLTEX);
+	IDirect3DDevice9_SetFVF(qdx.device, FVFID_2DVERTCOLTEX);
+
+	qdx_texobj_apply(texid, 0);
 
 	//IDirect3DDevice9_SetStreamSource(qdx.device, 0, b, 0, sizeof(fvf_2dvertcoltex_t));
 	//IDirect3DDevice9_DrawPrimitive(qdx.device, D3DPT_TRIANGLEFAN, 0, 2);
@@ -1338,12 +1337,8 @@ void RE_UploadCinematic( int w, int h, int cols, int rows, const byte *data, int
 		tr.scratchImage[client]->height = tr.scratchImage[client]->uploadHeight = rows;
 		qdx_texobj_upload(TRUE, texid, FALSE, 0, GL_RGBA, cols, rows, data);
 		//qglTexImage2D( GL_TEXTURE_2D, 0, 3, cols, rows, 0, GL_RGBA, GL_UNSIGNED_BYTE, data );
-		qdx_textureobj_t *opt = qdx_texobj_acc(texid);
-		if (opt)
-		{
-			opt->flt_min = opt->flt_mag = D3DTEXF_LINEAR;
-			opt->wrap_u = opt->wrap_v = D3DTADDRESS_CLAMP;
-		}
+		qdx_texobj_setparam(texid, TEXP_FLT_MIN | TEXP_FLT_MAG, D3DTEXF_LINEAR);
+		qdx_texobj_setparam(texid, TEXP_WRAP_U | TEXP_WRAP_V, D3DTADDRESS_CLAMP);
 		//qglTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
 		//qglTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
 		//qglTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP );
@@ -1356,7 +1351,6 @@ void RE_UploadCinematic( int w, int h, int cols, int rows, const byte *data, int
 			qdx_texobj_upload(FALSE, texid, FALSE, 0, GL_RGBA, cols, rows, data);
 		}
 	}
-	qdx_texobj_apply(texid, glState.currenttmu);
 }
 
 
@@ -1644,17 +1638,19 @@ void RB_ShowImages( void ) {
 
 		fvf_2dvertcoltex_t rbuf[] =
 		{
-			{ x, y + h, VERT2D_ZVAL, VERT2D_RHVVAL, 0, 1 },
 			{ x, y, VERT2D_ZVAL, VERT2D_RHVVAL, color, 0, 0 },
 			{ x + w, y, VERT2D_ZVAL, VERT2D_RHVVAL, color, 1,  0 },
 			{ x + w, y + h, VERT2D_ZVAL, VERT2D_RHVVAL, color, 1, 1 },
+			{ x, y + h, VERT2D_ZVAL, VERT2D_RHVVAL, 0, 1 },
 		};
 
 		//qdx_vbuffer_t b = qdx_vbuffer_upload(FVF_2DVERTCOLTEX, sizeof(rbuf), rbuf);
 
 		DX9_BEGIN_SCENE();
 
-		IDirect3DDevice9_SetFVF(qdx.device, FVF_2DVERTCOLTEX);
+		IDirect3DDevice9_SetFVF(qdx.device, FVFID_2DVERTCOLTEX);
+
+		qdx_texobj_apply(image->texnum - TEXNUM_OFFSET, 0);
 
 		//IDirect3DDevice9_SetStreamSource(qdx.device, 0, b, 0, sizeof(fvf_2dvertcoltex_t));
 		//IDirect3DDevice9_DrawPrimitive(qdx.device, D3DPT_TRIANGLEFAN, 0, 2);
@@ -1736,6 +1732,7 @@ const void  *RB_SwapBuffers( const void *data ) {
 	GPUimp_EndFrame();
 
 	backEnd.projection2D = qfalse;
+	qdx_fvf_set2d(FALSE);
 
 	return (const void *)( cmd + 1 );
 }

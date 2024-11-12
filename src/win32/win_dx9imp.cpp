@@ -57,9 +57,9 @@ typedef struct
 	WNDPROC wndproc;
 
 	HDC hDC;                // handle to device context
-	HGLRC hGLRC;            // handle to GL rendering context
+	//HGLRC hGLRC;            // handle to GL rendering context
 
-	HINSTANCE hinstOpenGL;  // HINSTANCE for the OpenGL library
+	//HINSTANCE hinstOpenGL;  // HINSTANCE for the OpenGL library
 
 	qboolean allowdisplaydepthchange;
 	qboolean pixelFormatSet;
@@ -69,7 +69,7 @@ typedef struct
 
 	qboolean cdsFullscreen;
 
-	FILE *log_fp;
+	//FILE *log_fp;
 } dx9state_t;
 
 static void DX9imp_CheckHardwareGamma(void);
@@ -1618,10 +1618,10 @@ void DX9imp_Shutdown(void) {
 	}
 
 	// close the r_logFile
-	if (dx9imp_state.log_fp) {
-		fclose(dx9imp_state.log_fp);
-		dx9imp_state.log_fp = 0;
-	}
+	//if (dx9imp_state.log_fp) {
+	//	fclose(dx9imp_state.log_fp);
+	//	dx9imp_state.log_fp = 0;
+	//}
 
 	// reset display settings
 	if (dx9imp_state.cdsFullscreen) {
@@ -1640,11 +1640,11 @@ void DX9imp_Shutdown(void) {
 /*
 ** GLimp_LogComment
 */
-void DX9imp_LogComment(char *comment) {
-	if (dx9imp_state.log_fp) {
-		fprintf(dx9imp_state.log_fp, "%s", comment);
-	}
-}
+//void DX9imp_LogComment(char *comment) {
+//	if (dx9imp_state.log_fp) {
+//		fprintf(dx9imp_state.log_fp, "%s", comment);
+//	}
+//}
 
 static D3DGAMMARAMP s_oldHardwareGamma;
 static bool gammaCalibrate = false;
@@ -2074,8 +2074,8 @@ void qdx_texobj_map(int id, textureptr_t tex)
 		if (textures[id].obj != 0)
 		{
 			textures[id].obj->Release();
-			textures[id] = g_cleartex;
 		}
+		textures[id] = g_cleartex;
 		textures[id].obj = tex;
 	}
 }
@@ -2088,8 +2088,13 @@ qdx_textureobj_t qdx_texobj_get(int id)
 	{
 		ret = textures[id];
 	}
+	else if(id == TEXID_NULL)
+	{
+		ret = g_cleartex;
+	}
 	else
 	{
+		assert(FALSE);
 		ret = g_cleartex;
 	}
 
@@ -2104,8 +2109,48 @@ qdx_textureobj_t* qdx_texobj_acc(int id)
 	{
 		ret = &textures[id];
 	}
+	else
+	{
+		assert(FALSE);
+	}
 
 	return ret;
+}
+
+void qdx_texobj_setparam(int id, qdx_texparam_t par, int val)
+{
+	qdx_textureobj_t *obj = qdx_texobj_acc(id);
+	if (obj)
+	{
+		if (id & TEXP_FLT_MIN)
+		{
+			obj->flt_min = val;
+		}
+		if (id & TEXP_FLT_MIP)
+		{
+			obj->flt_mip = (val > D3DTEXF_LINEAR) ? D3DTEXF_LINEAR : val;
+		}
+		if (id & TEXP_FLT_MAG)
+		{
+			obj->flt_mag = val;
+		}
+		if (id & TEXP_ANIS_LVL)
+		{
+			obj->anisotropy = val;
+		}
+		if (id  & TEXP_WRAP_U)
+		{
+			obj->wrap_u = val;
+		}
+		if (id  & TEXP_WRAP_V)
+		{
+			obj->wrap_v = val;
+		}
+	}
+	else
+	{
+		assert(FALSE);
+	}
 }
 
 void qdx_texobj_delete(int id)
@@ -2121,12 +2166,20 @@ void qdx_texobj_delete(int id)
 			ret->Release();
 		}
 	}
+	else
+	{
+		assert(FALSE);
+	}
 }
 
 void qdx_texobj_apply(int id, int sampler)
 {
 	qdx_textureobj_t opt = qdx_texobj_get(id);
-	int sampler_id = sampler >= 0 ? sampler : opt.sampler;
+	int sampler_id;
+	if (sampler == TEXSAMPLER_USECFG)
+		sampler_id = opt.sampler;
+	else
+		sampler_id = sampler;
 
 	if (qdx.device)
 	{
@@ -2137,40 +2190,306 @@ void qdx_texobj_apply(int id, int sampler)
 		qdx.device->SetSamplerState(sampler, D3DSAMP_MAXANISOTROPY, opt.anisotropy);
 		qdx.device->SetSamplerState(sampler, D3DSAMP_ADDRESSU, opt.wrap_u);
 		qdx.device->SetSamplerState(sampler, D3DSAMP_ADDRESSV, opt.wrap_v);
-		qdx.device->SetSamplerState(sampler, D3DSAMP_BORDERCOLOR, opt.border);
+		//qdx.device->SetSamplerState(sampler, D3DSAMP_BORDERCOLOR, opt.border);
 	}
 }
 
 struct fvf_state
 {
+	BOOL is2dprojection;
 	UINT bits;
-	void *vertexes;
-	void *normals;
-	void *colors;
-	void *texcoord[2];
+	const float *vertexes;
+	UINT numverts;
+	UINT strideverts;
+	const float *normals;
+	UINT numnorms;
+	UINT stridenorms;
+	const byte *colors;
+	UINT numcols;
+	UINT stridecols;
+	const float *texcoord[2];
+	UINT numtexcoords[2];
+	UINT stridetexcoords[2];
+	INT textureids[2];
+	DWORD color;
 } g_fvfs = { 0 };
 
-void qdx_fvf_enable(int bits)
+inline void copy_two(float *dst, const float *src)
 {
-	g_fvfs.bits |= bits;
+	dst[0] = src[0];
+	dst[1] = src[1];
 }
 
-void qdx_fvf_disable(int bits)
+inline void copy_xyzrhv(float *dst, const float *src)
 {
-	g_fvfs.bits &= ~bits;
+	dst[0] = src[0];
+	dst[1] = src[1];
+	dst[2] = VERT2D_ZVAL;
+	dst[3] = VERT2D_RHVVAL;
 }
 
-void qdx_fvf_assemble()
+inline void copy_three(float *dst, const float *src)
 {
-	switch (g_fvfs.bits)
+	dst[0] = src[0];
+	dst[1] = src[1];
+	dst[2] = src[2];
+}
+
+inline DWORD abgr_to_argb(const byte *in)
+{
+	DWORD abgr = *((uint32_t*)in);
+	DWORD axgx = abgr & 0xff00ff00;
+	DWORD r = abgr & 0xff;
+	DWORD b = (abgr & 0xff0000) >> 16;
+	return (axgx | (r << 16) | b);
+}
+
+#define GFVF_VERTELEM(IDX) (g_fvfs.vertexes + (IDX) * g_fvfs.strideverts)
+#define GFVF_NORMELEM(IDX) (g_fvfs.normals + (IDX) * g_fvfs.stridenorms)
+#define GFVF_COLRELEM(IDX) (g_fvfs.colors + (IDX) * g_fvfs.stridecols)
+#define GFVF_TEX0ELEM(IDX) (g_fvfs.texcoord[0] + (IDX) * g_fvfs.stridetexcoords[0])
+#define GFVF_TEX1ELEM(IDX) (g_fvfs.texcoord[1] + (IDX) * g_fvfs.stridetexcoords[1])
+
+void qdx_fvf_set2d(BOOL state)
+{
+	g_fvfs.is2dprojection = state;
+}
+void qdx_fvf_texid(int texid, int samplernum)
+{
+	if (0 <= samplernum <= 1)
 	{
-	case FVF_VERTCOL:
-		break;
+		g_fvfs.textureids[samplernum] = texid;
+	}
+	else
+	{
+		assert(FALSE);
 	}
 }
 
-#define ON_FAIL_RET_NULL(X) if(FAILED(X)) { return NULL; }
-#define ON_FAIL_RETURN(X) if(FAILED(X)) { return; }
+void qdx_fvf_color(DWORD color)
+{
+	g_fvfs.color = color;
+}
+
+void qdx_fvf_enable(fvf_param_t param)
+{
+	g_fvfs.bits |= param;
+}
+
+void qdx_fvf_disable(fvf_param_t param)
+{
+	g_fvfs.bits &= ~param;
+}
+
+void qdx_fvf_buffer(fvf_param_t param, const void *buffer, UINT elems, UINT stride)
+{
+	UINT bits = 0;
+	switch (param)
+	{
+	case FVF_VERTEX:
+		g_fvfs.vertexes = (float*)buffer;
+		g_fvfs.numverts = elems;
+		g_fvfs.strideverts = stride;
+		break;
+	case FVF_NORMAL:
+		g_fvfs.normals = (float*)buffer;
+		g_fvfs.numnorms = elems;
+		g_fvfs.stridenorms = stride;
+		break;
+	case FVF_COLOR:
+		g_fvfs.colors = (byte*)buffer;
+		g_fvfs.numcols = elems;
+		g_fvfs.stridecols = stride;
+		break;
+	case FVF_TEX0:
+		g_fvfs.texcoord[0] = (float*)buffer;
+		g_fvfs.numtexcoords[0] = elems;
+		g_fvfs.stridetexcoords[0] = stride;
+		break;
+	case FVF_TEX1:
+		g_fvfs.texcoord[1] = (float*)buffer;
+		g_fvfs.numtexcoords[1] = elems;
+		g_fvfs.stridetexcoords[1] = stride;
+		break;
+	case FVF_TEX0 | FVF_TEX1:
+		g_fvfs.texcoord[0] = (float*)buffer;
+		g_fvfs.numtexcoords[0] = elems;
+		g_fvfs.stridetexcoords[0] = stride;
+		g_fvfs.texcoord[1] = (float*)buffer;
+		g_fvfs.numtexcoords[1] = elems;
+		g_fvfs.stridetexcoords[1] = stride;
+		break;
+	default:
+		return;
+	}
+
+	if (buffer == NULL)
+	{
+		g_fvfs.bits &= ~param;
+	}
+	else
+	{
+		g_fvfs.bits |= param;
+	}
+}
+
+#define ON_FAIL_RET_NULL(X) if(FAILED(X)) { assert(FALSE); return NULL; }
+#define ON_FAIL_RETURN(X) if(FAILED(X)) { assert(FALSE); return; }
+
+void qdx_fvf_assemble_and_draw(UINT numindexes, const qdxIndex_t *indexes)
+{
+	DWORD selected_fvf = FVFID_VERTCOL;
+	UINT stride_fvf = sizeof(fvf_vertcol_t);
+	qdxIndex_t lowindex = SHADER_MAX_INDEXES, highindex = 0;
+	UINT selectionsize = 0;
+
+	if (0 == (g_fvfs.bits & FVF_VERTEX))
+	{
+		//see comment in RE_BeginRegistration for the call to RE_StretchPic
+		//the vertex buffer pointer gets set when RB_StageIteratorGeneric is called, which is triggered by that RE_StretchPic 
+		//todo: I guess this is something we can actually fix now, since we know why it happens
+		return;
+	}
+
+	for (int i = 0; i < numindexes; i++)
+	{
+		UINT index = indexes[i];
+		if (index < lowindex)
+		{
+			lowindex = index;
+		}
+		if (index > highindex)
+		{
+			highindex = index;
+		}
+	}
+	selectionsize = 1 + highindex - lowindex;
+
+
+	LPDIRECT3DINDEXBUFFER9 i_buffer;
+	ON_FAIL_RETURN(qdx.device->CreateIndexBuffer(sizeof(indexes[0]) * numindexes, 0, QDX_INDEX_TYPE, D3DPOOL_MANAGED, &i_buffer, NULL));
+
+	qdxIndex_t *pInd;
+	ON_FAIL_RETURN(i_buffer->Lock(0, 0, (void**)&pInd, 0));
+	for (int i = 0; i < numindexes; i++)
+	{
+		pInd[i] = indexes[i] - lowindex;
+	}
+	i_buffer->Unlock();
+
+	UINT selectionbits = g_fvfs.bits;
+	if (g_fvfs.is2dprojection && (0 != (g_fvfs.bits & FVF_VERTEX)))
+	{
+		selectionbits &= ~FVF_VERTEX;
+		selectionbits |= FVF_2DVERTEX;
+	}
+
+	switch (selectionbits)
+	{
+	case (FVF_VERTEX | FVF_COLOR):
+		selected_fvf = FVFID_VERTCOL;
+		stride_fvf = sizeof(fvf_vertcol_t);
+		break;
+	case (FVF_VERTEX | FVF_TEX0):
+	case (FVF_VERTEX | FVF_COLOR | FVF_TEX0):
+		selected_fvf = FVFID_VERTCOLTEX;
+		stride_fvf = sizeof(fvf_vertcoltex_t);
+		break;
+	case (FVF_2DVERTEX | FVF_COLOR | FVF_TEX0):
+		selected_fvf = FVFID_2DVERTCOLTEX;
+		stride_fvf = sizeof(fvf_2dvertcoltex_t);
+		break;
+		//case (FVF_VERTEX | FVF_TEX0):
+		//	selected_fvf = FVFID_VERTTEX;
+		//	stride_fvf = sizeof(fvf_verttex_t);
+		//	break;
+	case (FVF_VERTEX | FVF_COLOR | FVF_TEX0 | FVF_TEX1):
+		selected_fvf = FVFID_VERTCOLTEX2;
+		stride_fvf = sizeof(fvf_vertcoltex2_t);
+		break;
+	default:
+		assert(FALSE);
+	}
+
+	LPDIRECT3DVERTEXBUFFER9 v_buffer;
+	ON_FAIL_RETURN(qdx.device->CreateVertexBuffer(selectionsize * stride_fvf, 0, selected_fvf, D3DPOOL_MANAGED, &v_buffer, NULL));
+
+	byte *pVert;
+	ON_FAIL_RETURN(v_buffer->Lock(0, 0, (void**)&pVert, 0));
+
+	int vpos = 0;
+	for (int i = lowindex; i <= highindex; i++)
+	{
+		switch (selectionbits)
+		{
+		case (FVF_VERTEX | FVF_COLOR): {
+			fvf_vertcol_t *p = (fvf_vertcol_t *)pVert;
+			copy_three(p->XYZ, GFVF_VERTELEM(i));
+			p->COLOR = abgr_to_argb(GFVF_COLRELEM(i));
+			pVert += sizeof(p[0]);
+			break; }
+		case (FVF_VERTEX | FVF_COLOR | FVF_TEX0): {
+			fvf_vertcoltex_t *p = (fvf_vertcoltex_t *)pVert;
+			copy_three(p->XYZ, GFVF_VERTELEM(i));
+			p->COLOR = abgr_to_argb(GFVF_COLRELEM(i));
+			copy_two(p->UV, GFVF_TEX0ELEM(i));
+			pVert += sizeof(p[0]);
+			break; }
+		case (FVF_2DVERTEX | FVF_COLOR | FVF_TEX0): {
+			fvf_2dvertcoltex_t *p = (fvf_2dvertcoltex_t *)pVert;
+			copy_xyzrhv(p->XYZRHV, GFVF_VERTELEM(i));
+			p->COLOR = abgr_to_argb(GFVF_COLRELEM(i));
+			copy_two(p->UV, GFVF_TEX0ELEM(i));
+			pVert += sizeof(p[0]);
+			break; }
+		case (FVF_VERTEX | FVF_TEX0): {
+			fvf_vertcoltex_t *p = (fvf_vertcoltex_t *)pVert;
+			copy_three(p->XYZ, GFVF_VERTELEM(i));
+			p->COLOR = g_fvfs.color;
+			copy_two(p->UV, GFVF_TEX0ELEM(i));
+			pVert += sizeof(p[0]);
+			break; }
+		case (FVF_VERTEX | FVF_COLOR | FVF_TEX0 | FVF_TEX1): {
+			fvf_vertcoltex2_t *p = (fvf_vertcoltex2_t *)pVert;
+			copy_three(p->XYZ, GFVF_VERTELEM(i));
+			p->COLOR = abgr_to_argb(GFVF_COLRELEM(i));
+			copy_two(p->UV0, GFVF_TEX0ELEM(i));
+			copy_two(p->UV1, GFVF_TEX0ELEM(i));
+			pVert += sizeof(p[0]);
+			break; }
+		}
+
+		vpos++;
+	}
+
+	assert(vpos == selectionsize);
+
+	v_buffer->Unlock();
+
+	//qdx.device->Clear(0, NULL, D3DCLEAR_TARGET, D3DCOLOR_XRGB(0x33, 0x4d, 0x4d), 1.0f, 0);
+	//qdx.device->Clear(0, NULL, D3DCLEAR_ZBUFFER, D3DCOLOR_XRGB(0, 0, 0), 1.0f, 0);
+	//qdx.device->SetRenderState(D3DRS_LIGHTING, FALSE);
+	//qdx.device->SetRenderState(D3DRS_CULLMODE, D3DCULL_NONE);
+
+	qdx.device->BeginScene();
+
+	qdx.device->SetFVF(selected_fvf);
+
+	qdx.device->SetStreamSource(0, v_buffer, 0, stride_fvf);
+	qdx.device->SetIndices(i_buffer);
+
+	if (g_fvfs.bits & FVF_TEX0)
+		qdx_texobj_apply(g_fvfs.textureids[0], 0);
+	if (g_fvfs.bits & FVF_TEX1)
+		qdx_texobj_apply(g_fvfs.textureids[1], 1);
+
+	qdx.device->DrawIndexedPrimitive(D3DPT_TRIANGLELIST, 0, 0, vpos, 0, numindexes / 3);
+	qdx.device->EndScene();
+
+
+	v_buffer->Release();
+	i_buffer->Release();
+}
 
 qdx_vbuffer_t qdx_vbuffer_upload(UINT fvfid, UINT size, void *data)
 {

@@ -2513,12 +2513,14 @@ static void APIENTRY logViewport( GLint x, GLint y, GLsizei width, GLsizei heigh
 ** is only called during a hard shutdown of the OGL subsystem (e.g. vid_restart).
 */
 void QGL_DMY_Shutdown( void ) {
-	ri.Printf( PRINT_ALL, "...shutting down QGL\n" );
+	ri.Printf( PRINT_ALL, "...shutting down fake QGL\n" );
 
-	if ( glw_state.hinstOpenGL ) {
+	QGL_DMY_EnableLogging(qfalse);
+
+	/*if ( glw_state.hinstOpenGL ) {
 		ri.Printf( PRINT_ALL, "...unloading OpenGL DLL\n" );
 		FreeLibrary( glw_state.hinstOpenGL );
-	}
+	}*/
 
 	glw_state.hinstOpenGL = NULL;
 
@@ -2888,7 +2890,7 @@ BOOL WINAPI func_true_vv(void *_p0, void *_p1) { return TRUE; }
 #define GR_NUM_BOARDS 0x0f
 
 #   pragma warning (disable : 4113 4133 4047 )
-#   define GPA( a ) GetProcAddress( glw_state.hinstOpenGL, a )
+//#   define GPA( a ) GetProcAddress( glw_state.hinstOpenGL, a )
 
 /*
 ** QGL_Init
@@ -2900,29 +2902,29 @@ BOOL WINAPI func_true_vv(void *_p0, void *_p1) { return TRUE; }
 ** might be.
 */
 qboolean QGL_DMY_Init( const char *dllname ) {
-	char systemDir[1024];
-	char libName[1024];
+	//char systemDir[1024];
+	//char libName[1024];
 
-	GetSystemDirectory( systemDir, sizeof( systemDir ) );
+	//GetSystemDirectory( systemDir, sizeof( systemDir ) );
 
 	assert( glw_state.hinstOpenGL == 0 );
 
-	ri.Printf( PRINT_ALL, "...initializing QGL\n" );
+	ri.Printf( PRINT_ALL, "...initializing fake QGL\n" );
 
-	if ( dllname[0] != '!' && strstr( dllname, ".dll" ) == NULL ) {
-		Com_sprintf( libName, sizeof( libName ), "%s\\%s", systemDir, dllname );
-	} else
-	{
-		Q_strncpyz( libName, dllname, sizeof( libName ) );
-	}
+	//if ( dllname[0] != '!' && strstr( dllname, ".dll" ) == NULL ) {
+	//	Com_sprintf( libName, sizeof( libName ), "%s\\%s", systemDir, dllname );
+	//} else
+	//{
+	//	Q_strncpyz( libName, dllname, sizeof( libName ) );
+	//}
 
-	ri.Printf( PRINT_ALL, "...calling LoadLibrary( '%s.dll' ): ", libName );
+	//ri.Printf( PRINT_ALL, "...calling LoadLibrary( '%s.dll' ): ", libName );
 
-	if ( ( glw_state.hinstOpenGL = LoadLibrary( dllname ) ) == 0 ) {
-		ri.Printf( PRINT_ALL, "failed\n" );
-		return qfalse;
-	}
-	ri.Printf( PRINT_ALL, "succeeded\n" );
+	//if ( ( glw_state.hinstOpenGL = LoadLibrary( dllname ) ) == 0 ) {
+	//	ri.Printf( PRINT_ALL, "failed\n" );
+	//	return qfalse;
+	//}
+	//ri.Printf( PRINT_ALL, "succeeded\n" );
 
 
 	qglAccum = logAccum;
@@ -3349,6 +3351,12 @@ void QGL_DMY_EnableLogging( qboolean enable ) {
 			fclose( glw_state.log_fp );
 			glw_state.log_fp = NULL;
 		}
+	}
+}
+
+void DX9imp_LogComment(char *comment) {
+	if (glw_state.log_fp) {
+		fprintf(glw_state.log_fp, "%s", comment);
 	}
 }
 

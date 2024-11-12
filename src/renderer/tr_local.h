@@ -47,6 +47,9 @@ typedef unsigned int glIndex_t;
 typedef unsigned short glIndex_t;
 #endif
 
+/* when compile fails here you need to sync glIndex_t and qdxIndex_t; maybe set GL_INDEX_IS_UINT to 0 ? */
+C_ASSERT(sizeof(qdxIndex_t) == sizeof(UINT));
+
 // fast float to int conversion
 #if id386 && !( ( defined __linux__ || defined __FreeBSD__ ) && ( defined __i386__ ) ) // rb010123
 long myftol( float f );

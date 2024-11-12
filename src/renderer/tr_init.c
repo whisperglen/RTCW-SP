@@ -797,6 +797,7 @@ void GL_SetDefaultState( void ) {
 	IDirect3DDevice9_SetRenderState(qdx.device, D3DRS_SCISSORTESTENABLE, TRUE);
 	IDirect3DDevice9_SetRenderState(qdx.device, D3DRS_CULLMODE, D3DCULL_NONE); 
 	IDirect3DDevice9_SetRenderState(qdx.device, D3DRS_ALPHABLENDENABLE, FALSE);
+	IDirect3DDevice9_SetRenderState(qdx.device, D3DRS_LIGHTING, FALSE);
 	
 //----(SA)	added.
 	// ATI pn_triangles

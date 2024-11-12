@@ -196,14 +196,9 @@ void GL_TextureMode( const char *string ) {
 			GL_Bind( glt );
 			//qglTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, gl_filter_min );
 			//qglTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, gl_filter_max );
-			qdx_textureobj_t *opt = qdx_texobj_acc(glt->texnum - TEXNUM_OFFSET);
-			if (opt)
-			{
-				opt->flt_min = gl_filter_min;
-				opt->flt_mip = gl_filter_mip;
-				opt->flt_mag = gl_filter_max;
-			}
-			//todo: apply texture sampler params?
+			qdx_texobj_setparam(glt->texnum - TEXNUM_OFFSET, TEXP_FLT_MIN, gl_filter_min);
+			qdx_texobj_setparam(glt->texnum - TEXNUM_OFFSET, TEXP_FLT_MIP, gl_filter_mip);
+			qdx_texobj_setparam(glt->texnum - TEXNUM_OFFSET, TEXP_FLT_MAG, gl_filter_max);
 		}
 	}
 }
@@ -859,24 +854,21 @@ static void Upload32(   int texnum, unsigned *data,
 	}
 done:
 
-	{
-		qdx_textureobj_t *opt = qdx_texobj_acc(texnum - TEXNUM_OFFSET);
-		if (mipmap) {
-			opt->flt_min = gl_filter_min;
-			opt->flt_mip = gl_filter_mip;
-			opt->flt_mag = gl_filter_max;
-			opt->anisotropy = Com_Clamp(1, glConfig.maxAnisotropy, r_ext_texture_filter_anisotropic->integer);
-			//qglTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, gl_filter_min);
-			//qglTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, gl_filter_max);
-		}
-		else
-		{
-			opt->flt_min = opt->flt_mag = D3DTEXF_LINEAR;
-			opt->anisotropy = Com_Clamp(1, glConfig.maxAnisotropy, r_ext_texture_filter_anisotropic->integer);
-			//qglTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-			//qglTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-		}
+	if (mipmap) {
+		qdx_texobj_setparam(texnum - TEXNUM_OFFSET, TEXP_FLT_MIN, gl_filter_min);
+		qdx_texobj_setparam(texnum - TEXNUM_OFFSET, TEXP_FLT_MIP, gl_filter_mip);
+		qdx_texobj_setparam(texnum - TEXNUM_OFFSET, TEXP_FLT_MAG, gl_filter_max);
+		//qglTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, gl_filter_min);
+		//qglTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, gl_filter_max);
 	}
+	else
+	{
+		qdx_texobj_setparam(texnum - TEXNUM_OFFSET, TEXP_FLT_MIN | TEXP_FLT_MAG, D3DTEXF_LINEAR);
+		//qglTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		//qglTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	}
+	qdx_texobj_setparam(texnum - TEXNUM_OFFSET, TEXP_ANIS_LVL,
+		Com_Clamp(1, glConfig.maxAnisotropy, r_ext_texture_filter_anisotropic->integer));
 
 	GL_CheckErrors();
 
@@ -974,11 +966,7 @@ image_t *R_CreateImageExt( const char *name, const byte *pic, int width, int hei
 			  &image->uploadHeight,
 			  noCompress );
 
-	qdx_textureobj_t *opt = qdx_texobj_acc(image->texnum);
-	if (opt)
-	{
-		opt->wrap_u = opt->wrap_v = qdx_texture_wrapmode(glWrapClampMode);
-	}
+	qdx_texobj_setparam(image->texnum - TEXNUM_OFFSET, TEXP_WRAP_U | TEXP_WRAP_V, qdx_texture_wrapmode(glWrapClampMode));
 	//qglTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, glWrapClampMode );
 	//qglTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, glWrapClampMode );
 
@@ -2464,13 +2452,13 @@ void R_DeleteTextures( void ) {
 		if ( glConfig.maxActiveTextures ) {
 			GL_SelectTexture( 1 );
 			//qglBindTexture( GL_TEXTURE_2D, 0 );
-			qdx_texobj_apply(-1, 1);
+			qdx_fvf_texid(TEXID_NULL, 1);
 			GL_SelectTexture( 0 );
 			//qglBindTexture( GL_TEXTURE_2D, 0 );
-			qdx_texobj_apply(-1, 0);
+			qdx_fvf_texid(TEXID_NULL, 0);
 		} else {
 			//qglBindTexture( GL_TEXTURE_2D, 0 );
-			qdx_texobj_apply(-1, 0);
+			qdx_fvf_texid(TEXID_NULL, 0);
 		}
 	}
 }
@@ -3547,13 +3535,13 @@ void R_PurgeImage( image_t *image ) {
 		if ( glConfig.maxActiveTextures ) {
 			GL_SelectTexture( 1 );
 			//qglBindTexture( GL_TEXTURE_2D, 0 );
-			qdx_texobj_apply(-1, 1);
+			qdx_fvf_texid(TEXID_NULL, 1);
 			GL_SelectTexture( 0 );
 			//qglBindTexture( GL_TEXTURE_2D, 0 );
-			qdx_texobj_apply(-1, 0);
+			qdx_fvf_texid(TEXID_NULL, 0);
 		} else {
 			//qglBindTexture( GL_TEXTURE_2D, 0 );
-			qdx_texobj_apply(-1, 0);
+			qdx_fvf_texid(TEXID_NULL, 0);
 		}
 	}
 }
@@ -3628,13 +3616,13 @@ void R_BackupImages( void ) {
 		if ( glConfig.maxActiveTextures ) {
 			GL_SelectTexture( 1 );
 			//qglBindTexture( GL_TEXTURE_2D, 0 );
-			qdx_texobj_apply(-1, 1);
+			qdx_fvf_texid(TEXID_NULL, 1);
 			GL_SelectTexture( 0 );
 			//qglBindTexture( GL_TEXTURE_2D, 0 );
-			qdx_texobj_apply(-1, 0);
+			qdx_fvf_texid(TEXID_NULL, 0);
 		} else {
 			//qglBindTexture( GL_TEXTURE_2D, 0 );
-			qdx_texobj_apply(-1, 0);
+			qdx_fvf_texid(TEXID_NULL, 0);
 		}
 	}
 }

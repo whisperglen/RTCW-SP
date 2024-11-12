@@ -11,6 +11,13 @@
 extern "C" {
 #endif
 
+#if 1
+#define QDX_INDEX_TYPE D3DFMT_INDEX32
+typedef UINT32 qdxIndex_t;
+#else
+#define QDX_INDEX_TYPE D3DFMT_INDEX16
+typedef UINT16 qdxIndex_t;
+#endif
 struct qdx9_state
 {
 	LPDIRECT3D9 d3d;
@@ -44,8 +51,19 @@ typedef struct qdx_textureobject
 	D3DCOLOR border;
 } qdx_textureobj_t;
 
+typedef enum qdx_texparam
+{
+	TEXP_FLT_MIN,
+	TEXP_FLT_MIP,
+	TEXP_FLT_MAG,
+	TEXP_ANIS_LVL,
+	TEXP_WRAP_U,
+	TEXP_WRAP_V
+} qdx_texparam_t;
+
 void qdx_texobj_upload(BOOL createNew, int id, BOOL usemips, int miplvl, int format, int width, int height, const void *data);
 void qdx_texobj_apply(int id, int sampler);
+void qdx_texobj_setparam(int id, qdx_texparam_t par, int val);
 qdx_textureobj_t qdx_texobj_get(int id);
 qdx_textureobj_t* qdx_texobj_acc(int id);
 void qdx_texobj_delete(int id);
@@ -53,34 +71,70 @@ void qdx_texobj_map(int id, textureptr_t tex);
 D3DFORMAT qdx_texture_format(UINT in);
 D3DTEXTUREADDRESS qdx_texture_wrapmode(int gl_mode);
 
-void qdx_fvf_enable(int bits);
-void qdx_fvf_disable(int bits);
+typedef enum fvf_param
+{
+	FVF_VERTEX   = 1u << 0,
+	FVF_2DVERTEX = 1u << 1,
+	FVF_NORMAL   = 1u << 2,
+	FVF_COLOR    = 1u << 3,
+	FVF_TEX0     = 1u << 4,
+	FVF_TEX1     = 1u << 5,
+	FVF_COLORVAL = 1u << 6
+} fvf_param_t;
+
+#define TEXID_NULL (-1)
+#define TEXSAMPLER_USECFG (-1)
+
+void qdx_fvf_buffer(fvf_param_t param, const void *buffer, UINT elems, UINT stride);
+void qdx_fvf_enable(fvf_param_t param);
+void qdx_fvf_disable(fvf_param_t param);
+#define qdx_fvf_buffer_null(P) qdx_fvf_buffer((P), NULL, 0, 0)
+void qdx_fvf_texid(int texid, int samplernum);
+void qdx_fvf_color(DWORD color);
+void qdx_fvf_set2d(BOOL state);
+void qdx_fvf_assemble_and_draw(UINT numindexes, const qdxIndex_t *indexes);
 
 #define VERT2D_ZVAL (0.5f)
 #define VERT2D_RHVVAL (1.0f)
 
 typedef struct fvf_2dvertcoltex
 {
-	FLOAT x, y, z, rhw;    // from the D3DFVF_XYZRHW flag
-	DWORD color;    // from the D3DFVF_DIFFUSE flag
-	FLOAT U, V;
+	FLOAT XYZRHV[4];    // from the D3DFVF_XYZRHW flag
+	DWORD COLOR;    // from the D3DFVF_DIFFUSE flag
+	FLOAT UV[2];
 } fvf_2dvertcoltex_t;
-#define FVF_2DVERTCOLTEX (D3DFVF_XYZRHW | D3DFVF_DIFFUSE | D3DFVF_TEX1 | D3DFVF_TEXCOORDSIZE2(0))
+#define FVFID_2DVERTCOLTEX (D3DFVF_XYZRHW | D3DFVF_DIFFUSE | D3DFVF_TEX1 | D3DFVF_TEXCOORDSIZE2(0))
 
 typedef struct fvf_vertcol
 {
-	FLOAT X, Y, Z;
+	FLOAT XYZ[3];
 	DWORD COLOR;
 } fvf_vertcol_t;
-#define FVF_VERTCOL (D3DFVF_XYZ | D3DFVF_DIFFUSE)
+#define FVFID_VERTCOL (D3DFVF_XYZ | D3DFVF_DIFFUSE)
 
 typedef struct fvf_vertcoltex
 {
-	FLOAT X, Y, Z;
+	FLOAT XYZ[3];
 	DWORD COLOR;
-	FLOAT U, V;
+	FLOAT UV[2];
 } fvf_vertcoltex_t;
-#define FVF_VERTCOLTEX (D3DFVF_XYZ | D3DFVF_DIFFUSE | D3DFVF_TEX1 | D3DFVF_TEXCOORDSIZE2(0))
+#define FVFID_VERTCOLTEX (D3DFVF_XYZ | D3DFVF_DIFFUSE | D3DFVF_TEX1 | D3DFVF_TEXCOORDSIZE2(0))
+
+//typedef struct fvf_verttex
+//{
+//	FLOAT XYZ[3];
+//	FLOAT UV[2];
+//} fvf_verttex_t;
+//#define FVFID_VERTTEX (D3DFVF_XYZ | D3DFVF_TEX1 | D3DFVF_TEXCOORDSIZE2(0))
+
+typedef struct fvf_vertcoltex2
+{
+	FLOAT XYZ[3];
+	DWORD COLOR;
+	FLOAT UV0[2];
+	FLOAT UV1[2];
+} fvf_vertcoltex2_t;
+#define FVFID_VERTCOLTEX2 (D3DFVF_XYZ | D3DFVF_DIFFUSE | D3DFVF_TEX2 | D3DFVF_TEXCOORDSIZE2(0) | D3DFVF_TEXCOORDSIZE2(1))
 
 #ifdef __cplusplus
 #define DX9_BEGIN_SCENE() qdx.device->BeginScene()
