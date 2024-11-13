@@ -193,8 +193,8 @@ void GL_TexEnv( int env ) {
 		break;
 	case GL_DECAL:
 		//qglTexEnvf( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_DECAL );
-		IDirect3DDevice9_SetTextureStageState(qdx.device, glState.currenttmu, D3DTSS_COLORARG1, D3DTA_TEXTURE);
-		IDirect3DDevice9_SetTextureStageState(qdx.device, glState.currenttmu, D3DTSS_COLORARG2, D3DTA_CURRENT);
+		IDirect3DDevice9_SetTextureStageState(qdx.device, glState.currenttmu, D3DTSS_COLORARG1, D3DTA_CURRENT);
+		IDirect3DDevice9_SetTextureStageState(qdx.device, glState.currenttmu, D3DTSS_COLORARG2, D3DTA_TEXTURE);
 		IDirect3DDevice9_SetTextureStageState(qdx.device, glState.currenttmu, D3DTSS_COLOROP, D3DTOP_BLENDTEXTUREALPHA);
 		IDirect3DDevice9_SetTextureStageState(qdx.device, glState.currenttmu, D3DTSS_ALPHAOP, D3DTOP_SELECTARG1);
 		break;
@@ -426,7 +426,7 @@ static void RB_Hyperspace( void ) {
 	//qglClearColor( c, c, c, 1 );
 	//qglClear( GL_COLOR_BUFFER_BIT );
 	DWORD c = backEnd.refdef.time & 255;
-	IDirect3DDevice9_Clear(qdx.device, 0, NULL, D3DCLEAR_ZBUFFER, D3DCOLOR_ARGB(1, c, c, c), 1.0f, 0);
+	IDirect3DDevice9_Clear(qdx.device, 0, NULL, D3DCLEAR_TARGET, D3DCOLOR_ARGB(255, c, c, c), qdx.depth_clear, 0);
 
 	backEnd.isHyperspace = qtrue;
 }
@@ -435,6 +435,7 @@ static void RB_Hyperspace( void ) {
 static void SetViewportAndScissor( void ) {
 	//qglMatrixMode( GL_PROJECTION );
 	//qglLoadMatrixf( backEnd.viewParms.projectionMatrix );
+	qdx_matrix_set(D3DTS_PROJECTION, backEnd.viewParms.projectionMatrix);
 	//qglMatrixMode( GL_MODELVIEW );
 
 	D3DVIEWPORT9 view = { backEnd.viewParms.viewportX,
@@ -631,13 +632,12 @@ void RB_BeginDrawingView( void ) {
 		//qglLoadMatrixf( s_flipMatrix ); //todo: check matrix mode stuff
 		//qglClipPlane( GL_CLIP_PLANE0, plane2 );
 		qglEnable( GL_CLIP_PLANE0 );
-		D3DXVECTOR4 out;
-		D3DXVec4Transform(&out, plane2, s_flipMatrix);
-		//IDirect3DDevice9_SetClipPlane(qdx.device, 0, &out);
-		//IDirect3DDevice9_SetRenderState(qdx.device, D3DRS_CLIPPLANEENABLE, D3DCLIPPLANE0);
+		qdx_matrix_set(D3DTS_WORLD, s_flipMatrix);
+		IDirect3DDevice9_SetClipPlane(qdx.device, 0, plane2);
+		IDirect3DDevice9_SetRenderState(qdx.device, D3DRS_CLIPPLANEENABLE, D3DCLIPPLANE0);
 	} else {
 		qglDisable( GL_CLIP_PLANE0 );
-		//IDirect3DDevice9_SetRenderState(qdx.device, D3DRS_CLIPPLANEENABLE, 0);
+		IDirect3DDevice9_SetRenderState(qdx.device, D3DRS_CLIPPLANEENABLE, 0);
 	}
 }
 
@@ -1097,7 +1097,8 @@ void RB_RenderDrawSurfList( drawSurf_t *drawSurfs, int numDrawSurfs ) {
 				R_TransformDlights( backEnd.refdef.num_dlights, backEnd.refdef.dlights, &backEnd.or );
 			}
 
-			qglLoadMatrixf( backEnd.or.modelMatrix );
+			//qglLoadMatrixf( backEnd.or.modelMatrix );
+			qdx_matrix_set(D3DTS_WORLD, backEnd.or.modelMatrix);
 
 			//
 			// change depthrange if needed
@@ -1145,7 +1146,8 @@ void RB_RenderDrawSurfList( drawSurf_t *drawSurfs, int numDrawSurfs ) {
 	backEnd.or = backEnd.viewParms.world;
 	R_TransformDlights( backEnd.refdef.num_dlights, backEnd.refdef.dlights, &backEnd.or );
 
-	qglLoadMatrixf( backEnd.viewParms.world.modelMatrix );
+	//qglLoadMatrixf( backEnd.viewParms.world.modelMatrix );
+	qdx_matrix_set(D3DTS_WORLD, backEnd.viewParms.world.modelMatrix); 
 	if ( depthRange ) {
 		qglDepthRange( 0, 1 );
 	}
@@ -1194,8 +1196,14 @@ void    RB_SetGL2D( void ) {
 	//qglMatrixMode( GL_PROJECTION );
 	//qglLoadIdentity();
 	//qglOrtho( 0, glConfig.vidWidth, glConfig.vidHeight, 0, 0, 1 );
+	D3DMATRIX mat;
+	//D3DXMatrixOrthoOffCenterRH(&mat, 0, glConfig.vidWidth, 0, glConfig.vidHeight, 0, 1);
+	D3DXMatrixOrthoOffCenterRH(&mat, 0, glConfig.vidWidth, glConfig.vidHeight, 0, 0, 1);
+	qdx_matrix_set(D3DTS_PROJECTION, &mat.m[0][0]);
 	//qglMatrixMode( GL_MODELVIEW );
 	//qglLoadIdentity();
+	D3DXMatrixIdentity(&mat);
+	qdx_matrix_set(D3DTS_WORLD, &mat.m[0][0]);
 
 	GL_State( GLS_DEPTHTEST_DISABLE |
 			  GLS_SRCBLEND_SRC_ALPHA |
@@ -1286,6 +1294,7 @@ void RE_StretchRaw( int x, int y, int w, int h, int cols, int rows, const byte *
 	D3DCOLOR color = D3DCOLOR_COLORVALUE(tr.identityLight, tr.identityLight, tr.identityLight, 1.0f);
 	//qglColor3f( tr.identityLight, tr.identityLight, tr.identityLight );
 
+#if DRAW2D
 	fvf_2dvertcoltex_t rbuf[] =
 	{
 		{ x, y, VERT2D_ZVAL, VERT2D_RHVVAL, color, 0.5f / cols,  0.5f / rows },
@@ -1293,19 +1302,33 @@ void RE_StretchRaw( int x, int y, int w, int h, int cols, int rows, const byte *
 		{ x + w, y + h, VERT2D_ZVAL, VERT2D_RHVVAL, color, (cols - 0.5f) / cols, (rows - 0.5f) / rows },
 		{ x, y + h, VERT2D_ZVAL, VERT2D_RHVVAL, color, 0.5f / cols, (rows - 0.5f) / rows },
 	};
+#else
+	fvf_vertcoltex_t rbuf[] =
+	{
+		{ x, y, 0, color, 0.5f / cols,  0.5f / rows },
+		{ x + w, y, 0, color, (cols - 0.5f) / cols,  0.5f / rows },
+		{ x + w, y + h, 0, color, (cols - 0.5f) / cols, (rows - 0.5f) / rows },
+		{ x, y + h, 0, color, 0.5f / cols, (rows - 0.5f) / rows },
+	};
+#endif
 
 	//qdx_vbuffer_t b = qdx_vbuffer_upload(FVF_2DVERTCOLTEX, sizeof(rbuf), rbuf);
 
 	DX9_BEGIN_SCENE();
 	
+#if DRAW2D
 	IDirect3DDevice9_SetFVF(qdx.device, FVFID_2DVERTCOLTEX);
+#else
+	IDirect3DDevice9_SetFVF(qdx.device, FVFID_VERTCOLTEX);
+#endif
 
 	qdx_texobj_apply(texid, 0);
+	qdx_matrix_apply();
 
-	//IDirect3DDevice9_SetStreamSource(qdx.device, 0, b, 0, sizeof(fvf_2dvertcoltex_t));
+	//IDirect3DDevice9_SetStreamSource(qdx.device, 0, b, 0, sizeof(rbuf[0]));
 	//IDirect3DDevice9_DrawPrimitive(qdx.device, D3DPT_TRIANGLEFAN, 0, 2);
 
-	IDirect3DDevice9_DrawPrimitiveUP(qdx.device, D3DPT_TRIANGLEFAN, 2, rbuf, sizeof(fvf_2dvertcoltex_t));
+	IDirect3DDevice9_DrawPrimitiveUP(qdx.device, D3DPT_TRIANGLEFAN, 2, rbuf, sizeof(rbuf[0]));
 
 	DX9_END_SCENE();
 
@@ -1577,7 +1600,7 @@ const void  *RB_DrawBuffer( const void *data ) {
 
 	cmd = (const drawBufferCommand_t *)data;
 
-	qglDrawBuffer( cmd->buffer );
+	//qglDrawBuffer( cmd->buffer );
 
 	// clear screen for debugging
 	if ( r_clear->integer ) {

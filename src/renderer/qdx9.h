@@ -26,7 +26,7 @@ struct qdx9_state
 	D3DCOLOR crt_color;
 	D3DCULL cull_mode;
 	float depth_clear;
-	float znear;
+	float znear, zfar;
 
 	WINDOWPLACEMENT wplacement;
 	D3DDISPLAYMODE desktop;
@@ -40,6 +40,12 @@ struct qdx9_state
 };
 
 extern struct qdx9_state qdx;
+
+void qdx_matrix_set(D3DTRANSFORMSTATETYPE type, const float *matrix);
+void qdx_matrix_mul(D3DTRANSFORMSTATETYPE type, const D3DMATRIX *matrix);
+void qdx_matrix_push(D3DTRANSFORMSTATETYPE type);
+void qdx_matrix_pop(D3DTRANSFORMSTATETYPE type);
+void qdx_matrix_apply(void);
 
 typedef LPDIRECT3DBASETEXTURE9 textureptr_t;
 typedef struct qdx_textureobject

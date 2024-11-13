@@ -84,6 +84,23 @@ typedef enum {
 	RSERR_UNKNOWN
 } rserr_t;
 
+struct qdx_matrixes
+{
+	D3DXMATRIX view;
+	D3DXMATRIX proj;
+	D3DXMATRIX world;
+	void init()
+	{
+		//D3DXMatrixIdentity(&view);
+		D3DXMatrixLookAtRH(&view,
+			&D3DXVECTOR3(0.0f, 0.0f, 0.0f),   // the camera position
+			&D3DXVECTOR3(0.0f, 0.0f, -1.0f),    // the look-at position, in RH forward is -z and +z in LH 
+			&D3DXVECTOR3(0.0f, 1.0f, 0.0f));    // the up direction
+		D3DXMatrixIdentity(&proj);
+		D3DXMatrixIdentity(&world);
+	}
+} qdx_mats;
+
 #define TRY_PFD_SUCCESS     0
 #define TRY_PFD_FAIL_SOFT   1
 #define TRY_PFD_FAIL_HARD   2
@@ -1561,6 +1578,8 @@ void DX9imp_Init(void) {
 
 	GLW_InitExtensions();
 	DX9imp_CheckHardwareGamma();
+
+	qdx_mats.init();
 }
 
 /*
@@ -2256,7 +2275,7 @@ void qdx_fvf_set2d(BOOL state)
 }
 void qdx_fvf_texid(int texid, int samplernum)
 {
-	if (0 <= samplernum <= 1)
+	if (0 <= samplernum && samplernum <= 1)
 	{
 		g_fvfs.textureids[samplernum] = texid;
 	}
@@ -2378,11 +2397,11 @@ void qdx_fvf_assemble_and_draw(UINT numindexes, const qdxIndex_t *indexes)
 	i_buffer->Unlock();
 
 	UINT selectionbits = g_fvfs.bits;
-	if (g_fvfs.is2dprojection && (0 != (g_fvfs.bits & FVF_VERTEX)))
-	{
-		selectionbits &= ~FVF_VERTEX;
-		selectionbits |= FVF_2DVERTEX;
-	}
+	//if (g_fvfs.is2dprojection && (0 != (g_fvfs.bits & FVF_VERTEX)))
+	//{
+	//	selectionbits &= ~FVF_VERTEX;
+	//	selectionbits |= FVF_2DVERTEX;
+	//}
 
 	switch (selectionbits)
 	{
@@ -2483,6 +2502,10 @@ void qdx_fvf_assemble_and_draw(UINT numindexes, const qdxIndex_t *indexes)
 	if (g_fvfs.bits & FVF_TEX1)
 		qdx_texobj_apply(g_fvfs.textureids[1], 1);
 
+	qdx.device->SetTransform(D3DTS_WORLD, &qdx_mats.world);
+	qdx.device->SetTransform(D3DTS_VIEW, &qdx_mats.view);
+	qdx.device->SetTransform(D3DTS_PROJECTION, &qdx_mats.proj);
+
 	qdx.device->DrawIndexedPrimitive(D3DPT_TRIANGLELIST, 0, 0, vpos, 0, numindexes / 3);
 	qdx.device->EndScene();
 
@@ -2515,6 +2538,86 @@ qdx_vbuffer_t qdx_vbuffer_upload(UINT fvfid, UINT size, void *data)
 void qdx_vbuffer_release(qdx_vbuffer_t buf)
 {
 	buf->Release();
+}
+
+#include <stack>
+
+std::stack<D3DXMATRIX> g_matview_stack;
+std::stack<D3DXMATRIX> g_matproj_stack;
+std::stack<D3DXMATRIX> g_matworld_stack;
+
+void qdx_matrix_set(D3DTRANSFORMSTATETYPE type, const float *matrix)
+{
+	switch (type)
+	{
+	case D3DTS_VIEW:
+		qdx_mats.view = D3DXMATRIX(matrix);
+		break;
+	case D3DTS_PROJECTION:
+		qdx_mats.proj = D3DXMATRIX(matrix);
+		break;
+	case D3DTS_WORLD:
+		qdx_mats.world = D3DXMATRIX(matrix);
+		break;
+	}
+}
+
+void qdx_matrix_mul(D3DTRANSFORMSTATETYPE type, const D3DMATRIX *matrix)
+{
+	switch (type)
+	{
+	case D3DTS_VIEW:
+		qdx_mats.view *= D3DXMATRIX(*matrix);
+		break;
+	case D3DTS_PROJECTION:
+		qdx_mats.proj *= D3DXMATRIX(*matrix);
+		break;
+	case D3DTS_WORLD:
+		qdx_mats.world *= D3DXMATRIX(*matrix);
+		break;
+	}
+}
+
+void qdx_matrix_push(D3DTRANSFORMSTATETYPE type)
+{
+	switch (type)
+	{
+	case D3DTS_VIEW:
+		g_matview_stack.push(qdx_mats.view);
+		break;
+	case D3DTS_PROJECTION:
+		g_matproj_stack.push(qdx_mats.proj);
+		break;
+	case D3DTS_WORLD:
+		g_matworld_stack.push(qdx_mats.world);
+		break;
+	}
+}
+
+void qdx_matrix_pop(D3DTRANSFORMSTATETYPE type)
+{
+	switch (type)
+	{
+	case D3DTS_VIEW:
+		qdx_mats.view = g_matview_stack.top();
+		g_matview_stack.pop();
+		break;
+	case D3DTS_PROJECTION:
+		qdx_mats.proj = g_matproj_stack.top();
+		g_matproj_stack.pop();
+		break;
+	case D3DTS_WORLD:
+		qdx_mats.world = g_matworld_stack.top();
+		g_matworld_stack.pop();
+		break;
+	}
+}
+
+void qdx_matrix_apply(void)
+{
+	qdx.device->SetTransform(D3DTS_WORLD, &qdx_mats.world);
+	qdx.device->SetTransform(D3DTS_VIEW, &qdx_mats.view);
+	qdx.device->SetTransform(D3DTS_PROJECTION, &qdx_mats.proj);
 }
 
 

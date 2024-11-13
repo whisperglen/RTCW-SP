@@ -989,13 +989,18 @@ void RB_StageIteratorSky( void ) {
 	if ( tess.shader->sky.outerbox[0] && tess.shader->sky.outerbox[0] != tr.defaultImage ) {
 		qglColor3f( tr.identityLight, tr.identityLight, tr.identityLight );
 
-		qglPushMatrix();
+		//qglPushMatrix();
+		qdx_matrix_push(D3DTS_WORLD);
 		GL_State( 0 );
-		qglTranslatef( backEnd.viewParms.or.origin[0], backEnd.viewParms.or.origin[1], backEnd.viewParms.or.origin[2] );
+		//qglTranslatef( backEnd.viewParms.or.origin[0], backEnd.viewParms.or.origin[1], backEnd.viewParms.or.origin[2] );
+		D3DMATRIX mw;
+		D3DXMatrixTranslation(&mw, backEnd.viewParms.or.origin[0], backEnd.viewParms.or.origin[1], backEnd.viewParms.or.origin[2]);
+		qdx_matrix_mul(D3DTS_WORLD, &mw);
 
 		DrawSkyBox( tess.shader );
 
-		qglPopMatrix();
+		//qglPopMatrix();
+		qdx_matrix_pop(D3DTS_WORLD);
 	}
 
 	// generate the vertexes for all the clouds, which will be drawn
@@ -1009,13 +1014,18 @@ void RB_StageIteratorSky( void ) {
 	if ( tess.shader->sky.innerbox[0] && tess.shader->sky.innerbox[0] != tr.defaultImage ) {
 		qglColor3f( tr.identityLight, tr.identityLight, tr.identityLight );
 
-		qglPushMatrix();
+		//qglPushMatrix();
+		qdx_matrix_push(D3DTS_WORLD);
 		GL_State( 0 );
-		qglTranslatef( backEnd.viewParms.or.origin[0], backEnd.viewParms.or.origin[1], backEnd.viewParms.or.origin[2] );
+		//qglTranslatef( backEnd.viewParms.or.origin[0], backEnd.viewParms.or.origin[1], backEnd.viewParms.or.origin[2] );
+		D3DMATRIX mw;
+		D3DXMatrixTranslation(&mw, backEnd.viewParms.or.origin[0], backEnd.viewParms.or.origin[1], backEnd.viewParms.or.origin[2]);
+		qdx_matrix_mul(D3DTS_WORLD, &mw);
 
 		DrawSkyBoxInner( tess.shader );
 
-		qglPopMatrix();
+		//qglPopMatrix();
+		qdx_matrix_pop(D3DTS_WORLD);
 	}
 	// Rafael - end
 
