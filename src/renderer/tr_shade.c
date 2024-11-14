@@ -420,8 +420,8 @@ static void DrawMultitextured( shaderCommands_t *input, int stage ) {
 	//
 	//qglDisableClientState( GL_TEXTURE_COORD_ARRAY );
 	//qglDisable( GL_TEXTURE_2D );
-	qdx_fvf_buffer_null(FVF_TEX1);
-	qdx_fvf_texid(TEXID_NULL, 1);
+	qdx_fvf_disable(FVF_TEX1);
+	//qdx_fvf_texid(TEXID_NULL, 1);
 
 	GL_SelectTexture( 0 );
 }
@@ -1301,11 +1301,11 @@ void RB_StageIteratorGeneric( void ) {
 	if ( input->shader->polygonOffset ) {
 		//qglEnable( GL_POLYGON_OFFSET_FILL );
 		//qglPolygonOffset( r_offsetFactor->value, r_offsetUnits->value );
-		DWORD tmp;
-		tmp = (DWORD)(*((int*)(&(r_offsetFactor->value))));
-		IDirect3DDevice9_SetRenderState(qdx.device, D3DRS_SLOPESCALEDEPTHBIAS, tmp);
-		tmp = (DWORD)(*((int*)(&(r_offsetUnits->value))));
-		IDirect3DDevice9_SetRenderState(qdx.device, D3DRS_DEPTHBIAS, tmp);
+		union { float fval; DWORD dwval; } tmpfltint;
+		tmpfltint.fval = r_offsetFactor->value;
+		IDirect3DDevice9_SetRenderState(qdx.device, D3DRS_SLOPESCALEDEPTHBIAS, tmpfltint.dwval);
+		tmpfltint.fval = r_offsetUnits->value / 250000.0f;
+		IDirect3DDevice9_SetRenderState(qdx.device, D3DRS_DEPTHBIAS, tmpfltint.dwval);
 	}
 
 	//

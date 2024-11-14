@@ -91,11 +91,11 @@ struct qdx_matrixes
 	D3DXMATRIX world;
 	void init()
 	{
-		//D3DXMatrixIdentity(&view);
-		D3DXMatrixLookAtRH(&view,
-			&D3DXVECTOR3(0.0f, 0.0f, 0.0f),   // the camera position
-			&D3DXVECTOR3(0.0f, 0.0f, -1.0f),    // the look-at position, in RH forward is -z and +z in LH 
-			&D3DXVECTOR3(0.0f, 1.0f, 0.0f));    // the up direction
+		D3DXMatrixIdentity(&view);
+		//D3DXMatrixLookAtRH(&view,
+		//	&D3DXVECTOR3(0.0f, 0.0f, 0.0f),   // the camera position
+		//	&D3DXVECTOR3(0.0f, 0.0f, -1.0f),    // the look-at position, in RH forward is -z and +z in LH 
+		//	&D3DXVECTOR3(0.0f, 1.0f, 0.0f));    // the up direction
 		D3DXMatrixIdentity(&proj);
 		D3DXMatrixIdentity(&world);
 	}
@@ -2066,6 +2066,7 @@ void qdx_texobj_upload(BOOL createNew, int id, BOOL usemips, int miplvl, int for
 		}
 		else
 		{
+			assert(FALSE);
 			//well if we do not know the fmmt, elembits is zero, so nothing is set
 			memset(lr.pBits, 0, (elems * elembits) / 8);
 		}
@@ -2141,27 +2142,27 @@ void qdx_texobj_setparam(int id, qdx_texparam_t par, int val)
 	qdx_textureobj_t *obj = qdx_texobj_acc(id);
 	if (obj)
 	{
-		if (id & TEXP_FLT_MIN)
+		if (par & TEXP_FLT_MIN)
 		{
 			obj->flt_min = val;
 		}
-		if (id & TEXP_FLT_MIP)
+		if (par & TEXP_FLT_MIP)
 		{
 			obj->flt_mip = (val > D3DTEXF_LINEAR) ? D3DTEXF_LINEAR : val;
 		}
-		if (id & TEXP_FLT_MAG)
+		if (par & TEXP_FLT_MAG)
 		{
 			obj->flt_mag = val;
 		}
-		if (id & TEXP_ANIS_LVL)
+		if (par & TEXP_ANIS_LVL)
 		{
 			obj->anisotropy = val;
 		}
-		if (id  & TEXP_WRAP_U)
+		if (par  & TEXP_WRAP_U)
 		{
 			obj->wrap_u = val;
 		}
-		if (id  & TEXP_WRAP_V)
+		if (par  & TEXP_WRAP_V)
 		{
 			obj->wrap_v = val;
 		}
@@ -2473,7 +2474,7 @@ void qdx_fvf_assemble_and_draw(UINT numindexes, const qdxIndex_t *indexes)
 			copy_three(p->XYZ, GFVF_VERTELEM(i));
 			p->COLOR = abgr_to_argb(GFVF_COLRELEM(i));
 			copy_two(p->UV0, GFVF_TEX0ELEM(i));
-			copy_two(p->UV1, GFVF_TEX0ELEM(i));
+			copy_two(p->UV1, GFVF_TEX1ELEM(i));
 			pVert += sizeof(p[0]);
 			break; }
 		}
@@ -2498,13 +2499,17 @@ void qdx_fvf_assemble_and_draw(UINT numindexes, const qdxIndex_t *indexes)
 	qdx.device->SetIndices(i_buffer);
 
 	if (g_fvfs.bits & FVF_TEX0)
+	{
 		qdx_texobj_apply(g_fvfs.textureids[0], 0);
+	}
+	else qdx_texobj_apply(TEXID_NULL, 0);
 	if (g_fvfs.bits & FVF_TEX1)
+	{
 		qdx_texobj_apply(g_fvfs.textureids[1], 1);
+	}
+	else qdx_texobj_apply(TEXID_NULL, 1);
 
-	qdx.device->SetTransform(D3DTS_WORLD, &qdx_mats.world);
-	qdx.device->SetTransform(D3DTS_VIEW, &qdx_mats.view);
-	qdx.device->SetTransform(D3DTS_PROJECTION, &qdx_mats.proj);
+	qdx_matrix_apply();
 
 	qdx.device->DrawIndexedPrimitive(D3DPT_TRIANGLELIST, 0, 0, vpos, 0, numindexes / 3);
 	qdx.device->EndScene();

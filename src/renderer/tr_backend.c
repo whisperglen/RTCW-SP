@@ -193,10 +193,8 @@ void GL_TexEnv( int env ) {
 		break;
 	case GL_DECAL:
 		//qglTexEnvf( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_DECAL );
-		IDirect3DDevice9_SetTextureStageState(qdx.device, glState.currenttmu, D3DTSS_COLORARG1, D3DTA_CURRENT);
-		IDirect3DDevice9_SetTextureStageState(qdx.device, glState.currenttmu, D3DTSS_COLORARG2, D3DTA_TEXTURE);
 		IDirect3DDevice9_SetTextureStageState(qdx.device, glState.currenttmu, D3DTSS_COLOROP, D3DTOP_BLENDTEXTUREALPHA);
-		IDirect3DDevice9_SetTextureStageState(qdx.device, glState.currenttmu, D3DTSS_ALPHAOP, D3DTOP_SELECTARG1);
+		IDirect3DDevice9_SetTextureStageState(qdx.device, glState.currenttmu, D3DTSS_ALPHAOP, D3DTOP_SELECTARG2);
 		break;
 	case GL_ADD:
 		//qglTexEnvf( GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_ADD );
@@ -438,17 +436,39 @@ static void SetViewportAndScissor( void ) {
 	qdx_matrix_set(D3DTS_PROJECTION, backEnd.viewParms.projectionMatrix);
 	//qglMatrixMode( GL_MODELVIEW );
 
-	D3DVIEWPORT9 view = { backEnd.viewParms.viewportX,
-					backEnd.viewParms.viewportY,
-					backEnd.viewParms.viewportWidth,
-					backEnd.viewParms.viewportHeight,
-					qdx.znear, //todo: check value
-					backEnd.viewParms.zFar };
+	int newX = backEnd.viewParms.viewportX;
+	int newY = -backEnd.viewParms.viewportY + glConfig.vidHeight - backEnd.viewParms.viewportHeight;
+	int newW = backEnd.viewParms.viewportWidth;
+	int newH = backEnd.viewParms.viewportHeight;
+	if (newX < 0)
+	{
+		newX = 0;
+	}
+	if (newY < 0)
+	{
+		newY = 0;
+	}
+	//if (newW > glConfig.vidWidth)
+	//{
+	//	newW = glConfig.vidWidth;
+	//}
+	//if (newH > glConfig.vidHeight)
+	//{
+	//	newH = glConfig.vidHeight;
+	//}
+
+	D3DVIEWPORT9 view = { newX,//backEnd.viewParms.viewportX,
+					newY,//backEnd.viewParms.viewportY,
+					newW,//backEnd.viewParms.viewportWidth,
+					newH,//backEnd.viewParms.viewportHeight,
+					0.0f, //todo: check value
+					1.0f };
 	IDirect3DDevice9_SetViewport(qdx.device, &view);
-	RECT scissor = { backEnd.viewParms.viewportX,
-					backEnd.viewParms.viewportY,
-					backEnd.viewParms.viewportWidth,
-					backEnd.viewParms.viewportHeight };
+	RECT scissor = { newX,//backEnd.viewParms.viewportX,
+					newY,//backEnd.viewParms.viewportY,
+					newW,//backEnd.viewParms.viewportWidth,
+					newH,//backEnd.viewParms.viewportHeight
+	};
 	IDirect3DDevice9_SetScissorRect(qdx.device, &scissor);
 
 //	// set the window clipping

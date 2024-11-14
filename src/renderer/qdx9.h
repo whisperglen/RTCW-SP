@@ -59,12 +59,12 @@ typedef struct qdx_textureobject
 
 typedef enum qdx_texparam
 {
-	TEXP_FLT_MIN,
-	TEXP_FLT_MIP,
-	TEXP_FLT_MAG,
-	TEXP_ANIS_LVL,
-	TEXP_WRAP_U,
-	TEXP_WRAP_V
+	TEXP_FLT_MIN  = (1 << 0),
+	TEXP_FLT_MIP  = (1 << 1),
+	TEXP_FLT_MAG  = (1 << 2),
+	TEXP_ANIS_LVL = (1 << 3),
+	TEXP_WRAP_U   = (1 << 4),
+	TEXP_WRAP_V   = (1 << 5)
 } qdx_texparam_t;
 
 void qdx_texobj_upload(BOOL createNew, int id, BOOL usemips, int miplvl, int format, int width, int height, const void *data);
