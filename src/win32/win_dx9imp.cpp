@@ -74,6 +74,7 @@ typedef struct
 
 static void DX9imp_CheckHardwareGamma(void);
 static void DX9imp_RestoreGamma(void);
+static void qdx_log_comment(const char *name, UINT fvfbits, const void *ptr);
 
 typedef enum {
 	RSERR_OK,
@@ -160,7 +161,7 @@ static qboolean GLW_StartDriverAndSetMode(const char *drivername,
 		ri.Printf(PRINT_ALL, "...Error: cannot alloc memory to enumerate videomodes\n");
 		return qfalse;
 	}
-	ZeroMemory(qdx.modes,(sizeof(D3DDISPLAYMODE) * (1 + nummodes)));
+	ZeroMemory(qdx.modes, (sizeof(D3DDISPLAYMODE) * (1 + nummodes)));
 	D3DDISPLAYMODE *m = qdx.modes;
 	for (int mode = 0; mode < nummodes; mode++)
 	{
@@ -882,6 +883,8 @@ static void PrintCDSError(int value) {
 
 static void fill_in_d3dpresentparams(D3DPRESENT_PARAMETERS &d3dpp)
 {
+	int samples = r_ext_multisample->value;
+
 	ZeroMemory(&d3dpp, sizeof(d3dpp));
 	d3dpp.Windowed = dx9imp_state.cdsFullscreen ? FALSE : TRUE;
 	d3dpp.SwapEffect = D3DSWAPEFFECT_DISCARD;    // discard old frames
@@ -898,6 +901,28 @@ static void fill_in_d3dpresentparams(D3DPRESENT_PARAMETERS &d3dpp)
 		d3dpp.FullScreen_RefreshRateInHz = qdx.desktop.RefreshRate;
 	}
 	d3dpp.PresentationInterval = r_swapInterval->integer ? D3DPRESENT_INTERVAL_DEFAULT : D3DPRESENT_INTERVAL_IMMEDIATE;
+
+	//check for multisample
+	while (samples >= 2)
+	{
+		if (SUCCEEDED(qdx.d3d->CheckDeviceMultiSampleType(D3DADAPTER_DEFAULT,
+			D3DDEVTYPE_HAL, qdx.fmt_backbuffer, dx9imp_state.cdsFullscreen ? FALSE : TRUE,
+			(D3DMULTISAMPLE_TYPE)samples, NULL)))
+		{
+			d3dpp.MultiSampleType = (D3DMULTISAMPLE_TYPE)samples;
+			ri.Printf(PRINT_ALL, "multisample %dx was enabled\n", samples);
+			break;
+		}
+		else
+		{
+			samples--;
+		}
+	}
+
+	if (samples < 2 && r_ext_multisample->value)
+	{
+		ri.Printf(PRINT_ALL, "multisample not supported\n");
+	}
 }
 
 /*
@@ -909,7 +934,7 @@ static void fill_in_d3dpresentparams(D3DPRESENT_PARAMETERS &d3dpp)
 #ifdef ChangeDisplaySettings
 #undef ChangeDisplaySettings
 #endif
-inline LONG ChangeDisplaySettings(LPVOID, DWORD) { return DISP_CHANGE_SUCCESSFUL; }
+ID_INLINE LONG ChangeDisplaySettings(LPVOID, DWORD) { return DISP_CHANGE_SUCCESSFUL; }
 
 static rserr_t GLW_SetMode(const char *drivername,
 	int mode,
@@ -1232,7 +1257,7 @@ static void GLW_InitExtensions(void) {
 
 	// GL_EXT_compiled_vertex_array
 	if (r_ext_compiled_vertex_array->integer) {
-		ri.Printf(PRINT_ALL, "...compiled_vertex_array is set\n");
+		ri.Printf(PRINT_ALL, "...compiled_vertex_array: n/a\n");
 	}
 
 	// WGL_3DFX_gamma_control
@@ -1268,7 +1293,7 @@ static void GLW_InitExtensions(void) {
 	// GL_ATI_pn_triangles - ATI PN-Triangles
 	if (0 != (qdx.caps.DevCaps2 & D3DDEVCAPS2_ADAPTIVETESSNPATCH)) {
 		if (r_ext_ATI_pntriangles->integer) {
-			ri.Printf(PRINT_ALL, "...using GL_ATI_pn_triangles\n");
+			ri.Printf(PRINT_ALL, "...adaptive tesselation is supported\n");
 
 			//glConfig.ATIMaxTruformTess
 
@@ -1280,12 +1305,12 @@ static void GLW_InitExtensions(void) {
 			//}
 		}
 		else {
-			ri.Printf(PRINT_ALL, "...ignoring ATI_pn_triangles\n");
+			ri.Printf(PRINT_ALL, "...ignoring adaptive tesselation\n");
 			ri.Cvar_Set("r_ext_ATI_pntriangles", "0");
 		}
 	}
 	else {
-		ri.Printf(PRINT_ALL, "...ATI_pn_triangles not found\n");
+		ri.Printf(PRINT_ALL, "...adaptive tesselation not found\n");
 		ri.Cvar_Set("r_ext_ATI_pntriangles", "0");
 	}
 
@@ -1322,18 +1347,23 @@ static void GLW_InitExtensions(void) {
 
 
 	// GL_NV_fog_distance
-	if (0 != (qdx.caps.RasterCaps & (D3DPRASTERCAPS_FOGRANGE| D3DPRASTERCAPS_FOGVERTEX))) {
+	if (0 != (qdx.caps.RasterCaps & D3DPRASTERCAPS_WFOG))
+	{
+		ri.Printf(PRINT_ALL, "...pixel fog is supported by gpu\n");
+	}
+	if (0 != (qdx.caps.RasterCaps & (D3DPRASTERCAPS_FOGRANGE | D3DPRASTERCAPS_FOGVERTEX))) {
+		ri.Printf(PRINT_ALL, "...eye radial vertex fog is supported\n");
 		if (r_ext_NV_fog_dist->integer) {
 			glConfig.NVFogAvailable = qtrue;
-			ri.Printf(PRINT_ALL, "...using fog_distance\n");
+			ri.Printf(PRINT_ALL, "...using eye radial fog_distance\n");
 		}
 		else {
-			ri.Printf(PRINT_ALL, "...ignoring fog_distance\n");
+			ri.Printf(PRINT_ALL, "...ignoring eye radial fog_distance\n");
 			ri.Cvar_Set("r_ext_NV_fog_dist", "0");
 		}
 	}
 	else {
-		ri.Printf(PRINT_ALL, "...fog_distance not found\n");
+		ri.Printf(PRINT_ALL, "...eye radial fog_distance not found\n");
 		ri.Cvar_Set("r_ext_NV_fog_dist", "0");
 	}
 
@@ -1348,38 +1378,38 @@ static void GLW_InitExtensions(void) {
 /*
 ** GLW_CheckOSVersion
 */
-static qboolean GLW_CheckOSVersion(void) {
-#define OSR2_BUILD_NUMBER 1111
-
-	OSVERSIONINFO vinfo;
-
-	vinfo.dwOSVersionInfoSize = sizeof(vinfo);
-
-	dx9imp_state.allowdisplaydepthchange = qfalse;
-
-	if (GetVersionEx(&vinfo)) {
-		if (vinfo.dwMajorVersion > 4) {
-			dx9imp_state.allowdisplaydepthchange = qtrue;
-		}
-		else if (vinfo.dwMajorVersion == 4) {
-			if (vinfo.dwPlatformId == VER_PLATFORM_WIN32_NT) {
-				dx9imp_state.allowdisplaydepthchange = qtrue;
-			}
-			else if (vinfo.dwPlatformId == VER_PLATFORM_WIN32_WINDOWS) {
-				if (LOWORD(vinfo.dwBuildNumber) >= OSR2_BUILD_NUMBER) {
-					dx9imp_state.allowdisplaydepthchange = qtrue;
-				}
-			}
-		}
-	}
-	else
-	{
-		ri.Printf(PRINT_ALL, "GLW_CheckOSVersion() - GetVersionEx failed\n");
-		return qfalse;
-	}
-
-	return qtrue;
-}
+//static qboolean GLW_CheckOSVersion(void) {
+//#define OSR2_BUILD_NUMBER 1111
+//
+//	OSVERSIONINFO vinfo;
+//
+//	vinfo.dwOSVersionInfoSize = sizeof(vinfo);
+//
+//	dx9imp_state.allowdisplaydepthchange = qfalse;
+//
+//	if (GetVersionEx(&vinfo)) {
+//		if (vinfo.dwMajorVersion > 4) {
+//			dx9imp_state.allowdisplaydepthchange = qtrue;
+//		}
+//		else if (vinfo.dwMajorVersion == 4) {
+//			if (vinfo.dwPlatformId == VER_PLATFORM_WIN32_NT) {
+//				dx9imp_state.allowdisplaydepthchange = qtrue;
+//			}
+//			else if (vinfo.dwPlatformId == VER_PLATFORM_WIN32_WINDOWS) {
+//				if (LOWORD(vinfo.dwBuildNumber) >= OSR2_BUILD_NUMBER) {
+//					dx9imp_state.allowdisplaydepthchange = qtrue;
+//				}
+//			}
+//		}
+//	}
+//	else
+//	{
+//		ri.Printf(PRINT_ALL, "GLW_CheckOSVersion() - GetVersionEx failed\n");
+//		return qfalse;
+//	}
+//
+//	return qtrue;
+//}
 
 /*
 ** GLW_LoadOpenGL
@@ -1400,9 +1430,9 @@ static qboolean GLW_LoadOpenGL(const char *drivername) {
 	// load the driver and bind our function pointers to it
 	//
 	if (QGL_DMY_Init(buffer)) {
-		
+
 		cdsFullscreen = (qboolean)r_fullscreen->integer;
-		
+
 
 		// create the window and set up the context
 		if (!GLW_StartDriverAndSetMode(drivername, r_mode->integer, r_colorbits->integer, cdsFullscreen)) {
@@ -1454,7 +1484,7 @@ void DX9imp_EndFrame(void) {
 	if (Q_stricmp(r_drawBuffer->string, "GL_FRONT") != 0) {
 		if (glConfig.driverType > GLDRV_ICD) {
 			//if (!qwglSwapBuffers(dx9imp_state.hDC)) {
-				ri.Error(ERR_FATAL, "GLimp_EndFrame() - SwapBuffers() failed!\n");
+			ri.Error(ERR_FATAL, "GLimp_EndFrame() - SwapBuffers() failed!\n");
 			//}
 		}
 		else
@@ -1514,9 +1544,10 @@ void DX9imp_Init(void) {
 	//
 	// check OS version to see if we can do fullscreen display changes
 	//
-	if (!GLW_CheckOSVersion()) {
-		ri.Error(ERR_FATAL, "GLimp_Init() - incorrect operating system\n");
-	}
+	//if (!GLW_CheckOSVersion()) {
+	//	ri.Error(ERR_FATAL, "GLimp_Init() - incorrect operating system\n");
+	//}
+	dx9imp_state.allowdisplaydepthchange = qtrue;
 
 	// save off hInstance and wndproc
 	cv = ri.Cvar_Get("win_hinstance", "", 0);
@@ -2016,7 +2047,7 @@ void qdx_texobj_upload(BOOL createNew, int id, BOOL usemips, int miplvl, int for
 		{
 			uint32_t *out = (uint32_t*)lr.pBits;
 			const byte *in = (const byte*)data;
-			for (int i = 0; i < elems; i++, out++, in+=4)
+			for (int i = 0; i < elems; i++, out++, in += 4)
 			{
 				*out = D3DCOLOR_ARGB(in[3], in[0], in[1], in[2]);
 			}
@@ -2025,7 +2056,7 @@ void qdx_texobj_upload(BOOL createNew, int id, BOOL usemips, int miplvl, int for
 		{
 			uint32_t *out = (uint32_t*)lr.pBits;
 			const byte *in = (const byte*)data;
-			for (int i = 0; i < elems; i++, out++, in+=4)
+			for (int i = 0; i < elems; i++, out++, in += 4)
 			{
 				*out = D3DCOLOR_XRGB(in[0], in[1], in[2]);
 			}
@@ -2034,20 +2065,20 @@ void qdx_texobj_upload(BOOL createNew, int id, BOOL usemips, int miplvl, int for
 		{
 			uint16_t *out = (uint16_t*)lr.pBits;
 			const byte *in = (const byte*)data;
-			for (int i = 0; i < elems; i++, out++, in+=4)
+			for (int i = 0; i < elems; i++, out++, in += 4)
 			{
 				UINT r = (in[0] * 15 / 255) << 8;
 				UINT g = (in[1] * 15 / 255) << 4;
 				UINT b = (in[2] * 15 / 255) << 0;
 				UINT a = (in[3] * 15 / 255) << 12;
-				*out = ( a | r | g | b);
+				*out = (a | r | g | b);
 			}
 		}
 		else if (dxfmt == D3DFMT_R5G6B5)
 		{
 			uint16_t *out = (uint16_t*)lr.pBits;
 			const byte *in = (const byte*)data;
-			for (int i = 0; i < elems; i++, out++, in+=4)
+			for (int i = 0; i < elems; i++, out++, in += 4)
 			{
 				UINT r = (in[0] * 31 / 255) << 11;
 				UINT g = (in[1] * 63 / 255) << 5;
@@ -2108,7 +2139,7 @@ qdx_textureobj_t qdx_texobj_get(int id)
 	{
 		ret = textures[id];
 	}
-	else if(id == TEXID_NULL)
+	else if (id == TEXID_NULL)
 	{
 		ret = g_cleartex;
 	}
@@ -2166,6 +2197,10 @@ void qdx_texobj_setparam(int id, qdx_texparam_t par, int val)
 		{
 			obj->wrap_v = val;
 		}
+		if (par & TEXP_BORDERC)
+		{
+			obj->border = val;
+		}
 	}
 	else
 	{
@@ -2201,6 +2236,9 @@ void qdx_texobj_apply(int id, int sampler)
 	else
 		sampler_id = sampler;
 
+	if(r_logFile->integer)
+		qdx_log_comment(__FUNCTION__, (sampler == 0 ? FVF_TEX0 : FVF_TEX1), opt.obj);
+
 	if (qdx.device)
 	{
 		qdx.device->SetTexture(sampler, opt.obj);
@@ -2210,7 +2248,7 @@ void qdx_texobj_apply(int id, int sampler)
 		qdx.device->SetSamplerState(sampler, D3DSAMP_MAXANISOTROPY, opt.anisotropy);
 		qdx.device->SetSamplerState(sampler, D3DSAMP_ADDRESSU, opt.wrap_u);
 		qdx.device->SetSamplerState(sampler, D3DSAMP_ADDRESSV, opt.wrap_v);
-		//qdx.device->SetSamplerState(sampler, D3DSAMP_BORDERCOLOR, opt.border);
+		qdx.device->SetSamplerState(sampler, D3DSAMP_BORDERCOLOR, opt.border);
 	}
 }
 
@@ -2231,16 +2269,15 @@ struct fvf_state
 	UINT numtexcoords[2];
 	UINT stridetexcoords[2];
 	INT textureids[2];
-	DWORD color;
 } g_fvfs = { 0 };
 
-inline void copy_two(float *dst, const float *src)
+ID_INLINE void copy_two(float *dst, const float *src)
 {
 	dst[0] = src[0];
 	dst[1] = src[1];
 }
 
-inline void copy_xyzrhv(float *dst, const float *src)
+ID_INLINE void copy_xyzrhv(float *dst, const float *src)
 {
 	dst[0] = src[0];
 	dst[1] = src[1];
@@ -2248,14 +2285,14 @@ inline void copy_xyzrhv(float *dst, const float *src)
 	dst[3] = VERT2D_RHVVAL;
 }
 
-inline void copy_three(float *dst, const float *src)
+ID_INLINE void copy_three(float *dst, const float *src)
 {
 	dst[0] = src[0];
 	dst[1] = src[1];
 	dst[2] = src[2];
 }
 
-inline DWORD abgr_to_argb(const byte *in)
+ID_INLINE DWORD abgr_to_argb(const byte *in)
 {
 	DWORD abgr = *((uint32_t*)in);
 	DWORD axgx = abgr & 0xff00ff00;
@@ -2270,12 +2307,33 @@ inline DWORD abgr_to_argb(const byte *in)
 #define GFVF_TEX0ELEM(IDX) (g_fvfs.texcoord[0] + (IDX) * g_fvfs.stridetexcoords[0])
 #define GFVF_TEX1ELEM(IDX) (g_fvfs.texcoord[1] + (IDX) * g_fvfs.stridetexcoords[1])
 
+static void qdx_log_comment(const char *name, UINT fvfbits, const void *ptr)
+{
+	int fvfci = 0;
+	char fvfc[10];
+	memset(fvfc, 0, sizeof(fvfc));
+	if (fvfbits & FVF_VERTEX) fvfc[fvfci++] = 'v';
+	if (fvfbits & FVF_2DVERTEX) fvfc[fvfci++] = 'V';
+	if (fvfbits & FVF_NORMAL) fvfc[fvfci++] = 'n';
+	if (fvfbits & FVF_COLOR) fvfc[fvfci++] = 'c';
+	if (fvfbits & FVF_TEX0) fvfc[fvfci++] = 't';
+	if (fvfbits & FVF_TEX1) fvfc[fvfci++] = 'T';
+	if (fvfbits & FVF_COLORVAL) fvfc[fvfci++] = 'C';
+	char comment[256];
+	snprintf(comment, sizeof(comment), "%s: %s %p\n", name, fvfc, ptr);
+	DX9imp_LogComment(comment);
+}
+
 void qdx_fvf_set2d(BOOL state)
 {
 	g_fvfs.is2dprojection = state;
 }
+
 void qdx_fvf_texid(int texid, int samplernum)
 {
+	if (r_logFile->integer)
+		qdx_log_comment(__FUNCTION__, (samplernum == 0 ? FVF_TEX0 : FVF_TEX1), (const void*)texid);
+
 	if (0 <= samplernum && samplernum <= 1)
 	{
 		g_fvfs.textureids[samplernum] = texid;
@@ -2286,23 +2344,35 @@ void qdx_fvf_texid(int texid, int samplernum)
 	}
 }
 
-void qdx_fvf_color(DWORD color)
+void qdx_set_color(DWORD color)
 {
-	g_fvfs.color = color;
+	if (r_logFile->integer)
+		qdx_log_comment(__FUNCTION__, 0, (const void*)color);
+
+	qdx.crt_color = color;
 }
 
 void qdx_fvf_enable(fvf_param_t param)
 {
+	if (r_logFile->integer)
+		qdx_log_comment(__FUNCTION__, param, NULL);
+
 	g_fvfs.bits |= param;
 }
 
 void qdx_fvf_disable(fvf_param_t param)
 {
+	if (r_logFile->integer)
+		qdx_log_comment(__FUNCTION__, param, NULL);
+
 	g_fvfs.bits &= ~param;
 }
 
 void qdx_fvf_buffer(fvf_param_t param, const void *buffer, UINT elems, UINT stride)
 {
+	if (r_logFile->integer)
+		qdx_log_comment(__FUNCTION__, param, buffer);
+
 	UINT bits = 0;
 	switch (param)
 	{
@@ -2362,6 +2432,9 @@ void qdx_fvf_assemble_and_draw(UINT numindexes, const qdxIndex_t *indexes)
 	UINT stride_fvf = sizeof(fvf_vertcol_t);
 	qdxIndex_t lowindex = SHADER_MAX_INDEXES, highindex = 0;
 	UINT selectionsize = 0;
+
+	if (r_logFile->integer)
+		qdx_log_comment(__FUNCTION__, g_fvfs.bits, NULL);
 
 	if (0 == (g_fvfs.bits & FVF_VERTEX))
 	{
@@ -2465,7 +2538,7 @@ void qdx_fvf_assemble_and_draw(UINT numindexes, const qdxIndex_t *indexes)
 		case (FVF_VERTEX | FVF_TEX0): {
 			fvf_vertcoltex_t *p = (fvf_vertcoltex_t *)pVert;
 			copy_three(p->XYZ, GFVF_VERTELEM(i));
-			p->COLOR = g_fvfs.color;
+			p->COLOR = qdx.crt_color;
 			copy_two(p->UV, GFVF_TEX0ELEM(i));
 			pVert += sizeof(p[0]);
 			break; }
@@ -2524,12 +2597,12 @@ qdx_vbuffer_t qdx_vbuffer_upload(UINT fvfid, UINT size, void *data)
 	LPDIRECT3DVERTEXBUFFER9 v_buffer;
 
 	ON_FAIL_RET_NULL(
-	qdx.device->CreateVertexBuffer(size,
-		0,
-		fvfid,
-		D3DPOOL_MANAGED,
-		&v_buffer,
-		NULL));
+		qdx.device->CreateVertexBuffer(size,
+			0,
+			fvfid,
+			D3DPOOL_MANAGED,
+			&v_buffer,
+			NULL));
 
 	VOID* pVoid;
 
@@ -2623,6 +2696,15 @@ void qdx_matrix_apply(void)
 	qdx.device->SetTransform(D3DTS_WORLD, &qdx_mats.world);
 	qdx.device->SetTransform(D3DTS_VIEW, &qdx_mats.view);
 	qdx.device->SetTransform(D3DTS_PROJECTION, &qdx_mats.proj);
+}
+
+void qdx_depthrange(float znear, float zfar)
+{
+	D3DVIEWPORT9 vp = qdx.viewport;
+	vp.MinZ = znear;
+	vp.MaxZ = zfar;
+
+	qdx.device->SetViewport(&vp);
 }
 
 

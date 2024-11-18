@@ -457,13 +457,14 @@ static void SetViewportAndScissor( void ) {
 	//	newH = glConfig.vidHeight;
 	//}
 
-	D3DVIEWPORT9 view = { newX,//backEnd.viewParms.viewportX,
+	qdx_assign_viewport(&qdx.viewport,
+					newX,//backEnd.viewParms.viewportX,
 					newY,//backEnd.viewParms.viewportY,
 					newW,//backEnd.viewParms.viewportWidth,
 					newH,//backEnd.viewParms.viewportHeight,
-					0.0f, //todo: check value
-					1.0f };
-	IDirect3DDevice9_SetViewport(qdx.device, &view);
+					0.0f,
+					1.0f);
+	IDirect3DDevice9_SetViewport(qdx.device, &qdx.viewport);
 	RECT scissor = { newX,//backEnd.viewParms.viewportX,
 					newY,//backEnd.viewParms.viewportY,
 					newW,//backEnd.viewParms.viewportWidth,
@@ -1125,9 +1126,11 @@ void RB_RenderDrawSurfList( drawSurf_t *drawSurfs, int numDrawSurfs ) {
 			//
 			if ( oldDepthRange != depthRange ) {
 				if ( depthRange ) {
-					qglDepthRange( 0, 0.3 );
+					//qglDepthRange( 0, 0.3 );
+					qdx_depthrange(0, 0.3);
 				} else {
-					qglDepthRange( 0, 1 );
+					//qglDepthRange( 0, 1 );
+					qdx_depthrange(0, 1);
 				}
 				oldDepthRange = depthRange;
 			}
@@ -1169,7 +1172,8 @@ void RB_RenderDrawSurfList( drawSurf_t *drawSurfs, int numDrawSurfs ) {
 	//qglLoadMatrixf( backEnd.viewParms.world.modelMatrix );
 	qdx_matrix_set(D3DTS_WORLD, backEnd.viewParms.world.modelMatrix); 
 	if ( depthRange ) {
-		qglDepthRange( 0, 1 );
+		//qglDepthRange( 0, 1 );
+		qdx_depthrange(0, 1);
 	}
 
 	// (SA) draw sun
@@ -1207,8 +1211,8 @@ void    RB_SetGL2D( void ) {
 	qdx_fvf_set2d(TRUE);
 
 	// set 2D virtual screen size
-	D3DVIEWPORT9 view = { 0, 0, glConfig.vidWidth, glConfig.vidHeight, 0.0f, 1.0f };
-	IDirect3DDevice9_SetViewport(qdx.device, &view);
+	qdx_assign_viewport(&qdx.viewport, 0, 0, glConfig.vidWidth, glConfig.vidHeight, 0.0f, 1.0f);
+	IDirect3DDevice9_SetViewport(qdx.device, &qdx.viewport);
 	RECT scissor = { 0, 0, glConfig.vidWidth, glConfig.vidHeight };
 	IDirect3DDevice9_SetScissorRect(qdx.device, &scissor);
 	//qglViewport( 0, 0, glConfig.vidWidth, glConfig.vidHeight );

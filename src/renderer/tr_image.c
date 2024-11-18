@@ -185,8 +185,8 @@ void GL_TextureMode( const char *string ) {
 	{
 		if (gl_filter_min == D3DTEXF_LINEAR)
 			gl_filter_min = D3DTEXF_ANISOTROPIC;
-		if (gl_filter_max == D3DTEXF_LINEAR)
-			gl_filter_max = D3DTEXF_ANISOTROPIC;
+		//if (gl_filter_max == D3DTEXF_LINEAR)
+		//	gl_filter_max = D3DTEXF_ANISOTROPIC;
 	}
 
 	// change all the existing mipmap texture objects
@@ -970,7 +970,8 @@ image_t *R_CreateImageExt( const char *name, const byte *pic, int width, int hei
 	//qglTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, glWrapClampMode );
 	//qglTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, glWrapClampMode );
 
-	qglBindTexture( GL_TEXTURE_2D, 0 );
+	//qglBindTexture( GL_TEXTURE_2D, 0 );
+	qdx_fvf_texid(TEXID_NULL, image->TMU);
 
 	if ( image->TMU == 1 ) {
 		GL_SelectTexture( 0 );
@@ -2246,7 +2247,8 @@ static void R_CreateFogImage( void ) {
 	borderColor[2] = 1.0;
 	borderColor[3] = 1;
 
-	qglTexParameterfv( GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderColor ); //todo: this does not apply, texture was unbound in CreateImage
+	//qglTexParameterfv( GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderColor ); //todo: this does not apply, texture was unbound in CreateImage
+	qdx_texobj_setparam(tr.fogImage->texnum - TEXNUM_OFFSET, TEXP_BORDERC, D3DCOLOR_ARGB(255, 255, 255, 255));
 }
 
 /*

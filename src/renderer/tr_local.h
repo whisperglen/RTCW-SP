@@ -1091,6 +1091,7 @@ extern cvar_t   *r_texturebits;         // number of desired texture bits
 										// 16 = use 16-bit textures
 										// 32 = use 32-bit textures
 										// all else = error
+extern cvar_t	*r_ext_multisample;
 
 extern cvar_t   *r_measureOverdraw;     // enables stencil buffer overdraw measurement
 
@@ -1296,6 +1297,8 @@ void    GL_Cull( int cullType );
 #define GLS_DSTBLEND_DST_ALPHA                  0x00000070
 #define GLS_DSTBLEND_ONE_MINUS_DST_ALPHA        0x00000080
 #define     GLS_DSTBLEND_BITS                   0x000000f0
+
+#define GLS_BLEND_DISABLE       (glState.glStateBits & ~(GLS_SRCBLEND_BITS | GLS_DSTBLEND_BITS))
 
 #define GLS_DEPTHMASK_TRUE                      0x00000100
 

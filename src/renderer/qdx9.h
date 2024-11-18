@@ -27,6 +27,7 @@ struct qdx9_state
 	D3DCULL cull_mode;
 	float depth_clear;
 	float znear, zfar;
+	D3DVIEWPORT9 viewport;
 
 	WINDOWPLACEMENT wplacement;
 	D3DDISPLAYMODE desktop;
@@ -40,6 +41,18 @@ struct qdx9_state
 };
 
 extern struct qdx9_state qdx;
+
+inline void qdx_assign_viewport(D3DVIEWPORT9 *vp, DWORD X, DWORD Y, DWORD Width, DWORD Height, float MinZ, float MaxZ)
+{
+	vp->X = X;
+	vp->Y = Y;
+	vp->Width = Width;
+	vp->Height = Height;
+	vp->MinZ = MinZ;
+	vp->MaxZ = MaxZ;
+}
+
+void qdx_depthrange(float znear, float zfar);
 
 void qdx_matrix_set(D3DTRANSFORMSTATETYPE type, const float *matrix);
 void qdx_matrix_mul(D3DTRANSFORMSTATETYPE type, const D3DMATRIX *matrix);
@@ -64,7 +77,8 @@ typedef enum qdx_texparam
 	TEXP_FLT_MAG  = (1 << 2),
 	TEXP_ANIS_LVL = (1 << 3),
 	TEXP_WRAP_U   = (1 << 4),
-	TEXP_WRAP_V   = (1 << 5)
+	TEXP_WRAP_V   = (1 << 5),
+	TEXP_BORDERC  = (1 << 6),
 } qdx_texparam_t;
 
 void qdx_texobj_upload(BOOL createNew, int id, BOOL usemips, int miplvl, int format, int width, int height, const void *data);
@@ -96,7 +110,7 @@ void qdx_fvf_enable(fvf_param_t param);
 void qdx_fvf_disable(fvf_param_t param);
 #define qdx_fvf_buffer_null(P) qdx_fvf_buffer((P), NULL, 0, 0)
 void qdx_fvf_texid(int texid, int samplernum);
-void qdx_fvf_color(DWORD color);
+void qdx_set_color(DWORD color);
 void qdx_fvf_set2d(BOOL state);
 void qdx_fvf_assemble_and_draw(UINT numindexes, const qdxIndex_t *indexes);
 

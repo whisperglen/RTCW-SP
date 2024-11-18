@@ -371,6 +371,7 @@ static void MakeSkyVec( float s, float t, int axis, float outSt[2], vec3_t outXY
 static int sky_texorder[6] = {0,2,1,3,4,5};
 static vec3_t s_skyPoints[SKY_SUBDIVISIONS + 1][SKY_SUBDIVISIONS + 1];
 static float s_skyTexCoords[SKY_SUBDIVISIONS + 1][SKY_SUBDIVISIONS + 1][2];
+static fvf_vertcoltex_t s_skyFVF[2 * (SKY_SUBDIVISIONS + 1)];
 
 static void DrawSkySide( struct image_s *image, const int mins[2], const int maxs[2] ) {
 	int s, t;
@@ -379,18 +380,44 @@ static void DrawSkySide( struct image_s *image, const int mins[2], const int max
 
 	for ( t = mins[1] + HALF_SKY_SUBDIVISIONS; t < maxs[1] + HALF_SKY_SUBDIVISIONS; t++ )
 	{
-		qglBegin( GL_TRIANGLE_STRIP );
+		//qglBegin( GL_TRIANGLE_STRIP );
+		fvf_vertcoltex_t *p = s_skyFVF;
+		int primitives = -2;
 
 		for ( s = mins[0] + HALF_SKY_SUBDIVISIONS; s <= maxs[0] + HALF_SKY_SUBDIVISIONS; s++ )
 		{
-			qglTexCoord2fv( s_skyTexCoords[t][s] );
-			qglVertex3fv( s_skyPoints[t][s] );
+			memcpy(p->XYZ, s_skyPoints[t][s], 3 * sizeof(float));
+			memcpy(p->UV, s_skyTexCoords[t][s], 2 * sizeof(float));
+			p++;
+			//qglTexCoord2fv( s_skyTexCoords[t][s] );
+			//qglVertex3fv( s_skyPoints[t][s] );
 
-			qglTexCoord2fv( s_skyTexCoords[t + 1][s] );
-			qglVertex3fv( s_skyPoints[t + 1][s] );
+			p->COLOR = qdx.crt_color;
+
+			//qglTexCoord2fv( s_skyTexCoords[t + 1][s] );
+			//qglVertex3fv( s_skyPoints[t + 1][s] );
+			memcpy(p->XYZ, s_skyTexCoords[t + 1][s], 3 * sizeof(float));
+			memcpy(p->UV, s_skyPoints[t + 1][s], 2 * sizeof(float));
+			p++;
+			
+			primitives += 2;
 		}
 
-		qglEnd();
+		assert(primitives > 0);
+
+		DX9_BEGIN_SCENE();
+		
+		IDirect3DDevice9_SetFVF(qdx.device, FVFID_VERTCOLTEX);
+
+		int texid = glState.currenttextures[glState.currenttmu] - TEXNUM_OFFSET;
+		qdx_texobj_apply(texid, 0);
+		qdx_matrix_apply();
+
+		IDirect3DDevice9_DrawPrimitiveUP(qdx.device, D3DPT_TRIANGLESTRIP, primitives, s_skyFVF, sizeof(s_skyFVF[0]));
+
+		DX9_END_SCENE();
+
+		//qglEnd();
 	}
 }
 
@@ -400,27 +427,55 @@ static void DrawSkySideInner( struct image_s *image, const int mins[2], const in
 	GL_Bind( image );
 
 	//qglDisable (GL_BLEND);
-	qglBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
-	qglEnable( GL_BLEND );
+	GL_State(GLS_SRCBLEND_SRC_ALPHA | GLS_DSTBLEND_ONE_MINUS_SRC_ALPHA);
+	//qglBlendFunc( GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA );
+	//qglEnable( GL_BLEND );
 	GL_TexEnv( GL_MODULATE );
 
-	for ( t = mins[1] + HALF_SKY_SUBDIVISIONS; t < maxs[1] + HALF_SKY_SUBDIVISIONS; t++ )
+	for (t = mins[1] + HALF_SKY_SUBDIVISIONS; t < maxs[1] + HALF_SKY_SUBDIVISIONS; t++)
 	{
-		qglBegin( GL_TRIANGLE_STRIP );
+		//qglBegin( GL_TRIANGLE_STRIP );
+		fvf_vertcoltex_t *p = s_skyFVF;
+		int primitives = -2;
 
-		for ( s = mins[0] + HALF_SKY_SUBDIVISIONS; s <= maxs[0] + HALF_SKY_SUBDIVISIONS; s++ )
+		for (s = mins[0] + HALF_SKY_SUBDIVISIONS; s <= maxs[0] + HALF_SKY_SUBDIVISIONS; s++)
 		{
-			qglTexCoord2fv( s_skyTexCoords[t][s] );
-			qglVertex3fv( s_skyPoints[t][s] );
+			memcpy(p->XYZ, s_skyPoints[t][s], 3 * sizeof(float));
+			memcpy(p->UV, s_skyTexCoords[t][s], 2 * sizeof(float));
+			p++;
+			//qglTexCoord2fv( s_skyTexCoords[t][s] );
+			//qglVertex3fv( s_skyPoints[t][s] );
 
-			qglTexCoord2fv( s_skyTexCoords[t + 1][s] );
-			qglVertex3fv( s_skyPoints[t + 1][s] );
+			p->COLOR = qdx.crt_color;
+
+			//qglTexCoord2fv( s_skyTexCoords[t + 1][s] );
+			//qglVertex3fv( s_skyPoints[t + 1][s] );
+			memcpy(p->XYZ, s_skyTexCoords[t + 1][s], 3 * sizeof(float));
+			memcpy(p->UV, s_skyPoints[t + 1][s], 2 * sizeof(float));
+			p++;
+
+			primitives += 2;
 		}
 
-		qglEnd();
+		assert(primitives > 0);
+
+		DX9_BEGIN_SCENE();
+
+		IDirect3DDevice9_SetFVF(qdx.device, FVFID_VERTCOLTEX);
+
+		int texid = glState.currenttextures[glState.currenttmu] - TEXNUM_OFFSET;
+		qdx_texobj_apply(texid, 0);
+		qdx_matrix_apply();
+
+		IDirect3DDevice9_DrawPrimitiveUP(qdx.device, D3DPT_TRIANGLESTRIP, primitives, s_skyFVF, sizeof(s_skyFVF[0]));
+
+		DX9_END_SCENE();
+
+		//qglEnd();
 	}
 
-	qglDisable( GL_BLEND );
+	//qglDisable( GL_BLEND );
+	GL_State(GLS_BLEND_DISABLE);
 }
 
 static void DrawSkyBox( shader_t *shader ) {
@@ -823,8 +878,12 @@ void RB_DrawSun( void ) {
 	if ( !r_drawSun->integer ) {
 		return;
 	}
-	qglLoadMatrixf( backEnd.viewParms.world.modelMatrix );
-	qglTranslatef( backEnd.viewParms.or.origin[0], backEnd.viewParms.or.origin[1], backEnd.viewParms.or.origin[2] );
+	//qglLoadMatrixf( backEnd.viewParms.world.modelMatrix );
+	qdx_matrix_set(D3DTS_WORLD, backEnd.viewParms.world.modelMatrix);
+	//qglTranslatef( backEnd.viewParms.or.origin[0], backEnd.viewParms.or.origin[1], backEnd.viewParms.or.origin[2] );
+	D3DXMATRIX msun;
+	D3DXMatrixTranslation(&msun, backEnd.viewParms. or .origin[0], backEnd.viewParms. or .origin[1], backEnd.viewParms. or .origin[2]);
+	qdx_matrix_mul(D3DTS_WORLD, &msun);
 
 	dist =  backEnd.viewParms.zFar / 1.75;      // div sqrt(3)
 
@@ -839,7 +898,8 @@ void RB_DrawSun( void ) {
 	VectorScale( vec2, size, vec2 );
 
 	// farthest depth range
-	qglDepthRange( 1.0, 1.0 );
+	//qglDepthRange( 1.0, 1.0 );
+	qdx_depthrange(1, 1);
 
 	color[0] = color[1] = color[2] = color[3] = 255;
 
@@ -932,7 +992,8 @@ void RB_DrawSun( void ) {
 	}
 
 	// back to normal depth range
-	qglDepthRange( 0.0, 1.0 );
+	//qglDepthRange( 0.0, 1.0 );
+	qdx_depthrange(0, 1);
 }
 
 extern void R_Fog( glfog_t *curfog );
@@ -980,14 +1041,17 @@ void RB_StageIteratorSky( void ) {
 	// front of everything to allow developers to see how
 	// much sky is getting sucked in
 	if ( r_showsky->integer ) {
-		qglDepthRange( 0.0, 0.0 );
+		//qglDepthRange( 0.0, 0.0 );
+		qdx_depthrange(0, 0);
 	} else {
-		qglDepthRange( 1.0, 1.0 );
+		//qglDepthRange( 1.0, 1.0 );
+		qdx_depthrange(1, 1);
 	}
 
 	// draw the outer skybox
 	if ( tess.shader->sky.outerbox[0] && tess.shader->sky.outerbox[0] != tr.defaultImage ) {
-		qglColor3f( tr.identityLight, tr.identityLight, tr.identityLight );
+		//qglColor3f( tr.identityLight, tr.identityLight, tr.identityLight );
+		qdx_set_color(D3DCOLOR_COLORVALUE(tr.identityLight, tr.identityLight, tr.identityLight, 1.0f));
 
 		//qglPushMatrix();
 		qdx_matrix_push(D3DTS_WORLD);
@@ -1012,7 +1076,8 @@ void RB_StageIteratorSky( void ) {
 	// draw the inner skybox
 	// Rafael - drawing inner skybox
 	if ( tess.shader->sky.innerbox[0] && tess.shader->sky.innerbox[0] != tr.defaultImage ) {
-		qglColor3f( tr.identityLight, tr.identityLight, tr.identityLight );
+		//qglColor3f( tr.identityLight, tr.identityLight, tr.identityLight );
+		qdx_set_color(D3DCOLOR_COLORVALUE(tr.identityLight, tr.identityLight, tr.identityLight, 1.0f));
 
 		//qglPushMatrix();
 		qdx_matrix_push(D3DTS_WORLD);
@@ -1030,7 +1095,8 @@ void RB_StageIteratorSky( void ) {
 	// Rafael - end
 
 	// back to normal depth range
-	qglDepthRange( 0.0, 1.0 );
+	//qglDepthRange( 0.0, 1.0 );
+	qdx_depthrange(0, 1);
 
 	backEnd.refdef.rdflags &= ~RDF_DRAWINGSKY;
 

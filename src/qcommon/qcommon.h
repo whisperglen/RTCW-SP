@@ -1072,4 +1072,19 @@ extern huffman_t clientHuffTables;
 void function_called(const char *name);
 void functions_dump();
 
+typedef union inputs
+{
+	struct {
+		unsigned int x : 1;
+		unsigned int y : 1;
+		unsigned int z : 1;
+		int updown     : 2;
+		int leftright  : 2;
+		unsigned int ctrl : 1;
+	};
+	unsigned int all;
+} inputs_t;
+
+inputs_t get_keypressed();
+
 #endif // _QCOMMON_H_

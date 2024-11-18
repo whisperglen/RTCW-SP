@@ -516,17 +516,27 @@ void RB_RenderFlares( void ) {
 	}
 
 	if ( backEnd.viewParms.isPortal ) {
-		qglDisable( GL_CLIP_PLANE0 );
+		//qglDisable( GL_CLIP_PLANE0 );
+		IDirect3DDevice9_SetRenderState(qdx.device, D3DRS_CLIPPLANEENABLE, 0);
 	}
 
-	qglPushMatrix();
-	qglLoadIdentity();
-	qglMatrixMode( GL_PROJECTION );
-	qglPushMatrix();
-	qglLoadIdentity();
-	qglOrtho( backEnd.viewParms.viewportX, backEnd.viewParms.viewportX + backEnd.viewParms.viewportWidth,
-			  backEnd.viewParms.viewportY, backEnd.viewParms.viewportY + backEnd.viewParms.viewportHeight,
-			  -99999, 99999 );
+	D3DXMATRIX mat;
+	D3DXMatrixIdentity(&mat);
+	//qglPushMatrix();
+	//qglLoadIdentity();
+	qdx_matrix_push(D3DTS_WORLD);
+	qdx_matrix_set(D3DTS_WORLD, &mat.m[0][0]);
+	//qglMatrixMode( GL_PROJECTION );
+	//qglPushMatrix();
+	//qglLoadIdentity();
+	//qglOrtho( backEnd.viewParms.viewportX, backEnd.viewParms.viewportX + backEnd.viewParms.viewportWidth,
+	//		  backEnd.viewParms.viewportY, backEnd.viewParms.viewportY + backEnd.viewParms.viewportHeight,
+	//		  -99999, 99999 );
+	qdx_matrix_push(D3DTS_PROJECTION);
+	D3DXMatrixOrthoOffCenterRH(&mat, backEnd.viewParms.viewportX, backEnd.viewParms.viewportX + backEnd.viewParms.viewportWidth,
+		backEnd.viewParms.viewportY, backEnd.viewParms.viewportY + backEnd.viewParms.viewportHeight,
+		-99999, 99999);
+	qdx_matrix_set(D3DTS_PROJECTION, &mat.m[0][0]);
 
 	for ( f = r_activeFlares ; f ; f = f->next ) {
 		if ( f->frameSceneNum == backEnd.viewParms.frameSceneNum
@@ -536,8 +546,10 @@ void RB_RenderFlares( void ) {
 		}
 	}
 
-	qglPopMatrix();
-	qglMatrixMode( GL_MODELVIEW );
-	qglPopMatrix();
+	//qglPopMatrix();
+	//qglMatrixMode( GL_MODELVIEW );
+	//qglPopMatrix();
+	qdx_matrix_pop(D3DTS_PROJECTION);
+	qdx_matrix_pop(D3DTS_WORLD);
 }
 
