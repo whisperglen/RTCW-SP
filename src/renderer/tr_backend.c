@@ -433,19 +433,31 @@ static void RB_Hyperspace( void ) {
 static void SetViewportAndScissor( void ) {
 	//qglMatrixMode( GL_PROJECTION );
 	//qglLoadMatrixf( backEnd.viewParms.projectionMatrix );
-	qdx_matrix_set(D3DTS_PROJECTION, backEnd.viewParms.projectionMatrix);
+	D3DXMATRIX mat;
+	memcpy(&mat.m[0][0], backEnd.viewParms.projectionMatrix, 16 * sizeof(float));
+	// m[2][2] = zf /( zn - zf )
+	// m[3][2] = zn * zf /( zn - zf )
+	mat.m[2][2] = qdx.zfar / (qdx.znear - qdx.zfar);
+	mat.m[3][2] = qdx.znear * qdx.zfar / (qdx.znear - qdx.zfar);
+	qdx_matrix_set(D3DTS_PROJECTION, &mat.m[0][0]);
 	//qglMatrixMode( GL_MODELVIEW );
 
 	int newX = backEnd.viewParms.viewportX;
 	int newY = -backEnd.viewParms.viewportY + glConfig.vidHeight - backEnd.viewParms.viewportHeight;
 	int newW = backEnd.viewParms.viewportWidth;
 	int newH = backEnd.viewParms.viewportHeight;
+	float tX = 0.0f, tY = 0.0f;
+	BOOL need_transf = FALSE;
 	if (newX < 0)
 	{
+		need_transf = TRUE;
+		tX = newX;
 		newX = 0;
 	}
 	if (newY < 0)
 	{
+		need_transf = TRUE;
+		tY = newY;
 		newY = 0;
 	}
 	//if (newW > glConfig.vidWidth)
@@ -1221,7 +1233,6 @@ void    RB_SetGL2D( void ) {
 	//qglLoadIdentity();
 	//qglOrtho( 0, glConfig.vidWidth, glConfig.vidHeight, 0, 0, 1 );
 	D3DMATRIX mat;
-	//D3DXMatrixOrthoOffCenterRH(&mat, 0, glConfig.vidWidth, 0, glConfig.vidHeight, 0, 1);
 	D3DXMatrixOrthoOffCenterRH(&mat, 0, glConfig.vidWidth, glConfig.vidHeight, 0, 0, 1);
 	qdx_matrix_set(D3DTS_PROJECTION, &mat.m[0][0]);
 	//qglMatrixMode( GL_MODELVIEW );

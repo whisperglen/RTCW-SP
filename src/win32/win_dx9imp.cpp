@@ -163,10 +163,10 @@ static qboolean GLW_StartDriverAndSetMode(const char *drivername,
 	}
 	ZeroMemory(qdx.modes, (sizeof(D3DDISPLAYMODE) * (1 + nummodes)));
 	D3DDISPLAYMODE *m = qdx.modes;
-	for (int mode = 0; mode < nummodes; mode++)
+	for (int amode = 0; amode < nummodes; amode++)
 	{
 		D3DDISPLAYMODE dispMode;
-		qdx.d3d->EnumAdapterModes(qdx.adapter_num, qdx.desktop.Format, mode, &dispMode);
+		qdx.d3d->EnumAdapterModes(qdx.adapter_num, qdx.desktop.Format, amode, &dispMode);
 		if (dispMode.Width < minwidth || dispMode.Height < minheight)
 			continue;
 		memcpy(m, &dispMode, sizeof(dispMode));
@@ -1218,12 +1218,20 @@ static void GLW_InitExtensions(void) {
 	//qwglSwapIntervalEXT = (BOOL(WINAPI *)(int))qwglGetProcAddress("wglSwapIntervalEXT");
 	//todo: should this not be D3DPRESENT_INTERVAL_ONE for vsync active ?
 	if (0 != (qdx.caps.PresentationIntervals & (D3DPRESENT_INTERVAL_IMMEDIATE | D3DPRESENT_INTERVAL_DEFAULT))) {
-		ri.Printf(PRINT_ALL, "...using swap_control\n");
-		r_swapInterval->modified = qtrue;   // force a set next frame
+		if (r_swapInterval->integer)
+		{
+			ri.Printf(PRINT_ALL, "...using swap_control\n");
+			r_swapInterval->modified = qtrue;   // force a set next frame
+		}
+		else
+		{
+			ri.Printf(PRINT_ALL, "...not using swap_control\n");
+		}
 	}
 	else
 	{
 		ri.Printf(PRINT_ALL, "...swap_control not found\n");
+		ri.Cvar_Set("r_swapInterval", "0");
 	}
 
 	// GL_ARB_multitexture
@@ -1352,7 +1360,7 @@ static void GLW_InitExtensions(void) {
 		ri.Printf(PRINT_ALL, "...pixel fog is supported by gpu\n");
 	}
 	if (0 != (qdx.caps.RasterCaps & (D3DPRASTERCAPS_FOGRANGE | D3DPRASTERCAPS_FOGVERTEX))) {
-		ri.Printf(PRINT_ALL, "...eye radial vertex fog is supported\n");
+		ri.Printf(PRINT_ALL, "...eye radial vertex fog is supported (initially nv_fog)\n");
 		if (r_ext_NV_fog_dist->integer) {
 			glConfig.NVFogAvailable = qtrue;
 			ri.Printf(PRINT_ALL, "...using eye radial fog_distance\n");
@@ -2373,7 +2381,6 @@ void qdx_fvf_buffer(fvf_param_t param, const void *buffer, UINT elems, UINT stri
 	if (r_logFile->integer)
 		qdx_log_comment(__FUNCTION__, param, buffer);
 
-	UINT bits = 0;
 	switch (param)
 	{
 	case FVF_VERTEX:
@@ -2434,7 +2441,7 @@ void qdx_fvf_assemble_and_draw(UINT numindexes, const qdxIndex_t *indexes)
 	UINT selectionsize = 0;
 
 	if (r_logFile->integer)
-		qdx_log_comment(__FUNCTION__, g_fvfs.bits, NULL);
+		qdx_log_comment(__FUNCTION__, g_fvfs.bits, (const void*)numindexes);
 
 	if (0 == (g_fvfs.bits & FVF_VERTEX))
 	{
@@ -2479,6 +2486,7 @@ void qdx_fvf_assemble_and_draw(UINT numindexes, const qdxIndex_t *indexes)
 
 	switch (selectionbits)
 	{
+	case (FVF_VERTEX):
 	case (FVF_VERTEX | FVF_COLOR):
 		selected_fvf = FVFID_VERTCOL;
 		stride_fvf = sizeof(fvf_vertcol_t);
@@ -2492,10 +2500,6 @@ void qdx_fvf_assemble_and_draw(UINT numindexes, const qdxIndex_t *indexes)
 		selected_fvf = FVFID_2DVERTCOLTEX;
 		stride_fvf = sizeof(fvf_2dvertcoltex_t);
 		break;
-		//case (FVF_VERTEX | FVF_TEX0):
-		//	selected_fvf = FVFID_VERTTEX;
-		//	stride_fvf = sizeof(fvf_verttex_t);
-		//	break;
 	case (FVF_VERTEX | FVF_COLOR | FVF_TEX0 | FVF_TEX1):
 		selected_fvf = FVFID_VERTCOLTEX2;
 		stride_fvf = sizeof(fvf_vertcoltex2_t);
@@ -2515,6 +2519,12 @@ void qdx_fvf_assemble_and_draw(UINT numindexes, const qdxIndex_t *indexes)
 	{
 		switch (selectionbits)
 		{
+		case (FVF_VERTEX): {
+			fvf_vertcol_t *p = (fvf_vertcol_t *)pVert;
+			copy_three(p->XYZ, GFVF_VERTELEM(i));
+			p->COLOR = qdx.crt_color;
+			pVert += sizeof(p[0]);
+			break; }
 		case (FVF_VERTEX | FVF_COLOR): {
 			fvf_vertcol_t *p = (fvf_vertcol_t *)pVert;
 			copy_three(p->XYZ, GFVF_VERTELEM(i));

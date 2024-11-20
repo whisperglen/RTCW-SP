@@ -53,6 +53,6 @@ typedef struct
 	FILE *log_fp;
 } glwstate_t;
 
-extern glwstate_t glw_state;
+//extern glwstate_t glw_state;
 
 #endif
