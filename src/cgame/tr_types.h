@@ -294,7 +294,7 @@ typedef struct {
 	textureCompression_t textureCompression;
 	qboolean textureEnvAddAvailable;
 	qboolean anisotropicAvailable;                  //----(SA)	added
-	float maxAnisotropy;                            //----(SA)	added
+	int maxAnisotropy;                            //----(SA)	added
 
 	// vendor-specific support
 	// NVidia

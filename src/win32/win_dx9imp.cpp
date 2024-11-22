@@ -910,7 +910,7 @@ static void fill_in_d3dpresentparams(D3DPRESENT_PARAMETERS &d3dpp)
 			(D3DMULTISAMPLE_TYPE)samples, NULL)))
 		{
 			d3dpp.MultiSampleType = (D3DMULTISAMPLE_TYPE)samples;
-			ri.Printf(PRINT_ALL, "multisample %dx was enabled\n", samples);
+			ri.Printf(PRINT_ALL, "...multisample %dx was enabled\n", samples);
 			break;
 		}
 		else
@@ -921,7 +921,7 @@ static void fill_in_d3dpresentparams(D3DPRESENT_PARAMETERS &d3dpp)
 
 	if (samples < 2 && r_ext_multisample->value)
 	{
-		ri.Printf(PRINT_ALL, "multisample not supported\n");
+		ri.Printf(PRINT_ALL, "...multisample not supported\n");
 	}
 }
 
@@ -1132,6 +1132,7 @@ static rserr_t GLW_SetMode(const char *drivername,
 		{
 			ri.Error(ERR_FATAL, "GLW_SetMode - Direct3D9 CreateDevice failed %d\n", HRESULT_CODE(hr));
 		}
+		qdx.devicelost = qfalse;
 	}
 
 	//
@@ -1301,7 +1302,7 @@ static void GLW_InitExtensions(void) {
 	// GL_ATI_pn_triangles - ATI PN-Triangles
 	if (0 != (qdx.caps.DevCaps2 & D3DDEVCAPS2_ADAPTIVETESSNPATCH)) {
 		if (r_ext_ATI_pntriangles->integer) {
-			ri.Printf(PRINT_ALL, "...adaptive tesselation is supported\n");
+			ri.Printf(PRINT_ALL, "...adaptive tesselation is supported by gpu\n");
 
 			//glConfig.ATIMaxTruformTess
 
@@ -1337,7 +1338,8 @@ static void GLW_InitExtensions(void) {
 			}
 			else
 			{
-				ri.Printf(PRINT_ALL, "...using texture_filter_anisotropic (max: %i)\n", glConfig.maxAnisotropy);
+				ri.Printf(PRINT_ALL, "...using texture_filter_anisotropic: %i (max: %i)\n",
+					r_ext_texture_filter_anisotropic->integer, glConfig.maxAnisotropy);
 				glConfig.anisotropicAvailable = qtrue;
 			}
 		}
@@ -1498,7 +1500,14 @@ void DX9imp_EndFrame(void) {
 		else
 		{
 			//SwapBuffers(dx9imp_state.hDC);
-			qdx.device->Present(NULL, NULL, NULL, NULL);
+			HRESULT hr = qdx.device->Present(NULL, NULL, NULL, NULL);
+			if (FAILED(hr))
+			{
+				if (hr == D3DERR_DEVICELOST)
+				{
+					qdx.devicelost = qtrue;
+				}
+			}
 		}
 	}
 
@@ -1506,6 +1515,10 @@ void DX9imp_EndFrame(void) {
 	QGL_DMY_EnableLogging((qboolean)r_logFile->integer);
 }
 
+extern "C" qboolean DX9imp_requires_restart()
+{
+	return (qboolean)qdx.devicelost;
+}
 
 static void GLW_StartOpenGL(void) {
 
@@ -1713,7 +1726,13 @@ void DX9imp_CheckHardwareGamma(void) {
 		return;
 	}
 
-	if (!r_ignorehwgamma->integer) {
+	if (!r_ignorehwgamma->integer)
+	{
+		if (!dx9imp_state.cdsFullscreen)
+		{
+			ri.Printf(PRINT_ALL, "...hw gamma not supported in windowed mode\n");
+			return;
+		}
 		if (0 != (qdx.caps.Caps2 & D3DCAPS2_FULLSCREENGAMMA))
 		{
 			glConfig.deviceSupportsGamma = qtrue;
@@ -1725,37 +1744,36 @@ void DX9imp_CheckHardwareGamma(void) {
 			qdx.device->GetGammaRamp(0, &s_oldHardwareGamma);
 
 			if (glConfig.deviceSupportsGamma) {
-				//
-				// do a sanity check on the gamma values
-				//
-				if ((s_oldHardwareGamma.red[255] <= s_oldHardwareGamma.red[0]) ||
-					(s_oldHardwareGamma.green[255] <= s_oldHardwareGamma.green[0]) ||
-					(s_oldHardwareGamma.blue[255] <= s_oldHardwareGamma.blue[0])) {
-					glConfig.deviceSupportsGamma = qfalse;
-					ri.Printf(PRINT_WARNING, "WARNING: device has broken gamma support, generated gamma.dat\n");
-				}
+				////
+				//// do a sanity check on the gamma values
+				////
+				//if ((HIBYTE(s_oldHardwareGamma.red[255]) <= HIBYTE(s_oldHardwareGamma.red[0])) ||
+				//	(HIBYTE(s_oldHardwareGamma.green[255]) <= HIBYTE(s_oldHardwareGamma.green[0])) ||
+				//	(HIBYTE(s_oldHardwareGamma.blue[255]) <= HIBYTE(s_oldHardwareGamma.blue[0]))) {
+				//	glConfig.deviceSupportsGamma = qfalse;
+				//	ri.Printf(PRINT_WARNING, "WARNING: device has broken gamma support, generated gamma.dat\n");
+				//}
 
-				//
-				// make sure that we didn't have a prior crash in the game, and if so we need to
-				// restore the gamma values to at least a linear value
-				//
-				if ((s_oldHardwareGamma.red[181] == 255)) {
-					int g;
+				////
+				//// make sure that we didn't have a prior crash in the game, and if so we need to
+				//// restore the gamma values to at least a linear value
+				////
+				//if ((HIBYTE(s_oldHardwareGamma.red[181]) == 255)) {
+				//	int g;
 
-					ri.Printf(PRINT_WARNING, "WARNING: suspicious gamma tables, using linear ramp for restoration\n");
+				//	ri.Printf(PRINT_WARNING, "WARNING: suspicious gamma tables, using linear ramp for restoration\n");
 
-					for (g = 0; g < 255; g++)
-					{
-						s_oldHardwareGamma.red[g] = g;
-						s_oldHardwareGamma.green[g] = g;
-						s_oldHardwareGamma.blue[g] = g;
-					}
-				}
+				//	for (g = 0; g < 255; g++)
+				//	{
+				//		s_oldHardwareGamma.red[g] = g << 8;
+				//		s_oldHardwareGamma.green[g] = g << 8;
+				//		s_oldHardwareGamma.blue[g] = g << 8;
+				//	}
+				//}
 			}
 		}
 	}
 }
-#undef HIBYTE
 
 void DX9imp_SetGamma(unsigned char red[256], unsigned char green[256], unsigned char blue[256]) {
 	D3DGAMMARAMP table;
@@ -1768,9 +1786,9 @@ void DX9imp_SetGamma(unsigned char red[256], unsigned char green[256], unsigned 
 	//mapGammaMax();
 
 	for (i = 0; i < 256; i++) {
-		table.red[i] = /*(((unsigned short)red[i]) << 8) |*/ red[i];
-		table.green[i] = /*(((unsigned short)green[i]) << 8) |*/ green[i];
-		table.blue[i] = /*(((unsigned short)blue[i]) << 8) |*/ blue[i];
+		table.red[i] = (((unsigned short)red[i]) << 8) | red[i];
+		table.green[i] = (((unsigned short)green[i]) << 8) | green[i];
+		table.blue[i] = (((unsigned short)blue[i]) << 8) | blue[i];
 	}
 
 #if 0
@@ -2260,6 +2278,94 @@ void qdx_texobj_apply(int id, int sampler)
 	}
 }
 
+struct fvf_buffers
+{
+	DWORD owner;
+	LPDIRECT3DINDEXBUFFER9 i_buf;
+	struct fvf_vert_buffer
+	{
+		LPDIRECT3DVERTEXBUFFER9 data;
+		UINT fvf;
+	} v_buffs [10];
+} g_fvf_buffers[2];
+
+static int g_used_fvf_buffers = 0;
+
+static int get_buffers(LPDIRECT3DINDEXBUFFER9 *index_buf, LPDIRECT3DVERTEXBUFFER9 *vertex_buf, UINT fvf_spec, UINT fvf_stride)
+{
+	int ret = 0;
+	DWORD whoami = GetCurrentThreadId();
+	int i = 0, j = 0;
+	for (; i < g_used_fvf_buffers; i++)
+	{
+		if (g_fvf_buffers[i].owner == whoami)
+		{
+			if (index_buf)
+				*index_buf = g_fvf_buffers[i].i_buf;
+
+			for (j = 0; j < ARRAYSIZE(g_fvf_buffers[0].v_buffs); j++)
+			{
+				if (g_fvf_buffers[0].v_buffs[j].fvf == fvf_spec)
+				{
+					if (vertex_buf)
+						*vertex_buf = g_fvf_buffers[0].v_buffs[j].data;
+
+					return 0;
+				}
+				else if (g_fvf_buffers[0].v_buffs[j].fvf == 0)
+				{
+					LPDIRECT3DVERTEXBUFFER9 b;
+					if (FAILED(qdx.device->CreateVertexBuffer(SHADER_MAX_VERTEXES * fvf_stride, 0, fvf_spec, D3DPOOL_MANAGED, &b, NULL)))
+					{
+						return -1;
+					}
+					g_fvf_buffers[0].v_buffs[j].fvf = fvf_spec;
+					g_fvf_buffers[0].v_buffs[j].data = b;
+
+					if (vertex_buf)
+						*vertex_buf = b;
+
+					return 0;
+				}
+			}
+
+			return -2;
+		}
+	}
+
+	if (g_used_fvf_buffers + 1 < ARRAYSIZE(g_fvf_buffers))
+	{
+		LPDIRECT3DINDEXBUFFER9 ib;
+		if (FAILED(qdx.device->CreateIndexBuffer(sizeof(qdxIndex_t) * SHADER_MAX_INDEXES, 0, QDX_INDEX_TYPE, D3DPOOL_MANAGED, &ib, NULL)))
+		{
+			return -1;
+		}
+		LPDIRECT3DVERTEXBUFFER9 vb;
+		if (FAILED(qdx.device->CreateVertexBuffer(SHADER_MAX_VERTEXES * fvf_stride, 0, fvf_spec, D3DPOOL_MANAGED, &vb, NULL)))
+		{
+			ib->Release();
+			return -1;
+		}
+
+		struct fvf_buffers *p = &g_fvf_buffers[g_used_fvf_buffers];
+		g_used_fvf_buffers++;
+		p->owner = whoami;
+		p->i_buf = ib;
+		memset(p->v_buffs, 0, sizeof(p->v_buffs));
+		p->v_buffs[0].fvf = fvf_spec;
+		p->v_buffs[0].data = vb;
+
+		if (index_buf)
+			*index_buf = ib;
+		if (vertex_buf)
+			*vertex_buf = vb;
+
+		return 0;
+	}
+
+	return -2;
+}
+
 struct fvf_state
 {
 	BOOL is2dprojection;
@@ -2602,23 +2708,29 @@ void qdx_fvf_assemble_and_draw(UINT numindexes, const qdxIndex_t *indexes)
 	i_buffer->Release();
 }
 
-qdx_vbuffer_t qdx_vbuffer_upload(UINT fvfid, UINT size, void *data)
+qdx_vbuffer_t qdx_vbuffer_upload(qdx_vbuffer_t buf, UINT fvfid, UINT size, void *data)
 {
-	LPDIRECT3DVERTEXBUFFER9 v_buffer;
+	LPDIRECT3DVERTEXBUFFER9 v_buffer = buf;
 
-	ON_FAIL_RET_NULL(
-		qdx.device->CreateVertexBuffer(size,
-			0,
-			fvfid,
-			D3DPOOL_MANAGED,
-			&v_buffer,
-			NULL));
+	if (buf == NULL)
+	{
+		ON_FAIL_RET_NULL(
+			qdx.device->CreateVertexBuffer(size,
+				0,
+				fvfid,
+				D3DPOOL_MANAGED,
+				&v_buffer,
+				NULL));
+	}
 
-	VOID* pVoid;
+	if (size > 0 && data != NULL)
+	{
+		VOID* pVoid;
 
-	ON_FAIL_RET_NULL(v_buffer->Lock(0, 0, (void**)&pVoid, 0));
-	memcpy(pVoid, data, size);
-	v_buffer->Unlock();
+		ON_FAIL_RET_NULL(v_buffer->Lock(0, 0, (void**)&pVoid, 0));
+		memcpy(pVoid, data, size);
+		v_buffer->Unlock();
+	}
 
 	return v_buffer;
 }

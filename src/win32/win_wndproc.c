@@ -82,6 +82,7 @@ static void WIN_EnableAltTab( void ) {
 	}
 }
 
+extern qboolean DX9imp_requires_restart();
 /*
 ==================
 VID_AppActivate
@@ -108,6 +109,11 @@ static void VID_AppActivate( BOOL fActive, BOOL minimize ) {
 	} else
 	{
 		IN_Activate( qtrue );
+	}
+
+	if (g_wv.activeApp) {
+		if(DX9imp_requires_restart())
+			Cbuf_AddText("vid_restart\n");
 	}
 }
 

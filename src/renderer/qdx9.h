@@ -38,6 +38,7 @@ struct qdx9_state
 	UINT adapter_num;
 	D3DADAPTER_IDENTIFIER9 adapter_info;
 	D3DCAPS9 caps;
+	BOOL devicelost;
 };
 
 extern struct qdx9_state qdx;
@@ -166,7 +167,7 @@ typedef struct fvf_vertcoltex2
 
 typedef LPDIRECT3DVERTEXBUFFER9 qdx_vbuffer_t;
 
-qdx_vbuffer_t qdx_vbuffer_upload(UINT fvfid, UINT size, void *data);
+qdx_vbuffer_t qdx_vbuffer_upload(qdx_vbuffer_t buf, UINT fvfid, UINT size, void *data);
 void qdx_vbuffer_release(qdx_vbuffer_t buf);
 
 
