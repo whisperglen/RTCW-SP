@@ -225,8 +225,6 @@ R_AddDrawSurfCmd
 =============
 */
 void    R_AddDrawSurfCmd( drawSurf_t *drawSurfs, int numDrawSurfs ) {
-	function_called(__func__);
-
 	drawSurfsCommand_t  *cmd;
 
 	cmd = R_GetCommandBuffer( sizeof( *cmd ) );
@@ -251,8 +249,6 @@ Passing NULL will set the color to white
 =============
 */
 void    RE_SetColor( const float *rgba ) {
-	function_called(__func__);
-
 	setColorCommand_t   *cmd;
 
 	cmd = R_GetCommandBuffer( sizeof( *cmd ) );
@@ -280,8 +276,6 @@ RE_StretchPic
 */
 void RE_StretchPic( float x, float y, float w, float h,
 					float s1, float t1, float s2, float t2, qhandle_t hShader ) {
-	function_called(__func__);
-
 	stretchPicCommand_t *cmd;
 
 	cmd = R_GetCommandBuffer( sizeof( *cmd ) );
@@ -309,8 +303,6 @@ RE_StretchPicGradient
 */
 void RE_StretchPicGradient( float x, float y, float w, float h,
 							float s1, float t1, float s2, float t2, qhandle_t hShader, const float *gradientColor, int gradientType ) {
-	function_called(__func__);
-
 	stretchPicCommand_t *cmd;
 
 	cmd = R_GetCommandBuffer( sizeof( *cmd ) );
@@ -352,8 +344,6 @@ for each RE_EndFrame
 ====================
 */
 void RE_BeginFrame( stereoFrame_t stereoFrame ) {
-	function_called(__func__);
-
 	drawBufferCommand_t *cmd;
 
 	if ( !tr.registered ) {
@@ -537,8 +527,6 @@ Returns the number of msec spent in the back end
 =============
 */
 void RE_EndFrame( int *frontEndMsec, int *backEndMsec ) {
-	function_called(__func__);
-
 	swapBuffersCommand_t    *cmd;
 
 	if ( !tr.registered ) {

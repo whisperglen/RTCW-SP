@@ -1265,7 +1265,6 @@ RE_Shutdown
 ===============
 */
 void RE_Shutdown( qboolean destroyWindow ) {
-	function_called(__func__);
 
 	ri.Printf( PRINT_ALL, "RE_Shutdown( %i )\n", destroyWindow );
 
@@ -1326,8 +1325,6 @@ void RE_Shutdown( qboolean destroyWindow ) {
 	}
 
 	tr.registered = qfalse;
-
-	functions_dump();
 }
 
 
@@ -1339,8 +1336,6 @@ Touch all images to make sure they are resident
 =============
 */
 void RE_EndRegistration( void ) {
-	function_called(__func__);
-
 	R_SyncRenderThread();
 	if ( !Sys_LowPhysicalMemory() ) {
 		RB_ShowImages();

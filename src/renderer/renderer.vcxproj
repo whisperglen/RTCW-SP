@@ -187,10 +187,7 @@
     <ClCompile Include="..\jpeg-6\jmemmgr.c" />
     <ClCompile Include="..\jpeg-6\jmemnobs.c" />
     <ClCompile Include="..\jpeg-6\jutils.c" />
-    <ClCompile Include="..\win32\win_dx9imp.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</ExcludedFromBuild>
-    </ClCompile>
+    <ClCompile Include="..\win32\win_dx9imp.cpp" />
     <ClCompile Include="..\win32\win_qgl_dummy.c" />
     <ClCompile Include="DirectXTex\BC.cpp" />
     <ClCompile Include="DirectXTex\DirectXTexCompress.cpp" />

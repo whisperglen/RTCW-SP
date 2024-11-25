@@ -2579,8 +2579,6 @@ RE_GetSkinModel
 ==============
 */
 qboolean RE_GetSkinModel( qhandle_t skinid, const char *type, char *name ) {
-	function_called(__func__);
-
 	int i;
 	skin_t      *bar;
 
@@ -2612,8 +2610,6 @@ RE_GetShaderFromModel
 ==============
 */
 qhandle_t RE_GetShaderFromModel( qhandle_t modelid, int surfnum, int withlightmap ) {
-	function_called(__func__);
-
 	model_t     *model;
 	bmodel_t    *bmodel;
 	msurface_t  *surf;
@@ -2669,8 +2665,6 @@ RE_RegisterSkin
 ===============
 */
 qhandle_t RE_RegisterSkin( const char *name ) {
-	function_called(__func__);
-
 	qhandle_t hSkin;
 	skin_t      *skin;
 	skinSurface_t   *surf;

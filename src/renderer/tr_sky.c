@@ -882,7 +882,7 @@ void RB_DrawSun( void ) {
 	qdx_matrix_set(D3DTS_WORLD, backEnd.viewParms.world.modelMatrix);
 	//qglTranslatef( backEnd.viewParms.or.origin[0], backEnd.viewParms.or.origin[1], backEnd.viewParms.or.origin[2] );
 	D3DXMATRIX msun;
-	D3DXMatrixTranslation(&msun, backEnd.viewParms. or .origin[0], backEnd.viewParms. or .origin[1], backEnd.viewParms. or .origin[2]);
+	D3DXMatrixTranslation(&msun, backEnd.viewParms.or.origin[0], backEnd.viewParms.or.origin[1], backEnd.viewParms.or.origin[2]);
 	qdx_matrix_mul(D3DTS_WORLD, &msun);
 
 	dist =  backEnd.viewParms.zFar / 1.75;      // div sqrt(3)

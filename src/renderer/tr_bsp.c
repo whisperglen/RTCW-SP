@@ -227,8 +227,6 @@ space in big maps...
 =================
 */
 void        RE_SetWorldVisData( const byte *vis ) {
-	function_called(__func__);
-
 	tr.externalVisData = vis;
 }
 
@@ -2127,8 +2125,6 @@ R_GetEntityToken
 =================
 */
 qboolean R_GetEntityToken( char *buffer, int size ) {
-	function_called(__func__);
-
 	const char  *s;
 
 	s = COM_Parse( &s_worldData.entityParsePoint );
@@ -2149,8 +2145,6 @@ Called directly from cgame
 =================
 */
 void RE_LoadWorldMap( const char *name ) {
-	function_called(__func__);
-
 	int i;
 	dheader_t   *header;
 	byte        *buffer;

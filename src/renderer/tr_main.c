@@ -248,8 +248,6 @@ R_SetFog
 ==============
 */
 void R_SetFog(int fogvar, int var1, int var2, float r, float g, float b, float density) {
-	function_called(__func__);
-
 	if (fogvar != FOG_CMD_SWITCHFOG) {   // just set the parameters and return
 
 		if (var1 == 0 && var2 == 0) {    // clear this fog
@@ -568,37 +566,37 @@ void R_RotateForEntity(const trRefEntity_t *ent, const viewParms_t *viewParms,
 		return;
 	}
 
-	VectorCopy(ent->e.origin, or ->origin);
+	VectorCopy(ent->e.origin, or->origin);
 
-	VectorCopy(ent->e.axis[0], or ->axis[0]);
-	VectorCopy(ent->e.axis[1], or ->axis[1]);
-	VectorCopy(ent->e.axis[2], or ->axis[2]);
+	VectorCopy(ent->e.axis[0], or->axis[0]);
+	VectorCopy(ent->e.axis[1], or->axis[1]);
+	VectorCopy(ent->e.axis[2], or->axis[2]);
 
-	glMatrix[0] = or ->axis[0][0];
-	glMatrix[4] = or ->axis[1][0];
-	glMatrix[8] = or ->axis[2][0];
-	glMatrix[12] = or ->origin[0];
+	glMatrix[0] = or->axis[0][0];
+	glMatrix[4] = or->axis[1][0];
+	glMatrix[8] = or->axis[2][0];
+	glMatrix[12] = or->origin[0];
 
-	glMatrix[1] = or ->axis[0][1];
-	glMatrix[5] = or ->axis[1][1];
-	glMatrix[9] = or ->axis[2][1];
-	glMatrix[13] = or ->origin[1];
+	glMatrix[1] = or->axis[0][1];
+	glMatrix[5] = or->axis[1][1];
+	glMatrix[9] = or->axis[2][1];
+	glMatrix[13] = or->origin[1];
 
-	glMatrix[2] = or ->axis[0][2];
-	glMatrix[6] = or ->axis[1][2];
-	glMatrix[10] = or ->axis[2][2];
-	glMatrix[14] = or ->origin[2];
+	glMatrix[2] = or->axis[0][2];
+	glMatrix[6] = or->axis[1][2];
+	glMatrix[10] = or->axis[2][2];
+	glMatrix[14] = or->origin[2];
 
 	glMatrix[3] = 0;
 	glMatrix[7] = 0;
 	glMatrix[11] = 0;
 	glMatrix[15] = 1;
 
-	myGlMultMatrix(glMatrix, viewParms->world.modelMatrix, or ->modelMatrix);
+	myGlMultMatrix(glMatrix, viewParms->world.modelMatrix, or->modelMatrix);
 
 	// calculate the viewer origin in the model's space
 	// needed for fog, specular, and environment mapping
-	VectorSubtract(viewParms-> or .origin, or ->origin, delta);
+	VectorSubtract(viewParms-> or.origin, or->origin, delta);
 
 	// compensate for scale in the axes if necessary
 	if (ent->e.nonNormalizedAxes) {
@@ -612,9 +610,9 @@ void R_RotateForEntity(const trRefEntity_t *ent, const viewParms_t *viewParms,
 		axisLength = 1.0f;
 	}
 
-	or ->viewOrigin[0] = DotProduct(delta, or ->axis[0]) * axisLength;
-	or ->viewOrigin[1] = DotProduct(delta, or ->axis[1]) * axisLength;
-	or ->viewOrigin[2] = DotProduct(delta, or ->axis[2]) * axisLength;
+	or->viewOrigin[0] = DotProduct(delta, or->axis[0]) * axisLength;
+	or->viewOrigin[1] = DotProduct(delta, or->axis[1]) * axisLength;
+	or->viewOrigin[2] = DotProduct(delta, or->axis[2]) * axisLength;
 }
 
 /*
@@ -628,7 +626,7 @@ void R_RotateForViewer(void) {
 	float viewerMatrix[16];
 	vec3_t origin;
 
-	memset(&tr. or , 0, sizeof(tr. or ));
+	memset(&tr.or, 0, sizeof(tr.or));
 	tr.or.axis[0][0] = 1;
 	tr.or.axis[1][1] = 1;
 	tr.or.axis[2][2] = 1;
@@ -661,7 +659,7 @@ void R_RotateForViewer(void) {
 	// to OpenGL's coordinate system (looking down -Z)
 	myGlMultMatrix(viewerMatrix, s_flipMatrix, tr.or.modelMatrix);
 
-	tr.viewParms.world = tr. or ;
+	tr.viewParms.world = tr.or;
 
 }
 
@@ -1038,7 +1036,7 @@ qboolean R_GetPortalOrientations(drawSurf_t *drawSurf, int entityNum,
 		tr.currentEntity = &tr.refdef.entities[entityNum];
 
 		// get the orientation of the entity
-		R_RotateForEntity(tr.currentEntity, &tr.viewParms, &tr. or );
+		R_RotateForEntity(tr.currentEntity, &tr.viewParms, &tr.or);
 
 		// rotate the plane, but keep the non-rotated version for matching
 		// against the portalSurface entities
@@ -1153,7 +1151,7 @@ static qboolean IsMirror(const drawSurf_t *drawSurf, int entityNum) {
 		tr.currentEntity = &tr.refdef.entities[entityNum];
 
 		// get the orientation of the entity
-		R_RotateForEntity(tr.currentEntity, &tr.viewParms, &tr. or );
+		R_RotateForEntity(tr.currentEntity, &tr.viewParms, &tr.or);
 
 		// rotate the plane, but keep the non-rotated version for matching
 		// against the portalSurface entities
@@ -1738,7 +1736,7 @@ void R_AddEntitySurfaces(void) {
 
 		case RT_MODEL:
 			// we must set up parts of tr.or for model culling
-			R_RotateForEntity(ent, &tr.viewParms, &tr. or );
+			R_RotateForEntity(ent, &tr.viewParms, &tr.or);
 
 			tr.currentModel = R_GetModelByHandle(ent->e.hModel);
 			if (!tr.currentModel) {

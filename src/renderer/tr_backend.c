@@ -712,8 +712,6 @@ void RB_ZombieFXInit( void ) {
 }
 
 void RB_ZombieFXAddNewHit( int entityNum, const vec3_t hitPos, const vec3_t hitDir ) {
-	function_called(__func__);
-
 	int part = 0;
 
 // disabled for E3, are we still going to use this?
@@ -1267,8 +1265,6 @@ Used for cinematics.
 =============
 */
 void RE_StretchRaw( int x, int y, int w, int h, int cols, int rows, const byte *data, int client, qboolean dirty ) {
-	function_called(__func__);
-
 	int i, j;
 	int start, end;
 
@@ -1382,8 +1378,6 @@ void RE_StretchRaw( int x, int y, int w, int h, int cols, int rows, const byte *
 
 
 void RE_UploadCinematic( int w, int h, int cols, int rows, const byte *data, int client, qboolean dirty ) {
-	function_called(__func__);
-
 
 	GL_Bind( tr.scratchImage[client] );
 
@@ -1418,8 +1412,6 @@ RB_SetColor
 =============
 */
 const void  *RB_SetColor( const void *data ) {
-	function_called(__func__);
-
 	const setColorCommand_t *cmd;
 
 	cmd = (const setColorCommand_t *)data;
@@ -1438,8 +1430,6 @@ RB_StretchPic
 =============
 */
 const void *RB_StretchPic( const void *data ) {
-	function_called(__func__);
-
 	const stretchPicCommand_t   *cmd;
 	shader_t *shader;
 	int numVerts, numIndexes;
@@ -1516,8 +1506,6 @@ RB_StretchPicGradient
 ==============
 */
 const void *RB_StretchPicGradient( const void *data ) {
-	function_called(__func__);
-
 	const stretchPicCommand_t   *cmd;
 	shader_t *shader;
 	int numVerts, numIndexes;
@@ -1601,8 +1589,6 @@ RB_DrawSurfs
 =============
 */
 const void  *RB_DrawSurfs( const void *data ) {
-	function_called(__func__);
-
 	const drawSurfsCommand_t    *cmd;
 
 	// finish any 2D drawing if needed
@@ -1628,8 +1614,6 @@ RB_DrawBuffer
 =============
 */
 const void  *RB_DrawBuffer( const void *data ) {
-	function_called(__func__);
-
 	const drawBufferCommand_t   *cmd;
 
 	cmd = (const drawBufferCommand_t *)data;
@@ -1745,8 +1729,6 @@ RB_SwapBuffers
 =============
 */
 const void  *RB_SwapBuffers( const void *data ) {
-	function_called(__func__);
-
 	const swapBuffersCommand_t  *cmd;
 
 	// finish any 2D drawing if needed
