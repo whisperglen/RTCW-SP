@@ -535,8 +535,7 @@ void RB_BeginDrawingView( void ) {
 
 	// clear relevant buffers
 	clearBits = 0;
-	DWORD clearColor = 0;
-#define qglClearColor(r,g,b,a) clearColor = D3DCOLOR_COLORVALUE((r),(g),(b),(a))
+#define qglClearColor(r,g,b,a) qdx.clearColor = D3DCOLOR_COLORVALUE((r),(g),(b),(a))
 
 	if ( r_measureOverdraw->integer || r_shadows->integer == 2 ) {
 		clearBits |= GL_STENCIL_BUFFER_BIT;
@@ -629,7 +628,7 @@ void RB_BeginDrawingView( void ) {
 		if(clearBits & GL_STENCIL_BUFFER_BIT)
 			newBits |= D3DCLEAR_STENCIL;
 
-		IDirect3DDevice9_Clear(qdx.device, 0, NULL, newBits, clearColor, qdx.depth_clear, 0);
+		IDirect3DDevice9_Clear(qdx.device, 0, NULL, newBits, qdx.clearColor, qdx.depth_clear, 0);
 	}
 
 //----(SA)	done

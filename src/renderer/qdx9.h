@@ -24,6 +24,7 @@ struct qdx9_state
 	LPDIRECT3DDEVICE9 device;
 
 	D3DCOLOR crt_color;
+	D3DCOLOR clearColor;
 	D3DCULL cull_mode;
 	float depth_clear;
 	float znear, zfar;

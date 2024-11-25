@@ -303,26 +303,47 @@ DrawNormals
 Draws vertex normals for debugging
 ================
 */
+static fvf_vertcol_t g_viewnormals[2*SHADER_MAX_VERTEXES];
 static void DrawNormals( shaderCommands_t *input ) {
 	int i;
-	vec3_t temp;
+	//vec3_t temp;
 
 	GL_Bind( tr.whiteImage );
-	qglColor3f( 1,1,1 );
+	//qglColor3f( 1,1,1 );
+	D3DCOLOR color = D3DCOLOR_XRGB(255, 255, 255);
 
 	if ( r_shownormals->integer == 1 ) {
-		qglDepthRange( 0, 0 );  // never occluded
+		//qglDepthRange( 0, 0 );  // never occluded
+		qdx_depthrange(0, 0);
 	}
 	GL_State( GLS_POLYMODE_LINE | GLS_DEPTHMASK_TRUE );
 
-	qglBegin( GL_LINES );
+	//qglBegin( GL_LINES );
+	fvf_vertcol_t *p = g_viewnormals;
 	for ( i = 0 ; i < input->numVertexes ; i++ ) {
-		qglVertex3fv( input->xyz[i] );
-		VectorMA( input->xyz[i], 2, input->normal[i], temp );
-		qglVertex3fv( temp );
+		//qglVertex3fv( input->xyz[i] );
+		memcpy(p->XYZ, input->xyz[i], sizeof(p->XYZ));
+		p->COLOR = color;
+		p++;
+		VectorMA( input->xyz[i], 2, input->normal[i], p->XYZ);
+		//qglVertex3fv( temp );
+		p->COLOR = color;
+		p++;
 	}
-	qglEnd();
-	qglDepthRange( 0, 1 );
+	//qglEnd();
+	DX9_BEGIN_SCENE();
+
+	IDirect3DDevice9_SetFVF(qdx.device, FVFID_VERTCOL);
+
+
+	qdx_texobj_apply(tr.whiteImage->texnum - TEXNUM_OFFSET, 0);
+	qdx_matrix_apply();
+
+	IDirect3DDevice9_DrawPrimitiveUP(qdx.device, D3DPT_LINELIST, input->numVertexes, g_viewnormals, sizeof(g_viewnormals[0]));
+
+	DX9_END_SCENE();
+	//qglDepthRange( 0, 1 );
+	qdx_depthrange(0, 1);
 }
 
 /*
