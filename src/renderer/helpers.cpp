@@ -11,7 +11,7 @@ extern "C" {
 #include "..\qcommon\qcommon.h"
 }
 #include <Windows.h>
-#include <Winuser.h>
+#include <WinUser.h>
 
 static std::map<std::string, int> occurences;
 static std::vector<std::string> ordered_calls;
@@ -24,35 +24,6 @@ extern "C" inputs_t get_keypressed()
 {
 	inputs_t ret = { 0 };
 
-	if (IS_PRESSED(GetAsyncKeyState('X')))
-	{
-		prevstate.x = 1;
-	}
-	else if (prevstate.x == 1)
-	{
-		ret.x = 1;
-		prevstate.x = 0;
-	}
-	///
-	if (IS_PRESSED(GetAsyncKeyState('Y')))
-	{
-		prevstate.y = 1;
-	}
-	else if (prevstate.y == 1)
-	{
-		ret.y = 1;
-		prevstate.y = 0;
-	}
-	///
-	if (IS_PRESSED(GetAsyncKeyState('Z')))
-	{
-		prevstate.z = 1;
-	}
-	else if (prevstate.z == 1)
-	{
-		ret.z = 1;
-		prevstate.z = 0;
-	}
 	///
 	if (IS_PRESSED(GetAsyncKeyState(VK_CONTROL)))
 	{
@@ -90,6 +61,66 @@ extern "C" inputs_t get_keypressed()
 	{
 		ret.leftright = prevstate.leftright;
 		prevstate.leftright = 0;
+	}
+	///
+	if (IS_PRESSED(GetAsyncKeyState('X')))
+	{
+		prevstate.x = 1;
+	}
+	else if (prevstate.x == 1)
+	{
+		ret.x = 1;
+		prevstate.x = 0;
+	}
+	///
+	if (IS_PRESSED(GetAsyncKeyState('Y')))
+	{
+		prevstate.y = 1;
+	}
+	else if (prevstate.y == 1)
+	{
+		ret.y = 1;
+		prevstate.y = 0;
+	}
+	///
+	if (IS_PRESSED(GetAsyncKeyState('Z')))
+	{
+		prevstate.z = 1;
+	}
+	else if (prevstate.z == 1)
+	{
+		ret.z = 1;
+		prevstate.z = 0;
+	}
+	///
+	if (IS_PRESSED(GetAsyncKeyState('I')))
+	{
+		prevstate.i = 1;
+	}
+	else if (prevstate.i == 1)
+	{
+		ret.i = 1;
+		prevstate.i = 0;
+	}
+	///
+	if (IS_PRESSED(GetAsyncKeyState('O')))
+	{
+		prevstate.o = 1;
+	}
+	else if (prevstate.o == 1)
+	{
+		ret.o = 1;
+		prevstate.o = 0;
+	}
+	///
+	if (IS_PRESSED(GetAsyncKeyState('U')))
+	{
+		prevstate.u = 1;
+	}
+	else if (prevstate.u == 1)
+	{
+		ret.u = 1;
+		prevstate.u = 0;
 	}
 
 	return ret;

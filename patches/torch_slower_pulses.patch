@@ -1,0 +1,63 @@
+diff --git a/src/game/g_misc.c b/src/game/g_misc.c
+index 197bcc8..9cd4a4d 100644
+--- a/src/game/g_misc.c
++++ b/src/game/g_misc.c
+@@ -1220,6 +1220,31 @@ void SP_corona( gentity_t *ent ) {
+ // (SA) dlights and dlightstyles
+ 
+ char* predef_lightstyles[] = {
++	"mmnnmmnonmmnonmmnoonmmnonoqonmmnoo",//"mmnmmommommnonmmonqnmmo",
++	"abcdefghijklmnopqrstuvwxyzyxwvutsrqponmlkjihgfedcba",
++	"mmmmmaaaaammmmmaaaaaabcdefgabcdefg",
++	"ma",
++	"jklmnopqrstuvwxyzyxwvutsrqponmlkj",
++	"nnmmnoonoqonnmnonmmnnmnonmnonmnoonnoo",//"nmonqnmomnmomomono",
++	"mmmaaaabcdefgmmmmaaaammmaamm",
++	"aaaaaaaazzzzzzzz",
++	"mmamammmmammamamaaamammma",
++	"abcdefghijklmnopqrrqponmlkjihgfedcba",
++	"mmnommomhkmmomnonmmonqnmmo",
++	"kmamaamakmmmaakmamakmakmmmma",
++	"kmmmakakmmaaamammamkmamakmmmma",
++	"mmnnoonnmmmmmmmmmnmmmmnonmmmmmmm",
++	"mmmmnonmmmmnmmmmmnonmmmmmnmmmmmmm",
++	"zzzzzzzzaaaaaaaa",
++	"zzzzzzzzaaaaaaaaaaaaaaaa",
++	"aaaaaaaazzzzzzzzaaaaaaaa",
++	"aaaaaaaaaaaaaaaazzzzzzzz",
++	"nnmnoonnoonnmnonmmnnmnonmnonmnoonnoo",//"nmononmomnmomomono"
++	"hhijklmmmmmmmmmlkjihh",
++	"omnmlnmononmomnmomomono",
++};
++
++char* predef_lightstyles_orig[] = {
+ 	"mmnmmommommnonmmonqnmmo",
+ 	"abcdefghijklmnopqrstuvwxyzyxwvutsrqponmlkjihgfedcba",
+ 	"mmmmmaaaaammmmmaaaaaabcdefgabcdefg",
+@@ -1238,7 +1263,10 @@ char* predef_lightstyles[] = {
+ 	"zzzzzzzzaaaaaaaa",
+ 	"zzzzzzzzaaaaaaaaaaaaaaaa",
+ 	"aaaaaaaazzzzzzzzaaaaaaaa",
+-	"aaaaaaaaaaaaaaaazzzzzzzz"
++	"aaaaaaaaaaaaaaaazzzzzzzz",
++	"nmononmomnmomomono",
++	//"hhijklmmmmmmmmmlkjihh",
++	//"omnmlnmononmomnmomomono",
+ };
+ 
+ 
+@@ -1355,6 +1383,14 @@ void SP_dlight( gentity_t *ent ) {
+ 	}
+ 
+ 	if ( ent->dl_stylestring && strlen( ent->dl_stylestring ) ) {    // if they're specified in a string, use em
++		for (int i = 0; i < sizeof(predef_lightstyles_orig) / sizeof(predef_lightstyles_orig[0]); i++)
++		{
++			if (0 == strcmp(ent->dl_stylestring, predef_lightstyles_orig[i]))
++			{
++				ent->dl_stylestring = predef_lightstyles[i];
++				break;
++			}
++		}
+ 	} else if ( style )       {
+ 		style = max( 1, style );                                  // clamp to predefined range
+ 		style = min( 19, style );

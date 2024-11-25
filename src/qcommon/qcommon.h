@@ -1075,12 +1075,15 @@ void functions_dump();
 typedef union inputs
 {
 	struct {
+		int updown : 2;
+		int leftright : 2;
+		unsigned int ctrl : 1;
 		unsigned int x : 1;
 		unsigned int y : 1;
 		unsigned int z : 1;
-		int updown     : 2;
-		int leftright  : 2;
-		unsigned int ctrl : 1;
+		unsigned int i : 1;
+		unsigned int o : 1;
+		unsigned int u : 1;
 	};
 	unsigned int all;
 } inputs_t;
