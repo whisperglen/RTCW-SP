@@ -1,0 +1,115 @@
+diff --git a/src/renderer/tr_backend.c b/src/renderer/tr_backend.c
+index c3239d0..5f3a0d3 100644
+--- a/src/renderer/tr_backend.c
++++ b/src/renderer/tr_backend.c
+@@ -32,14 +32,15 @@ backEndData_t   *backEndData[SMP_FRAMES];
+ backEndState_t backEnd;
+ 
+ 
+-static float s_flipMatrix[16] = {
+-	// convert from our coordinate system (looking down X)
+-	// to OpenGL's coordinate system (looking down -Z)
+-	0, 0, -1, 0,
+-	-1, 0, 0, 0,
+-	0, 1, 0, 0,
+-	0, 0, 0, 1
+-};
++//static float s_flipMatrix[16] = {
++//	// convert from our coordinate system (looking down X)
++//	// to OpenGL's coordinate system (looking down -Z)
++//	0, 0, -1, 0,
++//	-1, 0, 0, 0,
++//	0, 1, 0, 0,
++//	0, 0, 0, 1
++//};
++extern float s_flipMatrix[16];
+ 
+ 
+ /*
+@@ -164,6 +165,13 @@ void GL_Cull( int cullType ) {
+ 				mode = D3DCULL_CCW;
+ 			}
+ 		}
++#ifdef MATRIX_LH
++		if (mode == D3DCULL_CW)
++			mode = D3DCULL_CCW;
++		else if (mode == D3DCULL_CCW)
++			mode = D3DCULL_CW;
++		//mode = D3DCULL_NONE;
++#endif
+ 		IDirect3DDevice9_SetRenderState(qdx.device, D3DRS_CULLMODE, mode);
+ 	}
+ }
+@@ -435,10 +443,20 @@ static void SetViewportAndScissor( void ) {
+ 	//qglLoadMatrixf( backEnd.viewParms.projectionMatrix );
+ 	D3DXMATRIX mat;
+ 	memcpy(&mat.m[0][0], backEnd.viewParms.projectionMatrix, 16 * sizeof(float));
++#ifndef MATRIX_LH
++	// RH calculations
+ 	// m[2][2] = zf /( zn - zf )
+ 	// m[3][2] = zn * zf /( zn - zf )
+ 	mat.m[2][2] = qdx.zfar / (qdx.znear - qdx.zfar);
+ 	mat.m[3][2] = qdx.znear * qdx.zfar / (qdx.znear - qdx.zfar);
++#else
++	// LH calculations
++	// m[2][2] = zf /( zf - zn )
++	// m[3][2] = -zn * zf /( zf - zn )
++	mat.m[2][2] = qdx.zfar / (qdx.zfar - qdx.znear);
++	mat.m[2][3] = 1;
++	mat.m[3][2] = -qdx.znear * qdx.zfar / (qdx.zfar - qdx.znear);
++#endif
+ 	qdx_matrix_set(D3DTS_PROJECTION, &mat.m[0][0]);
+ 	//qglMatrixMode( GL_MODELVIEW );
+ 
+@@ -1232,7 +1250,11 @@ void    RB_SetGL2D( void ) {
+ 	//qglLoadIdentity();
+ 	//qglOrtho( 0, glConfig.vidWidth, glConfig.vidHeight, 0, 0, 1 );
+ 	D3DMATRIX mat;
++#ifndef MATRIX_LH
+ 	D3DXMatrixOrthoOffCenterRH(&mat, 0, glConfig.vidWidth, glConfig.vidHeight, 0, 0, 1);
++#else
++	D3DXMatrixOrthoOffCenterLH(&mat, 0, glConfig.vidWidth, glConfig.vidHeight, 0, 0, 1);
++#endif
+ 	qdx_matrix_set(D3DTS_PROJECTION, &mat.m[0][0]);
+ 	//qglMatrixMode( GL_MODELVIEW );
+ 	//qglLoadIdentity();
+diff --git a/src/renderer/tr_main.c b/src/renderer/tr_main.c
+index 6db3a11..3b7edae 100644
+--- a/src/renderer/tr_main.c
++++ b/src/renderer/tr_main.c
+@@ -37,7 +37,8 @@ If you have questions concerning this license or the applicable additional terms
+ 
+ trGlobals_t tr;
+ 
+-static float s_flipMatrix[16] = {
++#ifndef MATRIX_LH
++float s_flipMatrix[16] = {
+ 	// convert from our coordinate system (looking down X)
+ 	// to OpenGL's coordinate system (looking down -Z)
+ 	0, 0, -1, 0,
+@@ -45,7 +46,24 @@ static float s_flipMatrix[16] = {
+ 	0, 1, 0, 0,
+ 	0, 0, 0, 1
+ };
+-
++#else
++//float s_flipMatrix[16] = {
++//	// convert from our coordinate system (looking down X)
++//	// to DX's coordinate system (looking down Z)
++//	0, 0, 1, 0,
++//	-1, 0, 0, 0,
++//	0, 1, 0, 0,
++//	0, 0, 0, 1
++//};
++float s_flipMatrix[16] = {
++	// convert from our coordinate system (looking down X)
++	// to DX's coordinate system (looking down Z)
++	0, 1, 0, 0,
++	0, 0, 1, 0,
++	1, 0, 0, 0,
++	0, 0, 0, 1
++};
++#endif
+ 
+ refimport_t ri;
+ 

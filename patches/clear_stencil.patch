@@ -1,0 +1,26 @@
+diff --git a/src/renderer/tr_backend.c b/src/renderer/tr_backend.c
+index c3239d0..15e4f57 100644
+--- a/src/renderer/tr_backend.c
++++ b/src/renderer/tr_backend.c
+@@ -624,7 +624,10 @@ void RB_BeginDrawingView( void ) {
+ 		if(clearBits & GL_COLOR_BUFFER_BIT)
+ 			newBits |= D3DCLEAR_TARGET;
+ 		if (clearBits & GL_DEPTH_BUFFER_BIT)
++		{
+ 			newBits |= D3DCLEAR_ZBUFFER;
++			if(glConfig.stencilBits) newBits |= D3DCLEAR_STENCIL;
++		}
+ 		if(clearBits & GL_STENCIL_BUFFER_BIT)
+ 			newBits |= D3DCLEAR_STENCIL;
+ 
+@@ -1640,7 +1643,9 @@ const void  *RB_DrawBuffer( const void *data ) {
+ 	if ( r_clear->integer ) {
+ 		//qglClearColor( 1, 0, 0.5, 1 );
+ 		//qglClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
+-		IDirect3DDevice9_Clear(qdx.device, 0, NULL, D3DCLEAR_TARGET| D3DCLEAR_ZBUFFER, D3DCOLOR_COLORVALUE(1, 0, 0.5, 1), qdx.depth_clear, 0);
++		DWORD type = D3DCLEAR_TARGET | D3DCLEAR_ZBUFFER;
++		if (glConfig.stencilBits) type |= D3DCLEAR_STENCIL;
++		IDirect3DDevice9_Clear(qdx.device, 0, NULL, type, D3DCOLOR_COLORVALUE(1, 0, 0.5, 1), qdx.depth_clear, 0);
+ 	}
+ 
+ 	return (const void *)( cmd + 1 );

@@ -1,0 +1,35 @@
+diff --git a/src/renderer/tr_shade_calc.c b/src/renderer/tr_shade_calc.c
+index d91b81f..add99fe 100644
+--- a/src/renderer/tr_shade_calc.c
++++ b/src/renderer/tr_shade_calc.c
+@@ -899,6 +899,13 @@ void RB_CalcFogTexCoords( float *st ) {
+ 		eyeOutside = qfalse;
+ 	}
+ 
++	if (r_logFile->integer)
++	{
++		GPUimp_LogComment(va("RB_CalcFogTexCoords( % 2.4f % 2.4f % 2.4f % 2.4f )( % 2.4f % 2.4f % 2.4f % 2.4f )\nRB_CalcFogTexCoords",
++			fogDistanceVector[0], fogDistanceVector[1], fogDistanceVector[2], fogDistanceVector[3],
++			fogDepthVector[0], fogDepthVector[1], fogDepthVector[2], fogDepthVector[3]));
++	}
++
+ 	fogDistanceVector[3] += 1.0 / 512;
+ 
+ 	// calculate density for each point
+@@ -924,8 +931,16 @@ void RB_CalcFogTexCoords( float *st ) {
+ 
+ 		st[0] = s;
+ 		st[1] = t;
++		if (r_logFile->integer)
++		{
++			GPUimp_LogComment(va("[ % 2.4f % 2.4f ] ", st[0], st[1]));
++		}
+ 		st += 2;
+ 	}
++	if (r_logFile->integer)
++	{
++		GPUimp_LogComment("\n");
++	}
+ }
+ 
+ 

@@ -1,0 +1,119 @@
+diff --git a/src/qcommon/qcommon.h b/src/qcommon/qcommon.h
+index fc7a14e..6fabc75 100644
+--- a/src/qcommon/qcommon.h
++++ b/src/qcommon/qcommon.h
+@@ -1090,4 +1090,17 @@ typedef union inputs
+ 
+ inputs_t get_keypressed();
+ 
++struct selective_draw
++{
++	int threshold_active;
++	int shader_active;
++	int drawcall_active;
++	int by_shader;
++	int by_drawcall;
++	int shader_count;
++	int drawcall_count;
++};
++
++extern struct selective_draw qdx_drawp;
++
+ #endif // _QCOMMON_H_
+diff --git a/src/renderer/tr_cmds.c b/src/renderer/tr_cmds.c
+index c381282..6873262 100644
+--- a/src/renderer/tr_cmds.c
++++ b/src/renderer/tr_cmds.c
+@@ -364,6 +364,17 @@ void RE_BeginFrame( stereoFrame_t stereoFrame ) {
+ 	tr.frameCount++;
+ 	tr.frameSceneNum = 0;
+ 
++	if(qdx_drawp.shader_count < 5 + qdx_drawp.by_shader)
++	{
++		qdx_drawp.by_shader = -1;
++	}
++	if(qdx_drawp.drawcall_count < 5 + qdx_drawp.by_drawcall)
++	{
++		qdx_drawp.by_drawcall = -1;
++	}
++	qdx_drawp.shader_count = 0;
++	qdx_drawp.drawcall_count = 0;
++
+ 	//
+ 	// do overdraw measurement
+ 	//
+diff --git a/src/renderer/tr_shade.c b/src/renderer/tr_shade.c
+index 2a710bf..790e1b9 100644
+--- a/src/renderer/tr_shade.c
++++ b/src/renderer/tr_shade.c
+@@ -1180,6 +1180,9 @@ void SetIteratorFog( void ) {
+ 	}
+ }
+ 
++struct selective_draw qdx_drawp = { 0, 0, 0, -1, -1, 0, 0 };
++#define DRAWP_DRAW(A, B) ( qdx_drawp.threshold_active == 0 ? ((A) <= (B)) : (qdx_drawp.threshold_active == 1 ? ((A) == (B)) : ((A) != (B))) )
++#define DRAWP_DROP(A, B) ( qdx_drawp.threshold_active == 0 ? ((A) > (B)) : (qdx_drawp.threshold_active == 1 ? ((A) != (B)) : ((A) == (B))) )
+ 
+ /*
+ ** RB_IterateStagesGeneric
+@@ -1204,6 +1207,10 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input ) {
+ 			qdx_fvf_buffer(FVF_COLOR, input->svars.colors, 0, 4);
+ 		}
+ 
++		qdx_drawp.drawcall_count++;
++		if (qdx_drawp.drawcall_active && DRAWP_DROP(qdx_drawp.drawcall_count - 1, qdx_drawp.by_drawcall))
++			continue;
++
+ 		//
+ 		// do multitexture
+ 		//
+@@ -1297,7 +1304,31 @@ void RB_StageIteratorGeneric( void ) {
+ 	shaderCommands_t *input;
+ 
+ 	input = &tess;
+-
++#if 0
++	inputs_t keys = get_keypressed();
++	if (keys.i)
++	{
++		qdx_drawp.shader_active = !qdx_drawp.shader_active;
++	}
++	if (keys.o)
++	{
++		qdx_drawp.drawcall_active = !qdx_drawp.drawcall_active;
++	}
++	if (keys.u)
++	{
++		qdx_drawp.threshold_active++;
++		if (qdx_drawp.threshold_active >= 3)
++			qdx_drawp.threshold_active = 0;
++	}
++	if (keys.updown)
++	{
++		qdx_drawp.by_shader += keys.updown;
++	}
++	if (keys.leftright)
++	{
++		qdx_drawp.by_drawcall += keys.leftright;
++	}
++#endif
+ 	RB_DeformTessGeometry();
+ 
+ 	//
+@@ -1395,6 +1426,8 @@ void RB_StageIteratorGeneric( void ) {
+ 	//
+ 	// call shader function
+ 	//
++	qdx_drawp.shader_count++;
++	if(!qdx_drawp.shader_active || (qdx_drawp.shader_active && DRAWP_DRAW(qdx_drawp.shader_count - 1, qdx_drawp.by_shader))) {
+ 	RB_IterateStagesGeneric( input );
+ 
+ 	//
+@@ -1411,6 +1444,7 @@ void RB_StageIteratorGeneric( void ) {
+ 	if ( tess.fogNum && tess.shader->fogPass ) {
+ 		RB_FogPass();
+ 	}
++	}
+ 
+ 	//
+ 	// unlock arrays
