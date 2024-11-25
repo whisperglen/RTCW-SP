@@ -2,15 +2,21 @@
 //
 
 #include <stdio.h>
+#include <stdlib.h>
 
 extern void test_rsqrt();
+extern void test_matrix();
+extern void test_buffers();
 
 int main()
 {
-    printf("Hello Test!\n");
+    printf("Hello Test!\n\n");
 
-	test_rsqrt();
+	//test_rsqrt();
+	test_matrix();
+	//test_buffers();
 
+	printf("\n");
 	system("pause");
 }
 

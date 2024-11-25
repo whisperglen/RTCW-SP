@@ -82,6 +82,8 @@ float Q_fabs( float f ) {
 
 void test_rsqrt()
 {
+	printf("\ntest rsqrt\n");
+
 	g_check_for_float_zero = 1;
 	printf("check for input 0.0f\n");
 	printf("sseprecise %g\n", Q_rsqrt_sse_precise(0.f));
@@ -95,4 +97,6 @@ void test_rsqrt()
 	printf("sse %g\n", Q_rsqrt_sse(0.f));
 	printf("math %g\n", Q_rsqrt_math(0.f));
 	printf("q3 %g\n", Q_rsqrt_q3(0.f));
+
+	printf("test rsqrt end\n");
 }
