@@ -75,6 +75,7 @@ typedef struct
 static void DX9imp_CheckHardwareGamma(void);
 static void DX9imp_RestoreGamma(void);
 static void qdx_log_comment(const char *name, UINT fvfbits, const void *ptr);
+static void qdx_clear_buffers();
 
 typedef enum {
 	RSERR_OK,
@@ -507,15 +508,18 @@ static int DX9_ChooseFormat(PIXELFORMATDESCRIPTOR *pPFD, int colorbits, int dept
 
 				if (dsworks && (depthbits <= format_get_depthbits(fmt_ds[ids])))
 				{
-					if (SUCCEEDED(qdx.d3d->CheckDepthStencilMatch(qdx.adapter_num, D3DDEVTYPE_HAL, qdx.desktop.Format,
-						fmt_bb[ibb], fmt_ds[ids])))
+					if ((stencilbits == 0 && format_get_stencilbits(fmt_ds[ids]) == 0) ||
+						(stencilbits > 0 && format_get_stencilbits(fmt_ds[ids]) >= stencilbits))
 					{
-						if (ids < ds_match) {
-							bb_match = ibb;
-							ds_match = ids;
+						if (SUCCEEDED(qdx.d3d->CheckDepthStencilMatch(qdx.adapter_num, D3DDEVTYPE_HAL, qdx.desktop.Format,
+							fmt_bb[ibb], fmt_ds[ids])))
+						{
+							if (ids < ds_match) {
+								bb_match = ibb;
+								ds_match = ids;
+							}
+							ret = TRY_PFD_SUCCESS;
 						}
-						//todo: print format supported available
-						ret = TRY_PFD_SUCCESS;
 					}
 				}
 			}
@@ -1663,6 +1667,7 @@ void DX9imp_Shutdown(void) {
 	//}
 	if (qdx.device)
 	{
+		qdx_clear_buffers();
 		qdx.device->Release();
 		qdx.device = 0;
 	}
@@ -2278,6 +2283,13 @@ void qdx_texobj_apply(int id, int sampler)
 	}
 }
 
+#define FVF_PARAM_ARRAYSZ 6
+typedef struct fvf_buff_stats
+{
+	uint32_t num_entries;
+	uint32_t checksum[FVF_PARAM_ARRAYSZ];
+} fvf_buff_stats_t;
+
 struct fvf_buffers
 {
 	DWORD owner;
@@ -2286,14 +2298,34 @@ struct fvf_buffers
 	{
 		LPDIRECT3DVERTEXBUFFER9 data;
 		UINT fvf;
+		uint32_t usage;
+		fvf_buff_stats_t stats;
 	} v_buffs [10];
 } g_fvf_buffers[2];
 
 static int g_used_fvf_buffers = 0;
 
-static int get_buffers(LPDIRECT3DINDEXBUFFER9 *index_buf, LPDIRECT3DVERTEXBUFFER9 *vertex_buf, UINT fvf_spec, UINT fvf_stride)
+static void qdx_clear_buffers()
 {
-	int ret = 0;
+	int i = 0, j = 0;
+	for (; i < g_used_fvf_buffers; i++)
+	{
+		if (g_fvf_buffers[i].i_buf)
+			g_fvf_buffers[i].i_buf->Release();
+
+		for (j = 0; j < ARRAYSIZE(g_fvf_buffers[i].v_buffs); j++)
+		{
+			if (g_fvf_buffers[i].v_buffs[j].data)
+			{
+				g_fvf_buffers[i].v_buffs[j].data->Release();
+			}
+		}
+	}
+	g_used_fvf_buffers = 0;
+}
+
+static int qdx_get_buffers(LPDIRECT3DINDEXBUFFER9 *index_buf, LPDIRECT3DVERTEXBUFFER9 *vertex_buf, UINT fvf_spec, UINT fvf_stride, fvf_buff_stats_t **stats)
+{
 	DWORD whoami = GetCurrentThreadId();
 	int i = 0, j = 0;
 	for (; i < g_used_fvf_buffers; i++)
@@ -2303,27 +2335,32 @@ static int get_buffers(LPDIRECT3DINDEXBUFFER9 *index_buf, LPDIRECT3DVERTEXBUFFER
 			if (index_buf)
 				*index_buf = g_fvf_buffers[i].i_buf;
 
-			for (j = 0; j < ARRAYSIZE(g_fvf_buffers[0].v_buffs); j++)
+			for (j = 0; j < ARRAYSIZE(g_fvf_buffers[i].v_buffs); j++)
 			{
-				if (g_fvf_buffers[0].v_buffs[j].fvf == fvf_spec)
+				if (g_fvf_buffers[i].v_buffs[j].fvf == fvf_spec)
 				{
 					if (vertex_buf)
-						*vertex_buf = g_fvf_buffers[0].v_buffs[j].data;
+						*vertex_buf = g_fvf_buffers[i].v_buffs[j].data;
+					if (stats)
+						*stats = &g_fvf_buffers[i].v_buffs[j].stats;
 
 					return 0;
 				}
-				else if (g_fvf_buffers[0].v_buffs[j].fvf == 0)
+				else if (g_fvf_buffers[i].v_buffs[j].fvf == 0)
 				{
 					LPDIRECT3DVERTEXBUFFER9 b;
 					if (FAILED(qdx.device->CreateVertexBuffer(SHADER_MAX_VERTEXES * fvf_stride, 0, fvf_spec, D3DPOOL_MANAGED, &b, NULL)))
 					{
 						return -1;
 					}
-					g_fvf_buffers[0].v_buffs[j].fvf = fvf_spec;
-					g_fvf_buffers[0].v_buffs[j].data = b;
+					g_fvf_buffers[i].v_buffs[j].fvf = fvf_spec;
+					g_fvf_buffers[i].v_buffs[j].data = b;
+					memset(&g_fvf_buffers[i].v_buffs[j].stats, 0, sizeof(g_fvf_buffers[i].v_buffs[j].stats));
 
 					if (vertex_buf)
 						*vertex_buf = b;
+					if (stats)
+						*stats = &g_fvf_buffers[i].v_buffs[j].stats;
 
 					return 0;
 				}
@@ -2333,7 +2370,7 @@ static int get_buffers(LPDIRECT3DINDEXBUFFER9 *index_buf, LPDIRECT3DVERTEXBUFFER
 		}
 	}
 
-	if (g_used_fvf_buffers + 1 < ARRAYSIZE(g_fvf_buffers))
+	if (g_used_fvf_buffers < ARRAYSIZE(g_fvf_buffers))
 	{
 		LPDIRECT3DINDEXBUFFER9 ib;
 		if (FAILED(qdx.device->CreateIndexBuffer(sizeof(qdxIndex_t) * SHADER_MAX_INDEXES, 0, QDX_INDEX_TYPE, D3DPOOL_MANAGED, &ib, NULL)))
@@ -2359,6 +2396,8 @@ static int get_buffers(LPDIRECT3DINDEXBUFFER9 *index_buf, LPDIRECT3DVERTEXBUFFER
 			*index_buf = ib;
 		if (vertex_buf)
 			*vertex_buf = vb;
+		if (stats)
+			*stats = &p->v_buffs[0].stats;
 
 		return 0;
 	}
@@ -2482,6 +2521,38 @@ void qdx_fvf_disable(fvf_param_t param)
 	g_fvfs.bits &= ~param;
 }
 
+int qdx_fvfparam_to_index(fvf_param_t param)
+{
+	int ret = 0;
+
+	switch (param)
+	{
+	case FVF_VERTEX:
+		ret = 1;
+		break;
+	case FVF_NORMAL:
+		ret = 2;
+		break;
+	case FVF_COLOR:
+		ret = 3;
+		break;
+	case FVF_TEX0:
+		ret = 4;
+		break;
+	case FVF_TEX1:
+		ret = 5;
+		break;
+	case FVF_COLORVAL:
+		ret = 6;
+		break;
+		C_ASSERT(FVF_PARAM_ARRAYSZ == 6); //make sure we keep these in sync
+	default:
+		assert(FALSE);
+	}
+
+	return ret;
+}
+
 void qdx_fvf_buffer(fvf_param_t param, const void *buffer, UINT elems, UINT stride)
 {
 	if (r_logFile->integer)
@@ -2569,19 +2640,6 @@ void qdx_fvf_assemble_and_draw(UINT numindexes, const qdxIndex_t *indexes)
 			highindex = index;
 		}
 	}
-	selectionsize = 1 + highindex - lowindex;
-
-
-	LPDIRECT3DINDEXBUFFER9 i_buffer;
-	ON_FAIL_RETURN(qdx.device->CreateIndexBuffer(sizeof(indexes[0]) * numindexes, 0, QDX_INDEX_TYPE, D3DPOOL_MANAGED, &i_buffer, NULL));
-
-	qdxIndex_t *pInd;
-	ON_FAIL_RETURN(i_buffer->Lock(0, 0, (void**)&pInd, 0));
-	for (int i = 0; i < numindexes; i++)
-	{
-		pInd[i] = indexes[i] - lowindex;
-	}
-	i_buffer->Unlock();
 
 	UINT selectionbits = g_fvfs.bits;
 	//if (g_fvfs.is2dprojection && (0 != (g_fvfs.bits & FVF_VERTEX)))
@@ -2614,11 +2672,24 @@ void qdx_fvf_assemble_and_draw(UINT numindexes, const qdxIndex_t *indexes)
 		assert(FALSE);
 	}
 
+	LPDIRECT3DINDEXBUFFER9 i_buffer;
 	LPDIRECT3DVERTEXBUFFER9 v_buffer;
-	ON_FAIL_RETURN(qdx.device->CreateVertexBuffer(selectionsize * stride_fvf, 0, selected_fvf, D3DPOOL_MANAGED, &v_buffer, NULL));
+	struct fvf_buff_stats *bufstats;
+
+	qdx_get_buffers(&i_buffer, &v_buffer, selected_fvf, stride_fvf, &bufstats);
+
+	qdxIndex_t *pInd;
+	ON_FAIL_RETURN(i_buffer->Lock(0, numindexes * sizeof(qdxIndex_t), (void**)&pInd, D3DLOCK_DISCARD));//always discard old contents
+	for (int i = 0; i < numindexes; i++)
+	{
+		pInd[i] = indexes[i];
+	}
+	i_buffer->Unlock();
+
+	selectionsize = 1 + highindex - lowindex;
 
 	byte *pVert;
-	ON_FAIL_RETURN(v_buffer->Lock(0, 0, (void**)&pVert, 0));
+	ON_FAIL_RETURN(v_buffer->Lock(lowindex * stride_fvf, selectionsize * stride_fvf, (void**)&pVert, D3DLOCK_DISCARD));
 
 	int vpos = 0;
 	for (int i = lowindex; i <= highindex; i++)
@@ -2702,10 +2773,6 @@ void qdx_fvf_assemble_and_draw(UINT numindexes, const qdxIndex_t *indexes)
 
 	qdx.device->DrawIndexedPrimitive(D3DPT_TRIANGLELIST, 0, 0, vpos, 0, numindexes / 3);
 	qdx.device->EndScene();
-
-
-	v_buffer->Release();
-	i_buffer->Release();
 }
 
 qdx_vbuffer_t qdx_vbuffer_upload(qdx_vbuffer_t buf, UINT fvfid, UINT size, void *data)
