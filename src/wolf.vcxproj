@@ -191,6 +191,8 @@
     <ClCompile Include="server\sv_net_chan.c" />
     <ClCompile Include="server\sv_snapshot.c" />
     <ClCompile Include="server\sv_world.c" />
+    <ClCompile Include="win32\StackWalker\Main\StackWalker\StackWalker.cpp" />
+    <ClCompile Include="win32\win_crash.cpp" />
     <ClCompile Include="win32\win_input.c" />
     <ClCompile Include="win32\win_main.c" />
     <ClCompile Include="win32\win_net.c" />
@@ -232,6 +234,7 @@
     <ClInclude Include="ui\ui_public.h" />
     <ClInclude Include="win32\dx9_win.h" />
     <ClInclude Include="win32\resource.h" />
+    <ClInclude Include="win32\StackWalker\Main\StackWalker\StackWalker.h" />
     <ClInclude Include="win32\win_local.h" />
   </ItemGroup>
   <ItemGroup>
@@ -267,6 +270,9 @@
     <CopyFileToFolders Include="win32\copy.bat">
       <FileType>Document</FileType>
     </CopyFileToFolders>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\README.md" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

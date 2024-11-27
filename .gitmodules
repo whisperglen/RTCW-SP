@@ -1,3 +1,6 @@
 [submodule "test/perftesthelpers"]
 	path = test/perftesthelpers
 	url = git@github.com:whisperglen/perftesthelpers_idtech3.git
+[submodule "src/win32/StackWalker"]
+	path = src/win32/StackWalker
+	url = git@github.com:JochenKalmbach/StackWalker.git

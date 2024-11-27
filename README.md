@@ -12,6 +12,9 @@ Will it work? Who knows, let's find out!
 - tinker with the geometry to get stable hashes: 0%
 - convert dynamic lights to T&L: 0%
 
+### Included in this project:
+- The StackWalker[https://github.com/JochenKalmbach/StackWalker] project to print crash info
+
 ### *Original README text follows:*
 
 Return to Castle Wolfenstein single player GPL source release

@@ -1267,6 +1267,7 @@ void Sys_Init( void ) {
 //=======================================================================
 
 int totalMsec, countMsec;
+LONG WINAPI ExpFilter(EXCEPTION_POINTERS* pExp, DWORD dwExpCode);
 
 /*
 ==================
@@ -1337,11 +1338,18 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLin
 
 		startTime = Sys_Milliseconds();
 
+		__try
+		{
 		// make sure mouse and joystick are only called once a frame
 		IN_Frame();
 
 		// run the game
 		Com_Frame();
+		}
+		__except (ExpFilter(GetExceptionInformation(), GetExceptionCode()))
+		{
+			ExitProcess(0xDEAD);
+		}
 
 		endTime = Sys_Milliseconds();
 		totalMsec += endTime - startTime;

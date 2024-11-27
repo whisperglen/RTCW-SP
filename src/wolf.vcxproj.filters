@@ -12,6 +12,9 @@
     <Filter Include="Resource Files">
       <UniqueIdentifier>{0a459870-53b9-452c-a6b3-c1a2a6020b2e}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\CrashHandler">
+      <UniqueIdentifier>{55caee6d-2612-4f0b-afed-3191da32446d}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="client\cl_cgame.c">
@@ -167,6 +170,12 @@
     <ClCompile Include="qcommon\vm_none.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="win32\StackWalker\Main\StackWalker\StackWalker.cpp">
+      <Filter>Source Files\CrashHandler</Filter>
+    </ClCompile>
+    <ClCompile Include="win32\win_crash.cpp">
+      <Filter>Source Files\CrashHandler</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="A3D\a3dWrapperdp.h">
@@ -268,6 +277,9 @@
     <ClInclude Include="win32\resource.h">
       <Filter>Resource Files</Filter>
     </ClInclude>
+    <ClInclude Include="win32\StackWalker\Main\StackWalker\StackWalker.h">
+      <Filter>Source Files\CrashHandler</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="win32\winquake.rc">
@@ -278,5 +290,10 @@
     <CopyFileToFolders Include="win32\copy.bat">
       <Filter>Resource Files</Filter>
     </CopyFileToFolders>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\README.md">
+      <Filter>Resource Files</Filter>
+    </None>
   </ItemGroup>
 </Project>
