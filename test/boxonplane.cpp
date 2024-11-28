@@ -1,3 +1,8 @@
+
+/**
+* NOTE: the C version is a smidge faster than the asm, with the caveat that it needs
+* a change in the fast axial cases to provide the same results as the asm version
+*/
 #include <math.h>
 #include <float.h>
 #include <cassert>
@@ -31,7 +36,7 @@ int BoxOnPlaneSide(vec3_t emins, vec3_t emaxs, struct cplane_s *p) {
 		if (p->dist <= emins[p->type]) {
 			return 1;
 		}
-		if (p->dist >= emaxs[p->type]) {
+		if (p->dist > emaxs[p->type]) { //NOTE: it was >= here, but there were errors when comparing with the asm version
 			return 2;
 		}
 		return 3;
@@ -319,7 +324,113 @@ initialized:
 }
 #endif
 
-void maintest_boxonplaneside()
-{
+typedef int(*boxon_fn)(vec3_t emins, vec3_t emaxs, struct cplane_s *p);
 
+struct function_data
+{
+	void* fp;
+	const char* fname;
+};
+
+static struct function_data data_fn[] =
+{
+	{ BoxOnPlaneSide,        "      boxon" },
+	{ BoxOnPlaneSide_asm,    "  boxon_asm" },
+	{ 0, 0 }
+};
+
+#define ARRAY_SIZE(X) (sizeof(X)/sizeof(X[0]))
+
+struct boxon_input
+{
+	vec3_t a;
+	vec3_t b;
+	struct cplane_s c;
+};
+
+#define TEST_SIZE 7 * 1000 * 1000
+//#define TEST_SIZE 1 * 1000 * 1000
+
+struct boxon_input input[TEST_SIZE];
+int output[2][TEST_SIZE];
+
+C_ASSERT(ARRAY_SIZE(output) == ARRAY_SIZE(data_fn) - 1);
+
+#define MAX_ERRORS 10
+#define REPETITIONS 1
+extern "C" void maintest_boxonplaneside()
+{
+	int i, j, k, sz = 0;
+	int tested = 0;
+	int err = 0;
+	int ercd = 0;
+	double elapsed[ARRAY_SIZE(data_fn) - 1];
+
+	ercd = csv_open("./results_boxonplaneside.csv");
+	if (ercd != 0)
+	{
+		printf("Could not open the csv file.\n\n");
+	}
+
+	//bdmpx_set_option(BDMPX_OPTION_PRECACHE_FILE_FOR_READ, 1);
+
+	ercd = bdmpx_create(NULL, "bdmpx_boxonplaneside.bin", BDMPX_OP_READ);
+	if (ercd != 0)
+	{
+		printf("Could not open the test input file. Aborting.\n");
+		return;
+	}
+
+	for (j = 0; j < TEST_SIZE; j++)
+	{
+		if (3 != bdmpx_read(NULL, 3, NULL, &input[j].a, NULL, &input[j].b, NULL, &input[j].c))
+		{
+			break;
+		}
+	}
+	printf("BOXONPLANESIDE Test inputs %d\n", j);
+
+	Timer timer;
+
+	for (tested = 0; data_fn[tested].fp != 0; tested++)
+	{
+		boxon_fn callme = (boxon_fn)data_fn[tested].fp;
+		const char* myinfo = data_fn[tested].fname;
+		double elapsed;
+
+		timer.reset();
+		for (int r = 0; r < REPETITIONS; r++)
+			for (i = 0; i < j; i++)
+			{
+				if (i == 2252)
+				{
+					output[tested][i] = 0;
+				}
+				output[tested][i] = callme(input[i].a, input[i].b, &input[i].c);
+			}
+		elapsed = timer.elapsed_ms();
+		printf("%d %s: %4.4f\n", tested, myinfo, elapsed);
+		csv_put_float(elapsed);
+	}
+
+	csv_put_string(",");
+	for (k = 1; k < tested; k++)
+		csv_put_float(elapsed[k] / elapsed[0]);
+
+	csv_put_string("\n");
+	csv_close();
+
+	for (k = 1; k < tested && err < MAX_ERRORS; k++)
+	{
+		for (i = 0; i < j && err < MAX_ERRORS; i++)
+		{
+			if (output[0][i] != output[k][i])
+			{
+				printf("id:%d samp:%d orig:%d here:%d\n", k, i, output[0][i], output[k][i]);
+				err++;
+			}
+		}
+	}
+
+	printf("\n");
 }

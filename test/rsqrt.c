@@ -80,23 +80,26 @@ float Q_fabs( float f ) {
 
 //#define SQRTFAST( x ) ( 1.0f / Q_rsqrt( x ) )
 
+// we know from the tests in perftesthelpers that the sse version is a bit more precise and faster
+// than Q3 bitlevel hacking; even sse_precise is faster than Q3 version;
+// so we are not going to test that; only some corner cases..
 void test_rsqrt()
 {
-	printf("\ntest rsqrt\n");
+	printf("\n----- test rsqrt\n");
 
 	g_check_for_float_zero = 1;
-	printf("check for input 0.0f\n");
+	printf("check for input == 0.0f\n");
 	printf("sseprecise %g\n", Q_rsqrt_sse_precise(0.f));
 	printf("sse %g\n", Q_rsqrt_sse(0.f));
 	printf("math %g\n", Q_rsqrt_math(0.f));
 	printf("q3 %g\n", Q_rsqrt_q3(0.f));
 
 	g_check_for_float_zero = 0;
-	printf("do not check input 0.0f\n");
+	printf("do not check input == 0.0f\n");
 	printf("sseprecise %g\n", Q_rsqrt_sse_precise(0.f));
 	printf("sse %g\n", Q_rsqrt_sse(0.f));
 	printf("math %g\n", Q_rsqrt_math(0.f));
 	printf("q3 %g\n", Q_rsqrt_q3(0.f));
 
-	printf("test rsqrt end\n");
+	printf("----- test rsqrt end\n\n");
 }

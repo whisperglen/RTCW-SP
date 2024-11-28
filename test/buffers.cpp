@@ -1,14 +1,23 @@
 
+#include <stdio.h>
 #include <d3d9.h>
 #include <Windows.h>
 #include <stdint.h>
-#include <cassert>
+//#include <cassert>
+#include "tests.h"
 
 #define SHADER_MAX_VERTEXES 10
 #define SHADER_MAX_INDEXES (6*SHADER_MAX_VERTEXES)
 
 typedef uint32_t qdxIndex_t;
 #define QDX_INDEX_TYPE D3DFMT_INDEX32
+
+#define GetCurrentThreadId() g_GetCurrentThreadId
+DWORD g_GetCurrentThreadId = ~0;
+void SetCurrentThreadId(DWORD val)
+{
+	g_GetCurrentThreadId = val;
+}
 
 struct qdx9_state
 {
@@ -73,7 +82,7 @@ static int get_buffers(LPDIRECT3DINDEXBUFFER9 *index_buf, LPDIRECT3DVERTEXBUFFER
 		}
 	}
 
-	if (g_used_fvf_buffers + 1 < ARRAYSIZE(g_fvf_buffers))
+	if (g_used_fvf_buffers < ARRAYSIZE(g_fvf_buffers))
 	{
 		LPDIRECT3DINDEXBUFFER9 ib;
 		if (FAILED(qdx.device->CreateIndexBuffer(sizeof(qdxIndex_t) * SHADER_MAX_INDEXES, 0, QDX_INDEX_TYPE, D3DPOOL_MANAGED, &ib, NULL)))
@@ -108,6 +117,8 @@ static int get_buffers(LPDIRECT3DINDEXBUFFER9 *index_buf, LPDIRECT3DVERTEXBUFFER
 
 extern "C" void test_buffers()
 {
+	printf("\n----- test buffers\n");
+
 	qdx.d3d = Direct3DCreate9(D3D_SDK_VERSION);
 
 	HWND hwindow = CreateWindow(TEXT("STATIC"),
@@ -168,10 +179,12 @@ extern "C" void test_buffers()
 	} fvf_2dvertcoltex_t;
 #define FVFID_2DVERTCOLTEX (D3DFVF_XYZRHW | D3DFVF_DIFFUSE | D3DFVF_TEX1 | D3DFVF_TEXCOORDSIZE2(0))
 
-	int ercd[5], test[5] = { 0 };
 
-	LPDIRECT3DINDEXBUFFER9 index_buf[5];
-	LPDIRECT3DVERTEXBUFFER9 vertex_buf[5];
+#define ELEMENTS 7
+	int ercd[ELEMENTS], test[ELEMENTS] = { 0 };
+
+	LPDIRECT3DINDEXBUFFER9 index_buf[ELEMENTS];
+	LPDIRECT3DVERTEXBUFFER9 vertex_buf[ELEMENTS];
 
 	ercd[0] = get_buffers(&index_buf[0], &vertex_buf[0], FVFID_VERTCOL, sizeof(fvf_vertcol_t));
 	ercd[1] = get_buffers(&index_buf[1], &vertex_buf[1], FVFID_VERTCOLTEX, sizeof(fvf_vertcoltex));
@@ -185,11 +198,21 @@ extern "C" void test_buffers()
 
 	assert(0 == memcmp(ercd, test, sizeof(int) * 4));
 
-	ercd[4] = get_buffers(&index_buf[4], &vertex_buf[5], FVFID_2DVERTCOLTEX, sizeof(fvf_2dvertcoltex));
+	ercd[4] = get_buffers(&index_buf[4], &vertex_buf[4], FVFID_2DVERTCOLTEX, sizeof(fvf_2dvertcoltex));
 	assert(ercd[4] != 0);
+
+	SetCurrentThreadId(42);
+	ercd[5] = get_buffers(&index_buf[5], &vertex_buf[5], FVFID_VERTCOL, sizeof(fvf_2dvertcoltex));
+	assert(ercd[5] == 0);
+	assert(index_buf[5] != index_buf[0]);
+	assert(index_buf[5] != index_buf[1]);
+	assert(vertex_buf[5] != vertex_buf[0]);
+	assert(vertex_buf[5] != vertex_buf[1]);
 
 	////end test code
 
 	qdx.device->Release();
 	DestroyWindow(hwindow);
+
+	printf("----- test buffers end\n\n");
 }

@@ -4,20 +4,55 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+static int tests_total = 0;
+static int tests_ok = 0;
+
 extern void test_rsqrt();
 extern void test_matrix();
 extern void test_buffers();
+extern void maintest_snapvector();
+extern void maintest_boxonplaneside();
 
 int main()
 {
     printf("Hello Test!\n\n");
 
-	//test_rsqrt();
-	test_matrix();
-	//test_buffers();
+	test_rsqrt();
+	//test_matrix();
+	test_buffers();
+	maintest_snapvector();
+	maintest_boxonplaneside();
 
-	printf("\n");
+	printf("Tests results: %d/%d\n", tests_ok, tests_total);
 	system("pause");
+}
+
+void xassert_str(int success, const char* expression, const char* function, unsigned line, const char* file)
+{
+	tests_total++;
+	if (success) tests_ok++;
+	else
+	{
+		const char* fn = strrchr(file, '\\');
+		if (!fn) fn = strrchr(file, '/');
+		if (!fn) fn = "fnf";
+
+		printf("assert failed: %s in %s:%d %s\n", expression, function, line, fn);
+	}
+}
+
+void xassert_int(int success, int printval, const char* function, unsigned line, const char* file)
+{
+	tests_total++;
+	if (success) tests_ok++;
+	else
+	{
+		const char* fn = strrchr(file, '\\');
+		if (!fn) fn = strrchr(file, '/');
+		if (!fn) fn = "fnf";
+
+		printf("assert failed: 0x%x in %s:%d %s\n", printval, function, line, fn);
+	}
 }
 
 // Run program: Ctrl + F5 or Debug > Start Without Debugging menu
