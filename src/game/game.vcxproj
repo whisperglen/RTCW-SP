@@ -76,8 +76,10 @@
       <Culture>0x0409</Culture>
     </ResourceCompile>
     <PreLinkEvent>
-      <Message>Building game function table...</Message>
-      <Command>..\extractfuncs\extractfuncs.bat</Command>
+      <Message>
+      </Message>
+      <Command>
+      </Command>
     </PreLinkEvent>
     <Link>
       <AdditionalDependencies>winmm.lib;%(AdditionalDependencies)</AdditionalDependencies>
@@ -99,6 +101,12 @@
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <OutputFile>.\Debug/game.bsc</OutputFile>
     </Bscmake>
+    <PreBuildEvent>
+      <Command>..\extractfuncs\extractfuncs.bat</Command>
+    </PreBuildEvent>
+    <PreBuildEvent>
+      <Message>Building game function table...</Message>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <Midl>
@@ -128,8 +136,10 @@
       <Culture>0x0409</Culture>
     </ResourceCompile>
     <PreLinkEvent>
-      <Message>Building game function table...</Message>
-      <Command>..\extractfuncs\extractfuncs.bat</Command>
+      <Message>
+      </Message>
+      <Command>
+      </Command>
     </PreLinkEvent>
     <Link>
       <AdditionalDependencies>winmm.lib;%(AdditionalDependencies)</AdditionalDependencies>
@@ -150,6 +160,12 @@
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <OutputFile>.\Release/game.bsc</OutputFile>
     </Bscmake>
+    <PreBuildEvent>
+      <Command>..\extractfuncs\extractfuncs.bat</Command>
+    </PreBuildEvent>
+    <PreBuildEvent>
+      <Message>Building game function table...</Message>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\botai\ai_chat.c" />
