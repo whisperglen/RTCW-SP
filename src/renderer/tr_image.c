@@ -127,7 +127,8 @@ textureMode_t modes[] = {
 	{"GL_NEAREST_MIPMAP_NEAREST", D3DTEXF_POINT, D3DTEXF_POINT, D3DTEXF_POINT},
 	{"GL_LINEAR_MIPMAP_NEAREST", D3DTEXF_LINEAR, D3DTEXF_POINT, D3DTEXF_LINEAR},
 	{"GL_NEAREST_MIPMAP_LINEAR", D3DTEXF_POINT, D3DTEXF_LINEAR, D3DTEXF_POINT},
-	{"GL_LINEAR_MIPMAP_LINEAR", D3DTEXF_LINEAR, D3DTEXF_LINEAR, D3DTEXF_LINEAR}
+	{"GL_LINEAR_MIPMAP_LINEAR", D3DTEXF_LINEAR, D3DTEXF_LINEAR, D3DTEXF_LINEAR},
+	{"GL_NONE", D3DTEXF_NONE, D3DTEXF_NONE, D3DTEXF_NONE},
 };
 
 /*
@@ -624,6 +625,11 @@ static void Upload32(   int texnum, unsigned *data,
 	float rMax = 0, gMax = 0, bMax = 0;
 	static int rmse_saved = 0;
 	float rmse;
+
+	if (r_nomipmaps->value)
+	{
+		mipmap = 0;
+	}
 
 	// do the root mean square error stuff first
 	if ( r_rmse->value ) {

@@ -123,7 +123,7 @@ cvar_t  *r_colorbits;
 cvar_t  *r_stereo;
 cvar_t  *r_primitives;
 cvar_t  *r_texturebits;
-cvar_t  *r_ext_multisample;
+cvar_t  *r_multisample;
 
 cvar_t  *r_drawBuffer;
 cvar_t  *r_glDriver;
@@ -143,6 +143,7 @@ cvar_t  *r_lowMemTextureThreshold;
 cvar_t  *r_colorMipLevels;
 cvar_t  *r_picmip;
 cvar_t  *r_picmip2;
+cvar_t  *r_nomipmaps;
 cvar_t  *r_showtris;
 cvar_t  *r_showsky;
 cvar_t  *r_shownormals;
@@ -904,6 +905,7 @@ void GfxInfo_f( void ) {
 	ri.Printf( PRINT_ALL, "texturemode: %s\n", r_textureMode->string );
 	ri.Printf( PRINT_ALL, "picmip: %d\n", r_picmip->integer );
 	ri.Printf( PRINT_ALL, "picmip2: %d\n", r_picmip2->integer );
+	ri.Printf( PRINT_ALL, "nomipmaps: %d\n", r_nomipmaps->integer);
 	ri.Printf( PRINT_ALL, "texture bits: %d\n", r_texturebits->integer );
 	ri.Printf( PRINT_ALL, "multitexture: %s\n", enablestrings[glConfig.maxActiveTextures != 0] );
 	ri.Printf( PRINT_ALL, "compiled vertex arrays: %s\n", enablestrings[2 ] );
@@ -1003,7 +1005,7 @@ void R_Register( void ) {
 	r_stencilbits = ri.Cvar_Get( "r_stencilbits", "8", CVAR_ARCHIVE | CVAR_LATCH );
 #endif
 	r_depthbits = ri.Cvar_Get( "r_depthbits", "0", CVAR_ARCHIVE | CVAR_LATCH );
-	r_ext_multisample = ri.Cvar_Get("r_ext_multisample", "4", CVAR_ARCHIVE | CVAR_LATCH);
+	r_multisample = ri.Cvar_Get("r_multisample", "4", CVAR_ARCHIVE | CVAR_LATCH);
 	r_overBrightBits = ri.Cvar_Get( "r_overBrightBits", "1", CVAR_ARCHIVE | CVAR_LATCH );
 	r_ignorehwgamma = ri.Cvar_Get( "r_ignorehwgamma", "1", CVAR_ARCHIVE | CVAR_LATCH );    //----(SA) changed this to default to '1' for Drew
 	r_mode = ri.Cvar_Get( "r_mode", "3", CVAR_ARCHIVE | CVAR_LATCH );
@@ -1017,6 +1019,7 @@ void R_Register( void ) {
 	r_subdivisions = ri.Cvar_Get( "r_subdivisions", "4", CVAR_ARCHIVE | CVAR_LATCH );
 	r_smp = ri.Cvar_Get( "r_smp", "0", CVAR_ARCHIVE | CVAR_LATCH | CVAR_ROM );
 	r_ignoreFastPath = ri.Cvar_Get( "r_ignoreFastPath", "1", CVAR_ARCHIVE | CVAR_LATCH );
+	r_nomipmaps = ri.Cvar_Get("r_nomipmaps", "0", CVAR_ARCHIVE | CVAR_LATCH);
 
 	//
 	// temporary latched variables that can only change over a restart

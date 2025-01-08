@@ -1091,7 +1091,7 @@ extern cvar_t   *r_texturebits;         // number of desired texture bits
 										// 16 = use 16-bit textures
 										// 32 = use 32-bit textures
 										// all else = error
-extern cvar_t	*r_ext_multisample;
+extern cvar_t	*r_multisample;
 
 extern cvar_t   *r_measureOverdraw;     // enables stencil buffer overdraw measurement
 
@@ -1161,6 +1161,7 @@ extern cvar_t  *r_rmse;                         // reduces textures to this root
 extern cvar_t  *r_colorMipLevels;               // development aid to see texture mip usage
 extern cvar_t  *r_picmip;                       // controls picmip values
 extern cvar_t  *r_picmip2;                      // controls picmip values for designated (character skin) textures
+extern cvar_t  *r_nomipmaps;                    // disables mipmapping
 extern cvar_t  *r_finish;
 extern cvar_t  *r_drawBuffer;
 extern cvar_t  *r_glDriver;

@@ -887,7 +887,7 @@ static void PrintCDSError(int value) {
 
 static void fill_in_d3dpresentparams(D3DPRESENT_PARAMETERS &d3dpp)
 {
-	int samples = r_ext_multisample->value;
+	int samples = r_multisample->value;
 
 	ZeroMemory(&d3dpp, sizeof(d3dpp));
 	d3dpp.Windowed = dx9imp_state.cdsFullscreen ? FALSE : TRUE;
@@ -923,7 +923,7 @@ static void fill_in_d3dpresentparams(D3DPRESENT_PARAMETERS &d3dpp)
 		}
 	}
 
-	if (samples < 2 && r_ext_multisample->value)
+	if (samples < 2 && r_multisample->value)
 	{
 		ri.Printf(PRINT_ALL, "...multisample not supported\n");
 	}
