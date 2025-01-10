@@ -2655,10 +2655,19 @@ void qdx_fvf_assemble_and_draw(UINT numindexes, const qdxIndex_t *indexes)
 		selected_fvf = FVFID_VERTCOL;
 		stride_fvf = sizeof(fvf_vertcol_t);
 		break;
+	case (FVF_VERTEX | FVF_NORMAL | FVF_COLOR):
+		selected_fvf = FVFID_VERTNORMCOL;
+		stride_fvf = sizeof(fvf_vertnormcol_t);
+		break;
 	case (FVF_VERTEX | FVF_TEX0):
 	case (FVF_VERTEX | FVF_COLOR | FVF_TEX0):
 		selected_fvf = FVFID_VERTCOLTEX;
 		stride_fvf = sizeof(fvf_vertcoltex_t);
+		break;
+	case (FVF_VERTEX | FVF_NORMAL | FVF_TEX0):
+	case (FVF_VERTEX | FVF_NORMAL | FVF_COLOR | FVF_TEX0):
+		selected_fvf = FVFID_VERTNORMCOLTEX;
+		stride_fvf = sizeof(fvf_vertnormcoltex_t);
 		break;
 	case (FVF_2DVERTEX | FVF_COLOR | FVF_TEX0):
 		selected_fvf = FVFID_2DVERTCOLTEX;
@@ -2667,6 +2676,10 @@ void qdx_fvf_assemble_and_draw(UINT numindexes, const qdxIndex_t *indexes)
 	case (FVF_VERTEX | FVF_COLOR | FVF_TEX0 | FVF_TEX1):
 		selected_fvf = FVFID_VERTCOLTEX2;
 		stride_fvf = sizeof(fvf_vertcoltex2_t);
+		break;
+	case (FVF_VERTEX | FVF_NORMAL | FVF_COLOR | FVF_TEX0 | FVF_TEX1):
+		selected_fvf = FVFID_VERTNORMCOLTEX2;
+		stride_fvf = sizeof(fvf_vertnormcoltex2_t);
 		break;
 	default:
 		assert(FALSE);
@@ -2708,9 +2721,24 @@ void qdx_fvf_assemble_and_draw(UINT numindexes, const qdxIndex_t *indexes)
 			p->COLOR = abgr_to_argb(GFVF_COLRELEM(i));
 			pVert += sizeof(p[0]);
 			break; }
+		case (FVF_VERTEX | FVF_NORMAL | FVF_COLOR): {
+			fvf_vertnormcol_t* p = (fvf_vertnormcol_t*)pVert;
+			copy_three(p->XYZ, GFVF_VERTELEM(i));
+			copy_three(p->NORM, GFVF_NORMELEM(i));
+			p->COLOR = abgr_to_argb(GFVF_COLRELEM(i));
+			pVert += sizeof(p[0]);
+			break; }
 		case (FVF_VERTEX | FVF_COLOR | FVF_TEX0): {
 			fvf_vertcoltex_t *p = (fvf_vertcoltex_t *)pVert;
 			copy_three(p->XYZ, GFVF_VERTELEM(i));
+			p->COLOR = abgr_to_argb(GFVF_COLRELEM(i));
+			copy_two(p->UV, GFVF_TEX0ELEM(i));
+			pVert += sizeof(p[0]);
+			break; }
+		case (FVF_VERTEX | FVF_NORMAL | FVF_COLOR | FVF_TEX0): {
+			fvf_vertnormcoltex_t* p = (fvf_vertnormcoltex_t*)pVert;
+			copy_three(p->XYZ, GFVF_VERTELEM(i));
+			copy_three(p->NORM, GFVF_NORMELEM(i));
 			p->COLOR = abgr_to_argb(GFVF_COLRELEM(i));
 			copy_two(p->UV, GFVF_TEX0ELEM(i));
 			pVert += sizeof(p[0]);
@@ -2729,6 +2757,14 @@ void qdx_fvf_assemble_and_draw(UINT numindexes, const qdxIndex_t *indexes)
 			copy_two(p->UV, GFVF_TEX0ELEM(i));
 			pVert += sizeof(p[0]);
 			break; }
+		case (FVF_VERTEX | FVF_NORMAL | FVF_TEX0): {
+			fvf_vertnormcoltex_t* p = (fvf_vertnormcoltex_t*)pVert;
+			copy_three(p->XYZ, GFVF_VERTELEM(i));
+			copy_three(p->NORM, GFVF_NORMELEM(i));
+			p->COLOR = qdx.crt_color;
+			copy_two(p->UV, GFVF_TEX0ELEM(i));
+			pVert += sizeof(p[0]);
+			break; }
 		case (FVF_VERTEX | FVF_COLOR | FVF_TEX0 | FVF_TEX1): {
 			fvf_vertcoltex2_t *p = (fvf_vertcoltex2_t *)pVert;
 			copy_three(p->XYZ, GFVF_VERTELEM(i));
@@ -2737,6 +2773,17 @@ void qdx_fvf_assemble_and_draw(UINT numindexes, const qdxIndex_t *indexes)
 			copy_two(p->UV1, GFVF_TEX1ELEM(i));
 			pVert += sizeof(p[0]);
 			break; }
+		case (FVF_VERTEX | FVF_NORMAL | FVF_COLOR | FVF_TEX0 | FVF_TEX1): {
+			fvf_vertnormcoltex2_t* p = (fvf_vertnormcoltex2_t*)pVert;
+			copy_three(p->XYZ, GFVF_VERTELEM(i));
+			copy_three(p->NORM, GFVF_NORMELEM(i));
+			p->COLOR = abgr_to_argb(GFVF_COLRELEM(i));
+			copy_two(p->UV0, GFVF_TEX0ELEM(i));
+			copy_two(p->UV1, GFVF_TEX1ELEM(i));
+			pVert += sizeof(p[0]);
+			break; }
+		default:
+			assert(FALSE);
 		}
 
 		vpos++;

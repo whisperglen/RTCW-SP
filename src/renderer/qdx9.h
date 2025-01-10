@@ -134,6 +134,14 @@ typedef struct fvf_vertcol
 } fvf_vertcol_t;
 #define FVFID_VERTCOL (D3DFVF_XYZ | D3DFVF_DIFFUSE)
 
+typedef struct fvf_vertnormcol
+{
+	FLOAT XYZ[3];
+	FLOAT NORM[3];
+	DWORD COLOR;
+} fvf_vertnormcol_t;
+#define FVFID_VERTNORMCOL (D3DFVF_XYZ | D3DFVF_NORMAL | D3DFVF_DIFFUSE)
+
 typedef struct fvf_vertcoltex
 {
 	FLOAT XYZ[3];
@@ -141,6 +149,15 @@ typedef struct fvf_vertcoltex
 	FLOAT UV[2];
 } fvf_vertcoltex_t;
 #define FVFID_VERTCOLTEX (D3DFVF_XYZ | D3DFVF_DIFFUSE | D3DFVF_TEX1 | D3DFVF_TEXCOORDSIZE2(0))
+
+typedef struct fvf_vertnormcoltex
+{
+	FLOAT XYZ[3];
+	FLOAT NORM[3];
+	DWORD COLOR;
+	FLOAT UV[2];
+} fvf_vertnormcoltex_t;
+#define FVFID_VERTNORMCOLTEX (D3DFVF_XYZ | D3DFVF_NORMAL | D3DFVF_DIFFUSE | D3DFVF_TEX1 | D3DFVF_TEXCOORDSIZE2(0))
 
 //typedef struct fvf_verttex
 //{
@@ -157,6 +174,16 @@ typedef struct fvf_vertcoltex2
 	FLOAT UV1[2];
 } fvf_vertcoltex2_t;
 #define FVFID_VERTCOLTEX2 (D3DFVF_XYZ | D3DFVF_DIFFUSE | D3DFVF_TEX2 | D3DFVF_TEXCOORDSIZE2(0) | D3DFVF_TEXCOORDSIZE2(1))
+
+typedef struct fvf_vertnormcoltex2
+{
+	FLOAT XYZ[3];
+	FLOAT NORM[3];
+	DWORD COLOR;
+	FLOAT UV0[2];
+	FLOAT UV1[2];
+} fvf_vertnormcoltex2_t;
+#define FVFID_VERTNORMCOLTEX2 (D3DFVF_XYZ | D3DFVF_NORMAL | D3DFVF_DIFFUSE | D3DFVF_TEX2 | D3DFVF_TEXCOORDSIZE2(0) | D3DFVF_TEXCOORDSIZE2(1))
 
 #ifdef __cplusplus
 #define DX9_BEGIN_SCENE() qdx.device->BeginScene()

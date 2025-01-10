@@ -13,9 +13,9 @@ Will it work? Who knows, let's find out!
 - convert dynamic lights to T&L: 0%
 
 ### Notable engine cvars:
-- r_wolffog (default "1"):set to "0" to disable ingame fog (there may still be geometry with fog texture applied, those will not be disabled)
-- r_nomipmaps (default "0"):set to "1" to disable mipmap creation for all textures
-- r_swapInterval (default "1"): controls VSYNC; "1" is VSUNC-ON, "0" is VSYNC-OFF
+- r_wolffog (default "1"): set to "0" to disable ingame fog (there may still be geometry with fog texture applied, those will not be disabled)
+- r_nomipmaps (default "0"): set to "1" to disable mipmap creation for all textures
+- r_swapInterval (default "1"): controls VSYNC; "1" is VSYNC-ON, "0" is VSYNC-OFF
 - r_multisample (default "4"): controls multisample antialiasing
 - r_ext_texture_filter_anisotropic (default "0"): was disabled in OGL mode, it can now be set to 1,2,4,8,16 and Texture filter "trilinear" (r_textureMode "GL_LINEAR_MIPMAP_LINEAR") to allow anisotropy for texture min_filter
 

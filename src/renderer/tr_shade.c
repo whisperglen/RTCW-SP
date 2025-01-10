@@ -1314,13 +1314,14 @@ void RB_StageIteratorGeneric( void ) {
 
 	if ( qglPNTrianglesiATI && tess.ATI_tess ) {
 		// RF< so we can send the normals as an array
-		qglEnableClientState( GL_NORMAL_ARRAY );
+		//qglEnableClientState( GL_NORMAL_ARRAY );
 #ifdef __MACOS__    //DAJ ATI
 		qglPNTrianglesiATI( GL_PN_TRIANGLES_ATI, 1 );
 #else
 		qglEnable( GL_PN_TRIANGLES_ATI ); // ATI PN-Triangles extension
 #endif
 	}
+	qdx_fvf_enable(FVF_NORMAL);
 
 
 	//
@@ -1369,8 +1370,9 @@ void RB_StageIteratorGeneric( void ) {
 	// This must be done first, since we can't change the arrays once they have been
 	// locked
 	if ( qglPNTrianglesiATI && tess.ATI_tess ) {
-		qglNormalPointer( GL_FLOAT, 16, input->normal );
+		//qglNormalPointer( GL_FLOAT, 16, input->normal );
 	}
+	qdx_fvf_buffer(FVF_NORMAL, input->normal, 0, 4);
 
 	//
 	// lock XYZ
@@ -1436,8 +1438,9 @@ void RB_StageIteratorGeneric( void ) {
 #else
 		qglDisable( GL_PN_TRIANGLES_ATI );    // ATI PN-Triangles extension
 #endif
-		qglDisableClientState( GL_NORMAL_ARRAY );
+		//qglDisableClientState( GL_NORMAL_ARRAY );
 	}
+	qdx_fvf_disable(FVF_NORMAL);
 
 }
 
@@ -1479,8 +1482,10 @@ void RB_StageIteratorVertexLitTexture( void ) {
 	//
 	// set arrays and lock
 	//
-	qglEnableClientState( GL_COLOR_ARRAY );
-	qglEnableClientState( GL_TEXTURE_COORD_ARRAY );
+	//qglEnableClientState( GL_COLOR_ARRAY );
+	//qglEnableClientState( GL_TEXTURE_COORD_ARRAY );
+	qdx_fvf_enable(FVF_COLOR);
+	qdx_fvf_enable(FVF_TEX0);
 
 	if ( qglPNTrianglesiATI && tess.ATI_tess ) {
 #ifdef __MACOS__    //DAJ ATI
@@ -1488,9 +1493,11 @@ void RB_StageIteratorVertexLitTexture( void ) {
 #else
 		qglEnable( GL_PN_TRIANGLES_ATI ); // ATI PN-Triangles extension
 #endif
-		qglEnableClientState( GL_NORMAL_ARRAY );         // RF< so we can send the normals as an array
-		qglNormalPointer( GL_FLOAT, 16, input->normal );
+		//qglEnableClientState( GL_NORMAL_ARRAY );         // RF< so we can send the normals as an array
+		//qglNormalPointer( GL_FLOAT, 16, input->normal );
 	}
+	qdx_fvf_enable(FVF_NORMAL);
+	qdx_fvf_buffer(FVF_NORMAL, input->normal, 0, 4);
 
 	//qglColorPointer( 4, GL_UNSIGNED_BYTE, 0, tess.svars.colors );
 	//qglTexCoordPointer( 2, GL_FLOAT, 16, tess.texCoords[0][0] );
