@@ -878,12 +878,15 @@ void RB_DrawSun( void ) {
 	if ( !r_drawSun->integer ) {
 		return;
 	}
+	D3DMATRIX mat;
 	//qglLoadMatrixf( backEnd.viewParms.world.modelMatrix );
-	qdx_matrix_set(D3DTS_WORLD, backEnd.viewParms.world.modelMatrix);
+	D3DXMatrixIdentity(&mat);
+	qdx_matrix_set(D3DTS_WORLD, mat.m);
+	qdx_matrix_set(D3DTS_VIEW, backEnd.viewParms.world.modelMatrix);
+	//qdx_matrix_set(D3DTS_VIEW, qdx.camera.m);
 	//qglTranslatef( backEnd.viewParms.or.origin[0], backEnd.viewParms.or.origin[1], backEnd.viewParms.or.origin[2] );
-	D3DXMATRIX msun;
-	D3DXMatrixTranslation(&msun, backEnd.viewParms.or.origin[0], backEnd.viewParms.or.origin[1], backEnd.viewParms.or.origin[2]);
-	qdx_matrix_mul(D3DTS_WORLD, &msun);
+	D3DXMatrixTranslation(&mat, backEnd.viewParms.or.origin[0], backEnd.viewParms.or.origin[1], backEnd.viewParms.or.origin[2]);
+	qdx_matrix_mul(D3DTS_VIEW, &mat);
 
 	dist =  backEnd.viewParms.zFar / 1.75;      // div sqrt(3)
 

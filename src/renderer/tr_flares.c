@@ -520,12 +520,14 @@ void RB_RenderFlares( void ) {
 		IDirect3DDevice9_SetRenderState(qdx.device, D3DRS_CLIPPLANEENABLE, 0);
 	}
 
-	D3DXMATRIX mat;
+	D3DMATRIX mat;
 	D3DXMatrixIdentity(&mat);
 	//qglPushMatrix();
 	//qglLoadIdentity();
 	qdx_matrix_push(D3DTS_WORLD);
-	qdx_matrix_set(D3DTS_WORLD, &mat.m[0][0]);
+	qdx_matrix_push(D3DTS_VIEW);
+	qdx_matrix_set(D3DTS_WORLD, mat.m);
+	qdx_matrix_set(D3DTS_VIEW, mat.m);
 	//qglMatrixMode( GL_PROJECTION );
 	//qglPushMatrix();
 	//qglLoadIdentity();
@@ -551,5 +553,6 @@ void RB_RenderFlares( void ) {
 	//qglPopMatrix();
 	qdx_matrix_pop(D3DTS_PROJECTION);
 	qdx_matrix_pop(D3DTS_WORLD);
+	qdx_matrix_pop(D3DTS_VIEW);
 }
 

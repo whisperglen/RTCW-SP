@@ -60,6 +60,8 @@ typedef struct
 	//HGLRC hGLRC;            // handle to GL rendering context
 
 	//HINSTANCE hinstOpenGL;  // HINSTANCE for the OpenGL library
+	HMODULE instDX9;
+	void* funcDX9Create;
 
 	qboolean allowdisplaydepthchange;
 	qboolean pixelFormatSet;
@@ -76,6 +78,7 @@ static void DX9imp_CheckHardwareGamma(void);
 static void DX9imp_RestoreGamma(void);
 static void qdx_log_comment(const char *name, UINT fvfbits, const void *ptr);
 static void qdx_clear_buffers();
+static void qdx_texobj_delete_all();
 
 typedef enum {
 	RSERR_OK,
@@ -127,11 +130,12 @@ extern "C" void     QGL_DMY_Shutdown(void);
 //
 // variable declarations
 //
-dx9state_t dx9imp_state;
+static dx9state_t dx9imp_state = { 0 };
 struct qdx9_state qdx;
 
 cvar_t  *r_allowSoftwareGL;     // don't abort out if the pixelformat claims software
 cvar_t  *r_maskMinidriver;      // allow a different dll name to be treated as if it were opengl32.dll
+cvar_t  *r_systemdll;         // search for directx9 dll only in system folder
 
 
 
@@ -144,11 +148,30 @@ static qboolean GLW_StartDriverAndSetMode(const char *drivername,
 	qboolean cdsFullscreen) {
 	rserr_t err;
 
-	const int minwidth = 800;
-	const int minheight = 600;
+	const int minwidth = 640;
+	const int minheight = 480;
+
+	if (dx9imp_state.instDX9 == NULL)
+	{
+		dx9imp_state.instDX9 = LoadLibraryEx("d3d9.dll", 0, r_systemdll->integer ? LOAD_LIBRARY_SEARCH_SYSTEM32 : 0);
+		if (dx9imp_state.instDX9 == NULL)
+		{
+			ri.Printf(PRINT_ALL, "...Error: cannot load d3d9.dll, system cvar:%d\n", r_systemdll->integer);
+			return qfalse;
+		}
+	}
+	if (dx9imp_state.funcDX9Create == NULL)
+	{
+		dx9imp_state.funcDX9Create = GetProcAddress(dx9imp_state.instDX9, "Direct3DCreate9");
+		if (dx9imp_state.funcDX9Create == NULL)
+		{
+			ri.Printf(PRINT_ALL, "...Error: cannot find Direct3DCreate9\n");
+			return qfalse;
+		}
+	}
 
 	ZeroMemory(&qdx, sizeof(qdx));
-	qdx.d3d = Direct3DCreate9(D3D_SDK_VERSION);
+	qdx.d3d = ((IDirect3D9 * (WINAPI *)(UINT))dx9imp_state.funcDX9Create)(D3D_SDK_VERSION);
 	qdx.adapter_count = qdx.d3d->GetAdapterCount();
 	qdx.adapter_num = D3DADAPTER_DEFAULT;
 	qdx.d3d->GetAdapterIdentifier(qdx.adapter_num, 0, &qdx.adapter_info);
@@ -1584,6 +1607,9 @@ void DX9imp_Init(void) {
 	r_allowSoftwareGL = ri.Cvar_Get("r_allowSoftwareGL", "0", CVAR_LATCH);
 	r_maskMinidriver = ri.Cvar_Get("r_maskMinidriver", "0", CVAR_LATCH);
 
+	//Com_StartupVariable("r_systemdll");
+	r_systemdll = ri.Cvar_Get("r_systemdll", "0", CVAR_INIT);
+
 	// load appropriate DLL and initialize subsystem
 	GLW_StartOpenGL();
 
@@ -1668,6 +1694,22 @@ void DX9imp_Shutdown(void) {
 	if (qdx.device)
 	{
 		qdx_clear_buffers();
+		qdx_texobj_delete_all();
+#if 1
+		if (dx9imp_state.cdsFullscreen)
+		{
+			//there seems to be a problem with releasing and recreating the device if fullscreen
+			//todo: am I doing something wrong with the objects? not releasing everything?
+			//dx9imp_state.cdsFullscreen = qfalse;
+			D3DPRESENT_PARAMETERS d3dpp;
+			fill_in_d3dpresentparams(d3dpp);
+			HRESULT hr = qdx.device->Reset(&d3dpp);
+			if (FAILED(hr))
+			{
+				ri.Printf(PRINT_ERROR, "failed to reset device: %d\n", HRESULT_CODE(hr));
+			}
+		}
+#endif
 		qdx.device->Release();
 		qdx.device = 0;
 	}
@@ -2258,6 +2300,19 @@ void qdx_texobj_delete(int id)
 	}
 }
 
+static void qdx_texobj_delete_all()
+{
+	for (int idx = 0; idx < ARRAYSIZE(textures); idx++)
+	{
+		if (textures[idx].obj != 0)
+		{
+			textures[idx].obj->Release();
+		}
+	}
+
+	memset(textures, 0, sizeof(textures));
+}
+
 void qdx_texobj_apply(int id, int sampler)
 {
 	qdx_textureobj_t opt = qdx_texobj_get(id);
@@ -2614,7 +2669,7 @@ void qdx_fvf_assemble_and_draw(UINT numindexes, const qdxIndex_t *indexes)
 {
 	DWORD selected_fvf = FVFID_VERTCOL;
 	UINT stride_fvf = sizeof(fvf_vertcol_t);
-	qdxIndex_t lowindex = SHADER_MAX_INDEXES, highindex = 0;
+	qdxIndex_t lowindex = SHADER_MAX_INDEXES, highindex = 0, offindex = 0;
 	UINT selectionsize = 0;
 
 	if (r_logFile->integer)
@@ -2691,21 +2746,23 @@ void qdx_fvf_assemble_and_draw(UINT numindexes, const qdxIndex_t *indexes)
 
 	qdx_get_buffers(&i_buffer, &v_buffer, selected_fvf, stride_fvf, &bufstats);
 
+	offindex = lowindex;
+
 	qdxIndex_t *pInd;
 	ON_FAIL_RETURN(i_buffer->Lock(0, numindexes * sizeof(qdxIndex_t), (void**)&pInd, D3DLOCK_DISCARD));//always discard old contents
 	for (int i = 0; i < numindexes; i++)
 	{
-		pInd[i] = indexes[i];
+		pInd[i] = indexes[i] - offindex;
 	}
 	i_buffer->Unlock();
 
 	selectionsize = 1 + highindex - lowindex;
 
 	byte *pVert;
-	ON_FAIL_RETURN(v_buffer->Lock(lowindex * stride_fvf, selectionsize * stride_fvf, (void**)&pVert, D3DLOCK_DISCARD));
+	ON_FAIL_RETURN(v_buffer->Lock((lowindex - offindex) * stride_fvf, selectionsize * stride_fvf, (void**)&pVert, D3DLOCK_DISCARD));
 
 	int vpos = 0;
-	for (int i = lowindex; i <= highindex; i++)
+	for (int i = lowindex - offindex; i <= highindex - offindex; i++)
 	{
 		switch (selectionbits)
 		{

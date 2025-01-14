@@ -29,6 +29,8 @@ struct qdx9_state
 	float depth_clear;
 	float znear, zfar;
 	D3DVIEWPORT9 viewport;
+	D3DMATRIX camera;
+	D3DMATRIX world;
 
 	WINDOWPLACEMENT wplacement;
 	D3DDISPLAYMODE desktop;

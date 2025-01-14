@@ -493,9 +493,11 @@ void RE_RenderScene( const refdef_t *fd ) {
 
 	// turn off dynamic lighting globally by clearing all the
 	// dlights if it needs to be disabled or if vertex lighting is enabled
-	if ( /*r_dynamiclight->integer == 0 ||*/    // RF, disabled so we can force things like lightning dlights
-		r_vertexLight->integer == 1 ||
-		glConfig.hardwareType == GLHW_PERMEDIA2 ) {
+	// RF, disabled (r_dynamiclight forces nolights) so we can force things like lightning dlights
+	// WG: if r_dynamiclight is off AND r_vertexLight is on then we can disable lights
+	if ( r_dynamiclight->integer == 0 &&
+		 ( r_vertexLight->integer == 1 ||
+		   glConfig.hardwareType == GLHW_PERMEDIA2 ) ) {
 		tr.refdef.num_dlights = 0;
 	}
 

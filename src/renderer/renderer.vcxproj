@@ -74,7 +74,7 @@
     <Lib>
       <OutputFile>.\Release\renderer.lib</OutputFile>
       <SuppressStartupBanner>true</SuppressStartupBanner>
-      <AdditionalDependencies>d3d9.lib;d3dx9.lib</AdditionalDependencies>
+      <AdditionalDependencies>d3dx9.lib</AdditionalDependencies>
       <AdditionalLibraryDirectories>$(ProjectDir)dx9sdk\lib\$(PlatformTarget)\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Lib>
     <Bscmake>
@@ -105,7 +105,7 @@
     <Lib>
       <OutputFile>.\Debug\renderer.lib</OutputFile>
       <SuppressStartupBanner>true</SuppressStartupBanner>
-      <AdditionalDependencies>d3d9.lib;d3dx9.lib</AdditionalDependencies>
+      <AdditionalDependencies>d3dx9.lib</AdditionalDependencies>
       <AdditionalLibraryDirectories>$(ProjectDir)dx9sdk\lib\$(PlatformTarget)\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Lib>
     <Bscmake>

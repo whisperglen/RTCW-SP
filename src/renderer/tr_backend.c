@@ -433,13 +433,13 @@ static void RB_Hyperspace( void ) {
 static void SetViewportAndScissor( void ) {
 	//qglMatrixMode( GL_PROJECTION );
 	//qglLoadMatrixf( backEnd.viewParms.projectionMatrix );
-	D3DXMATRIX mat;
-	memcpy(&mat.m[0][0], backEnd.viewParms.projectionMatrix, 16 * sizeof(float));
+	D3DMATRIX mat;
+	memcpy(mat.m, backEnd.viewParms.projectionMatrix, sizeof(mat.m));
 	// m[2][2] = zf /( zn - zf )
 	// m[3][2] = zn * zf /( zn - zf )
 	mat.m[2][2] = qdx.zfar / (qdx.znear - qdx.zfar);
 	mat.m[3][2] = qdx.znear * qdx.zfar / (qdx.znear - qdx.zfar);
-	qdx_matrix_set(D3DTS_PROJECTION, &mat.m[0][0]);
+	qdx_matrix_set(D3DTS_PROJECTION, mat.m);
 	//qglMatrixMode( GL_MODELVIEW );
 
 	int newX = backEnd.viewParms.viewportX;
@@ -664,7 +664,10 @@ void RB_BeginDrawingView( void ) {
 		//qglLoadMatrixf( s_flipMatrix ); //todo: check matrix mode stuff
 		//qglClipPlane( GL_CLIP_PLANE0, plane2 );
 		qglEnable( GL_CLIP_PLANE0 );
-		qdx_matrix_set(D3DTS_WORLD, s_flipMatrix);
+		D3DMATRIX mat;
+		D3DXMatrixIdentity(&mat);
+		qdx_matrix_set(D3DTS_WORLD, mat.m);
+		qdx_matrix_set(D3DTS_VIEW, s_flipMatrix);
 		IDirect3DDevice9_SetClipPlane(qdx.device, 0, plane2);
 		IDirect3DDevice9_SetRenderState(qdx.device, D3DRS_CLIPPLANEENABLE, D3DCLIPPLANE0);
 	} else {
@@ -1119,6 +1122,7 @@ void RB_RenderDrawSurfList( drawSurf_t *drawSurfs, int numDrawSurfs ) {
 				backEnd.currentEntity = &tr.worldEntity;
 				backEnd.refdef.floatTime = originalTime;
 				backEnd.or = backEnd.viewParms.world;
+				D3DXMatrixIdentity(&qdx.world);
 
 				// we have to reset the shaderTime as well otherwise image animations on
 				// the world (like water) continue with the wrong frame
@@ -1128,7 +1132,9 @@ void RB_RenderDrawSurfList( drawSurf_t *drawSurfs, int numDrawSurfs ) {
 			}
 
 			//qglLoadMatrixf( backEnd.or.modelMatrix );
-			qdx_matrix_set(D3DTS_WORLD, backEnd.or.modelMatrix);
+			//qdx_matrix_set(D3DTS_WORLD, backEnd.or.modelMatrix);
+			qdx_matrix_set(D3DTS_WORLD, qdx.world.m);
+			qdx_matrix_set(D3DTS_VIEW, qdx.camera.m);
 
 			//
 			// change depthrange if needed
@@ -1179,7 +1185,10 @@ void RB_RenderDrawSurfList( drawSurf_t *drawSurfs, int numDrawSurfs ) {
 	R_TransformDlights( backEnd.refdef.num_dlights, backEnd.refdef.dlights, &backEnd.or );
 
 	//qglLoadMatrixf( backEnd.viewParms.world.modelMatrix );
-	qdx_matrix_set(D3DTS_WORLD, backEnd.viewParms.world.modelMatrix); 
+	//qdx_matrix_set(D3DTS_WORLD, backEnd.viewParms.world.modelMatrix);
+	D3DXMatrixIdentity(&qdx.world);
+	qdx_matrix_set(D3DTS_WORLD, qdx.world.m);
+	qdx_matrix_set(D3DTS_VIEW, qdx.camera.m);
 	if ( depthRange ) {
 		//qglDepthRange( 0, 1 );
 		qdx_depthrange(0, 1);
@@ -1231,11 +1240,12 @@ void    RB_SetGL2D( void ) {
 	//qglOrtho( 0, glConfig.vidWidth, glConfig.vidHeight, 0, 0, 1 );
 	D3DMATRIX mat;
 	D3DXMatrixOrthoOffCenterRH(&mat, 0, glConfig.vidWidth, glConfig.vidHeight, 0, 0, 1);
-	qdx_matrix_set(D3DTS_PROJECTION, &mat.m[0][0]);
+	qdx_matrix_set(D3DTS_PROJECTION, mat.m);
 	//qglMatrixMode( GL_MODELVIEW );
 	//qglLoadIdentity();
 	D3DXMatrixIdentity(&mat);
-	qdx_matrix_set(D3DTS_WORLD, &mat.m[0][0]);
+	qdx_matrix_set(D3DTS_WORLD, mat.m);
+	qdx_matrix_set(D3DTS_VIEW, mat.m);
 
 	GL_State( GLS_DEPTHTEST_DISABLE |
 			  GLS_SRCBLEND_SRC_ALPHA |
