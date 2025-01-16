@@ -592,7 +592,7 @@ void R_RotateForEntity(const trRefEntity_t *ent, const viewParms_t *viewParms,
 	glMatrix[11] = 0;
 	glMatrix[15] = 1;
 	
-	memcpy(qdx.world.m, glMatrix, sizeof(qdx.world.m));
+	memcpy(&qdx.world.m[0][0], glMatrix, sizeof(qdx.world.m));
 
 	myGlMultMatrix(glMatrix, viewParms->world.modelMatrix, or->modelMatrix);
 
@@ -660,8 +660,6 @@ void R_RotateForViewer(void) {
 	// convert from our coordinate system (looking down X)
 	// to OpenGL's coordinate system (looking down -Z)
 	myGlMultMatrix(viewerMatrix, s_flipMatrix, tr.or.modelMatrix);
-
-	memcpy(qdx.camera.m, tr.or.modelMatrix, sizeof(qdx.camera.m));
 
 	tr.viewParms.world = tr.or;
 

@@ -525,9 +525,12 @@ void RB_RenderFlares( void ) {
 	//qglPushMatrix();
 	//qglLoadIdentity();
 	qdx_matrix_push(D3DTS_WORLD);
+	qdx_matrix_set(D3DTS_WORLD, &mat.m[0][0]);
+#ifdef FUSED_WORLD_CAMERA
+#else
 	qdx_matrix_push(D3DTS_VIEW);
-	qdx_matrix_set(D3DTS_WORLD, mat.m);
-	qdx_matrix_set(D3DTS_VIEW, mat.m);
+	qdx_matrix_set(D3DTS_VIEW, &mat.m[0][0]);
+#endif
 	//qglMatrixMode( GL_PROJECTION );
 	//qglPushMatrix();
 	//qglLoadIdentity();
@@ -553,6 +556,9 @@ void RB_RenderFlares( void ) {
 	//qglPopMatrix();
 	qdx_matrix_pop(D3DTS_PROJECTION);
 	qdx_matrix_pop(D3DTS_WORLD);
+#ifdef FUSED_WORLD_CAMERA
+#else
 	qdx_matrix_pop(D3DTS_VIEW);
+#endif
 }
 

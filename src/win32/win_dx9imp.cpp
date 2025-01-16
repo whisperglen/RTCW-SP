@@ -77,6 +77,7 @@ typedef struct
 static void DX9imp_CheckHardwareGamma(void);
 static void DX9imp_RestoreGamma(void);
 static void qdx_log_comment(const char *name, UINT fvfbits, const void *ptr);
+static void qdx_log_matrix(const char *name, const float *mat);
 static void qdx_clear_buffers();
 static void qdx_texobj_delete_all();
 
@@ -148,8 +149,8 @@ static qboolean GLW_StartDriverAndSetMode(const char *drivername,
 	qboolean cdsFullscreen) {
 	rserr_t err;
 
-	const int minwidth = 640;
-	const int minheight = 480;
+	const int minwidth = 800;
+	const int minheight = 600;
 
 	if (dx9imp_state.instDX9 == NULL)
 	{
@@ -2532,6 +2533,17 @@ static void qdx_log_comment(const char *name, UINT fvfbits, const void *ptr)
 	DX9imp_LogComment(comment);
 }
 
+static void qdx_log_matrix(const char *name, const float *mat)
+{
+	char comment[256];
+	snprintf(comment, sizeof(comment), "qdx_matrix[%s]:\n  %f %f %f %f\n  %f %f %f %f\n  %f %f %f %f\n", name,
+		mat[0], mat[1], mat[2], mat[3],
+		mat[4], mat[5], mat[6], mat[7],
+		mat[8], mat[9], mat[10], mat[11],
+		mat[12], mat[13], mat[14], mat[15]);
+	DX9imp_LogComment(comment);
+}
+
 void qdx_fvf_set2d(BOOL state)
 {
 	g_fvfs.is2dprojection = state;
@@ -2746,7 +2758,7 @@ void qdx_fvf_assemble_and_draw(UINT numindexes, const qdxIndex_t *indexes)
 
 	qdx_get_buffers(&i_buffer, &v_buffer, selected_fvf, stride_fvf, &bufstats);
 
-	offindex = lowindex;
+	//offindex = lowindex;
 
 	qdxIndex_t *pInd;
 	ON_FAIL_RETURN(i_buffer->Lock(0, numindexes * sizeof(qdxIndex_t), (void**)&pInd, D3DLOCK_DISCARD));//always discard old contents
@@ -2762,7 +2774,7 @@ void qdx_fvf_assemble_and_draw(UINT numindexes, const qdxIndex_t *indexes)
 	ON_FAIL_RETURN(v_buffer->Lock((lowindex - offindex) * stride_fvf, selectionsize * stride_fvf, (void**)&pVert, D3DLOCK_DISCARD));
 
 	int vpos = 0;
-	for (int i = lowindex - offindex; i <= highindex - offindex; i++)
+	for (int i = lowindex; i <= highindex; i++)
 	{
 		switch (selectionbits)
 		{
@@ -2989,6 +3001,30 @@ void qdx_matrix_apply(void)
 	qdx.device->SetTransform(D3DTS_WORLD, &qdx_mats.world);
 	qdx.device->SetTransform(D3DTS_VIEW, &qdx_mats.view);
 	qdx.device->SetTransform(D3DTS_PROJECTION, &qdx_mats.proj);
+
+	if (r_logFile->integer)
+	{
+		qdx_log_matrix("world", (float*)qdx_mats.world.m);
+		qdx_log_matrix("view", (float*)qdx_mats.view.m);
+		qdx_log_matrix("proj", (float*)qdx_mats.proj.m);
+		qdx_log_matrix("all", (float*)(&(qdx_mats.world * qdx_mats.view * qdx_mats.proj))->m);
+	}
+}
+
+int qdx_matrix_equals(const float *a, const float *b)
+{
+	int ret = 1;
+	int diff0 = 0;
+
+	for (int i = 0; i < 16; i++)
+	{
+		if (fabsf(a[i] - b[i]) > 0.001f)
+		{
+			diff0++;
+		}
+	}
+
+	return diff0 == 0;
 }
 
 void qdx_depthrange(float znear, float zfar)

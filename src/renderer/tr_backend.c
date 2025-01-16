@@ -434,12 +434,12 @@ static void SetViewportAndScissor( void ) {
 	//qglMatrixMode( GL_PROJECTION );
 	//qglLoadMatrixf( backEnd.viewParms.projectionMatrix );
 	D3DMATRIX mat;
-	memcpy(mat.m, backEnd.viewParms.projectionMatrix, sizeof(mat.m));
+	memcpy(&mat.m[0][0], backEnd.viewParms.projectionMatrix, sizeof(mat.m));
 	// m[2][2] = zf /( zn - zf )
 	// m[3][2] = zn * zf /( zn - zf )
 	mat.m[2][2] = qdx.zfar / (qdx.znear - qdx.zfar);
 	mat.m[3][2] = qdx.znear * qdx.zfar / (qdx.znear - qdx.zfar);
-	qdx_matrix_set(D3DTS_PROJECTION, mat.m);
+	qdx_matrix_set(D3DTS_PROJECTION, &mat.m[0][0]);
 	//qglMatrixMode( GL_MODELVIEW );
 
 	int newX = backEnd.viewParms.viewportX;
@@ -663,15 +663,19 @@ void RB_BeginDrawingView( void ) {
 
 		//qglLoadMatrixf( s_flipMatrix ); //todo: check matrix mode stuff
 		//qglClipPlane( GL_CLIP_PLANE0, plane2 );
-		qglEnable( GL_CLIP_PLANE0 );
+		//qglEnable( GL_CLIP_PLANE0 );
+#ifdef FUSED_WORLD_CAMERA
+		qdx_matrix_set(D3DTS_WORLD, s_flipMatrix);
+#else
 		D3DMATRIX mat;
 		D3DXMatrixIdentity(&mat);
-		qdx_matrix_set(D3DTS_WORLD, mat.m);
+		qdx_matrix_set(D3DTS_WORLD, &mat.m[0][0]);
 		qdx_matrix_set(D3DTS_VIEW, s_flipMatrix);
+#endif
 		IDirect3DDevice9_SetClipPlane(qdx.device, 0, plane2);
 		IDirect3DDevice9_SetRenderState(qdx.device, D3DRS_CLIPPLANEENABLE, D3DCLIPPLANE0);
 	} else {
-		qglDisable( GL_CLIP_PLANE0 );
+		//qglDisable( GL_CLIP_PLANE0 );
 		IDirect3DDevice9_SetRenderState(qdx.device, D3DRS_CLIPPLANEENABLE, 0);
 	}
 }
@@ -1132,9 +1136,12 @@ void RB_RenderDrawSurfList( drawSurf_t *drawSurfs, int numDrawSurfs ) {
 			}
 
 			//qglLoadMatrixf( backEnd.or.modelMatrix );
-			//qdx_matrix_set(D3DTS_WORLD, backEnd.or.modelMatrix);
-			qdx_matrix_set(D3DTS_WORLD, qdx.world.m);
-			qdx_matrix_set(D3DTS_VIEW, qdx.camera.m);
+#ifdef FUSED_WORLD_CAMERA
+			qdx_matrix_set(D3DTS_WORLD, backEnd.or.modelMatrix);
+#else
+			qdx_matrix_set(D3DTS_WORLD, &qdx.world.m[0][0]);
+			qdx_matrix_set(D3DTS_VIEW, &qdx.camera.m[0][0]);
+#endif
 
 			//
 			// change depthrange if needed
@@ -1185,10 +1192,13 @@ void RB_RenderDrawSurfList( drawSurf_t *drawSurfs, int numDrawSurfs ) {
 	R_TransformDlights( backEnd.refdef.num_dlights, backEnd.refdef.dlights, &backEnd.or );
 
 	//qglLoadMatrixf( backEnd.viewParms.world.modelMatrix );
-	//qdx_matrix_set(D3DTS_WORLD, backEnd.viewParms.world.modelMatrix);
+#ifdef FUSED_WORLD_CAMERA
+	qdx_matrix_set(D3DTS_WORLD, backEnd.viewParms.world.modelMatrix);
+#else
 	D3DXMatrixIdentity(&qdx.world);
-	qdx_matrix_set(D3DTS_WORLD, qdx.world.m);
-	qdx_matrix_set(D3DTS_VIEW, qdx.camera.m);
+	qdx_matrix_set(D3DTS_WORLD, &qdx.world.m[0][0]);
+	qdx_matrix_set(D3DTS_VIEW, &qdx.camera.m[0][0]);
+#endif
 	if ( depthRange ) {
 		//qglDepthRange( 0, 1 );
 		qdx_depthrange(0, 1);
@@ -1240,12 +1250,15 @@ void    RB_SetGL2D( void ) {
 	//qglOrtho( 0, glConfig.vidWidth, glConfig.vidHeight, 0, 0, 1 );
 	D3DMATRIX mat;
 	D3DXMatrixOrthoOffCenterRH(&mat, 0, glConfig.vidWidth, glConfig.vidHeight, 0, 0, 1);
-	qdx_matrix_set(D3DTS_PROJECTION, mat.m);
+	qdx_matrix_set(D3DTS_PROJECTION, &mat.m[0][0]);
 	//qglMatrixMode( GL_MODELVIEW );
 	//qglLoadIdentity();
 	D3DXMatrixIdentity(&mat);
-	qdx_matrix_set(D3DTS_WORLD, mat.m);
-	qdx_matrix_set(D3DTS_VIEW, mat.m);
+	qdx_matrix_set(D3DTS_WORLD, &mat.m[0][0]);
+#ifdef FUSED_WORLD_CAMERA
+#else
+	qdx_matrix_set(D3DTS_VIEW, &mat.m[0][0]);
+#endif
 
 	GL_State( GLS_DEPTHTEST_DISABLE |
 			  GLS_SRCBLEND_SRC_ALPHA |
@@ -1610,6 +1623,8 @@ const void  *RB_DrawSurfs( const void *data ) {
 
 	backEnd.refdef = cmd->refdef;
 	backEnd.viewParms = cmd->viewParms;
+
+	memcpy(&qdx.camera.m[0][0], backEnd.viewParms.world.modelMatrix, sizeof(qdx.camera.m));
 
 	RB_RenderDrawSurfList( cmd->drawSurfs, cmd->numDrawSurfs );
 
