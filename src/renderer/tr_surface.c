@@ -226,11 +226,15 @@ void RB_AddQuadStampExt( vec3_t origin, vec3_t left, vec3_t up, byte *color, flo
 
 	// constant color all the way around
 	// should this be identity and let the shader specify from entity?
-	*( unsigned int * ) &tess.vertexColors[ndx] =
-		*( unsigned int * ) &tess.vertexColors[ndx + 1] =
-			*( unsigned int * ) &tess.vertexColors[ndx + 2] =
-				*( unsigned int * ) &tess.vertexColors[ndx + 3] =
-					*( unsigned int * )color;
+	memcpy(tess.vertexColors[ndx], color, sizeof(tess.vertexColors[0]));
+	memcpy(tess.vertexColors[ndx + 1], color, sizeof(tess.vertexColors[0]));
+	memcpy(tess.vertexColors[ndx + 2], color, sizeof(tess.vertexColors[0]));
+	memcpy(tess.vertexColors[ndx + 3], color, sizeof(tess.vertexColors[0]));
+	//*( unsigned int * ) &tess.vertexColors[ndx] =
+	//	*( unsigned int * ) &tess.vertexColors[ndx + 1] =
+	//		*( unsigned int * ) &tess.vertexColors[ndx + 2] =
+	//			*( unsigned int * ) &tess.vertexColors[ndx + 3] =
+	//				*( unsigned int * )color;
 
 
 	tess.numVertexes += 4;

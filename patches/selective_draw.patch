@@ -1,3 +1,38 @@
+diff --git a/src/client/cl_console.c b/src/client/cl_console.c
+index bf6a958..c3dae5e 100644
+--- a/src/client/cl_console.c
++++ b/src/client/cl_console.c
+@@ -76,6 +76,17 @@ cvar_t      *con_notifytime;
+ 
+ vec4_t console_color = {1.0, 1.0, 1.0, 1.0};
+ 
++/*
++================
++Con_ConsoleShown
++
++Return qtrue if console is shown/drawn on screen
++================
++*/
++qboolean Con_ConsoleShown( void )
++{
++	return (cls.keyCatchers & KEYCATCH_CONSOLE) == 0 ? qfalse : qtrue;
++}
+ 
+ /*
+ ================
+diff --git a/src/client/client.h b/src/client/client.h
+index 4e8fa13..58f7806 100644
+--- a/src/client/client.h
++++ b/src/client/client.h
+@@ -519,7 +519,7 @@ void Con_PageDown( void );
+ void Con_Top( void );
+ void Con_Bottom( void );
+ void Con_Close( void );
+-
++qboolean Con_ConsoleShown( void );
+ 
+ //
+ // cl_scrn.c
 diff --git a/src/qcommon/qcommon.h b/src/qcommon/qcommon.h
 index fc7a14e..6fabc75 100644
 --- a/src/qcommon/qcommon.h
@@ -21,10 +56,10 @@ index fc7a14e..6fabc75 100644
 +
  #endif // _QCOMMON_H_
 diff --git a/src/renderer/tr_cmds.c b/src/renderer/tr_cmds.c
-index c381282..6873262 100644
+index 5d05db7..d5ace54 100644
 --- a/src/renderer/tr_cmds.c
 +++ b/src/renderer/tr_cmds.c
-@@ -364,6 +364,17 @@ void RE_BeginFrame( stereoFrame_t stereoFrame ) {
+@@ -354,6 +354,17 @@ void RE_BeginFrame( stereoFrame_t stereoFrame ) {
  	tr.frameCount++;
  	tr.frameSceneNum = 0;
  
@@ -43,10 +78,10 @@ index c381282..6873262 100644
  	// do overdraw measurement
  	//
 diff --git a/src/renderer/tr_shade.c b/src/renderer/tr_shade.c
-index 2a710bf..790e1b9 100644
+index 02fdb69..4b2bde4 100644
 --- a/src/renderer/tr_shade.c
 +++ b/src/renderer/tr_shade.c
-@@ -1180,6 +1180,9 @@ void SetIteratorFog( void ) {
+@@ -1222,6 +1222,9 @@ void SetIteratorFog( void ) {
  	}
  }
  
@@ -56,7 +91,7 @@ index 2a710bf..790e1b9 100644
  
  /*
  ** RB_IterateStagesGeneric
-@@ -1204,6 +1207,10 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input ) {
+@@ -1246,6 +1249,10 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input ) {
  			qdx_fvf_buffer(FVF_COLOR, input->svars.colors, 0, 4);
  		}
  
@@ -67,40 +102,43 @@ index 2a710bf..790e1b9 100644
  		//
  		// do multitexture
  		//
-@@ -1297,7 +1304,31 @@ void RB_StageIteratorGeneric( void ) {
+@@ -1339,7 +1346,34 @@ void RB_StageIteratorGeneric( void ) {
  	shaderCommands_t *input;
  
  	input = &tess;
 -
 +#if 0
 +	inputs_t keys = get_keypressed();
-+	if (keys.i)
++	if( ! Con_ConsoleShown())
 +	{
-+		qdx_drawp.shader_active = !qdx_drawp.shader_active;
-+	}
-+	if (keys.o)
-+	{
-+		qdx_drawp.drawcall_active = !qdx_drawp.drawcall_active;
-+	}
-+	if (keys.u)
-+	{
-+		qdx_drawp.threshold_active++;
-+		if (qdx_drawp.threshold_active >= 3)
-+			qdx_drawp.threshold_active = 0;
-+	}
-+	if (keys.updown)
-+	{
-+		qdx_drawp.by_shader += keys.updown;
-+	}
-+	if (keys.leftright)
-+	{
-+		qdx_drawp.by_drawcall += keys.leftright;
++		if (keys.i)
++		{
++			qdx_drawp.shader_active = !qdx_drawp.shader_active;
++		}
++		if (keys.o)
++		{
++			qdx_drawp.drawcall_active = !qdx_drawp.drawcall_active;
++		}
++		if (keys.u)
++		{
++			qdx_drawp.threshold_active++;
++			if (qdx_drawp.threshold_active >= 3)
++				qdx_drawp.threshold_active = 0;
++		}
++		if (keys.updown)
++		{
++			qdx_drawp.by_shader += keys.updown;
++		}
++		if (keys.leftright)
++		{
++			qdx_drawp.by_drawcall += keys.leftright;
++		}
 +	}
 +#endif
  	RB_DeformTessGeometry();
  
  	//
-@@ -1395,6 +1426,8 @@ void RB_StageIteratorGeneric( void ) {
+@@ -1439,6 +1473,8 @@ void RB_StageIteratorGeneric( void ) {
  	//
  	// call shader function
  	//
@@ -109,7 +147,7 @@ index 2a710bf..790e1b9 100644
  	RB_IterateStagesGeneric( input );
  
  	//
-@@ -1411,6 +1444,7 @@ void RB_StageIteratorGeneric( void ) {
+@@ -1455,6 +1491,7 @@ void RB_StageIteratorGeneric( void ) {
  	if ( tess.fogNum && tess.shader->fogPass ) {
  		RB_FogPass();
  	}

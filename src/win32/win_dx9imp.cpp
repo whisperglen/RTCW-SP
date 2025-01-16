@@ -2536,7 +2536,7 @@ static void qdx_log_comment(const char *name, UINT fvfbits, const void *ptr)
 static void qdx_log_matrix(const char *name, const float *mat)
 {
 	char comment[256];
-	snprintf(comment, sizeof(comment), "qdx_matrix[%s]:\n  %f %f %f %f\n  %f %f %f %f\n  %f %f %f %f\n", name,
+	snprintf(comment, sizeof(comment), "qdx_matrix[%s]:\n  %f %f %f %f\n  %f %f %f %f\n  %f %f %f %f\n  %f %f %f %f\n", name,
 		mat[0], mat[1], mat[2], mat[3],
 		mat[4], mat[5], mat[6], mat[7],
 		mat[8], mat[9], mat[10], mat[11],
@@ -2950,13 +2950,13 @@ void qdx_matrix_mul(D3DTRANSFORMSTATETYPE type, const D3DMATRIX *matrix)
 	switch (type)
 	{
 	case D3DTS_VIEW:
-		qdx_mats.view *= D3DXMATRIX(*matrix);
+		qdx_mats.view = D3DXMATRIX(*matrix) * qdx_mats.view;
 		break;
 	case D3DTS_PROJECTION:
-		qdx_mats.proj *= D3DXMATRIX(*matrix);
+		qdx_mats.proj = D3DXMATRIX(*matrix) * qdx_mats.proj;
 		break;
 	case D3DTS_WORLD:
-		qdx_mats.world *= D3DXMATRIX(*matrix);
+		qdx_mats.world = D3DXMATRIX(*matrix) * qdx_mats.world;
 		break;
 	}
 }
