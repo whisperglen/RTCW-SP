@@ -2254,6 +2254,8 @@ void QDECL CL_RefPrintf( int print_level, const char *fmt, ... ) {
 		Com_Printf( S_COLOR_YELLOW "%s", msg );       // yellow
 	} else if ( print_level == PRINT_DEVELOPER ) {
 		Com_DPrintf( S_COLOR_RED "%s", msg );     // red
+	} else if (print_level == PRINT_ERROR) {
+		Com_Printf( S_COLOR_RED "%s", msg );
 	}
 }
 
