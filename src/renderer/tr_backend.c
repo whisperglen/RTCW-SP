@@ -64,7 +64,7 @@ void GL_Bind( image_t *image ) {
 			image->frameUsed = tr.frameCount;
 		}
 		glState.currenttextures[glState.currenttmu] = texnum;
-		qdx_fvf_texid(texnum - TEXNUM_OFFSET, glState.currenttmu);
+		qdx_vatt_texid(texnum - TEXNUM_OFFSET, glState.currenttmu);
 		//qglBindTexture( GL_TEXTURE_2D, texnum );
 	}
 }
@@ -113,14 +113,14 @@ void GL_BindMultitexture( image_t *image0, GLuint env0, image_t *image1, GLuint 
 		image1->frameUsed = tr.frameCount;
 		glState.currenttextures[1] = texnum1;
 		//qglBindTexture( GL_TEXTURE_2D, texnum1 );
-		qdx_fvf_texid(texnum1 - TEXNUM_OFFSET, 1);
+		qdx_vatt_texid(texnum1 - TEXNUM_OFFSET, 1);
 	}
 	if ( glState.currenttextures[0] != texnum0 ) {
 		GL_SelectTexture( 0 );
 		image0->frameUsed = tr.frameCount;
 		glState.currenttextures[0] = texnum0;
 		//qglBindTexture( GL_TEXTURE_2D, texnum0 );
-		qdx_fvf_texid(texnum0 - TEXNUM_OFFSET, 0);
+		qdx_vatt_texid(texnum0 - TEXNUM_OFFSET, 0);
 	}
 }
 
@@ -520,7 +520,7 @@ void RB_BeginDrawingView( void ) {
 	// we will need to change the projection matrix before drawing
 	// 2D images again
 	backEnd.projection2D = qfalse;
-	qdx_fvf_set2d(FALSE);
+	qdx_vatt_set2d(FALSE);
 
 	//
 	// set the modelview matrix for the viewer
@@ -1236,7 +1236,7 @@ RB_SetGL2D
 */
 void    RB_SetGL2D( void ) {
 	backEnd.projection2D = qtrue;
-	qdx_fvf_set2d(TRUE);
+	qdx_vatt_set2d(TRUE);
 
 	// set 2D virtual screen size
 	qdx_assign_viewport(&qdx.viewport, 0, 0, glConfig.vidWidth, glConfig.vidHeight, 0.0f, 1.0f);
@@ -1348,7 +1348,7 @@ void RE_StretchRaw( int x, int y, int w, int h, int cols, int rows, const byte *
 	//qglColor3f( tr.identityLight, tr.identityLight, tr.identityLight );
 
 #if DRAW2D
-	fvf_2dvertcoltex_t rbuf[] =
+	vatt_2dvertcoltex_t rbuf[] =
 	{
 		{ x, y, VERT2D_ZVAL, VERT2D_RHVVAL, color, 0.5f / cols,  0.5f / rows },
 		{ x + w, y, VERT2D_ZVAL, VERT2D_RHVVAL, color, (cols - 0.5f) / cols,  0.5f / rows },
@@ -1356,7 +1356,7 @@ void RE_StretchRaw( int x, int y, int w, int h, int cols, int rows, const byte *
 		{ x, y + h, VERT2D_ZVAL, VERT2D_RHVVAL, color, 0.5f / cols, (rows - 0.5f) / rows },
 	};
 #else
-	fvf_vertcoltex_t rbuf[] =
+	vatt_vertcoltex_t rbuf[] =
 	{
 		{ x, y, 0, color, 0.5f / cols,  0.5f / rows },
 		{ x + w, y, 0, color, (cols - 0.5f) / cols,  0.5f / rows },
@@ -1370,9 +1370,9 @@ void RE_StretchRaw( int x, int y, int w, int h, int cols, int rows, const byte *
 	DX9_BEGIN_SCENE();
 	
 #if DRAW2D
-	IDirect3DDevice9_SetFVF(qdx.device, FVFID_2DVERTCOLTEX);
+	IDirect3DDevice9_SetFVF(qdx.device, VATTID_2DVERTCOLTEX);
 #else
-	IDirect3DDevice9_SetFVF(qdx.device, FVFID_VERTCOLTEX);
+	IDirect3DDevice9_SetFVF(qdx.device, VATTID_VERTCOLTEX);
 #endif
 
 	qdx_texobj_apply(texid, 0);
@@ -1702,7 +1702,7 @@ void RB_ShowImages( void ) {
 
 		D3DCOLOR color = D3DCOLOR_XRGB(255, 255, 255);
 
-		fvf_2dvertcoltex_t rbuf[] =
+		vatt_2dvertcoltex_t rbuf[] =
 		{
 			{ x, y, VERT2D_ZVAL, VERT2D_RHVVAL, color, 0, 0 },
 			{ x + w, y, VERT2D_ZVAL, VERT2D_RHVVAL, color, 1,  0 },
@@ -1714,14 +1714,14 @@ void RB_ShowImages( void ) {
 
 		DX9_BEGIN_SCENE();
 
-		IDirect3DDevice9_SetFVF(qdx.device, FVFID_2DVERTCOLTEX);
+		IDirect3DDevice9_SetFVF(qdx.device, VATTID_2DVERTCOLTEX);
 
 		qdx_texobj_apply(image->texnum - TEXNUM_OFFSET, 0);
 
-		//IDirect3DDevice9_SetStreamSource(qdx.device, 0, b, 0, sizeof(fvf_2dvertcoltex_t));
+		//IDirect3DDevice9_SetStreamSource(qdx.device, 0, b, 0, sizeof(vatt_2dvertcoltex_t));
 		//IDirect3DDevice9_DrawPrimitive(qdx.device, D3DPT_TRIANGLEFAN, 0, 2);
 
-		IDirect3DDevice9_DrawPrimitiveUP(qdx.device, D3DPT_TRIANGLEFAN, 2, rbuf, sizeof(fvf_2dvertcoltex_t));
+		IDirect3DDevice9_DrawPrimitiveUP(qdx.device, D3DPT_TRIANGLEFAN, 2, rbuf, sizeof(vatt_2dvertcoltex_t));
 
 		DX9_END_SCENE();
 
@@ -1796,7 +1796,7 @@ const void  *RB_SwapBuffers( const void *data ) {
 	GPUimp_EndFrame();
 
 	backEnd.projection2D = qfalse;
-	qdx_fvf_set2d(FALSE);
+	qdx_vatt_set2d(FALSE);
 
 	return (const void *)( cmd + 1 );
 }

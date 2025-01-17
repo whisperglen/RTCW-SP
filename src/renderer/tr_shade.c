@@ -262,7 +262,7 @@ Draws triangle outlines for debugging
 static void DrawTris( shaderCommands_t *input ) {
 	GL_Bind( tr.whiteImage );
 	//qglColor3f( 1,1,1 );
-	qdx_set_color(D3DCOLOR_COLORVALUE(1.f, 1.f, 1.f, 1.f));
+	qdx_set_global_color(D3DCOLOR_COLORVALUE(1.f, 1.f, 1.f, 1.f));
 
 	GL_State( GLS_POLYMODE_LINE | GLS_DEPTHMASK_TRUE );
 
@@ -272,12 +272,12 @@ static void DrawTris( shaderCommands_t *input ) {
 	}
 
 	//qglDisableClientState( GL_COLOR_ARRAY );
-	qdx_fvf_disable(FVF_COLOR);
+	qdx_vatt_disable(VATT_COLOR);
 	//qglDisableClientState( GL_TEXTURE_COORD_ARRAY );
-	qdx_fvf_disable(FVF_TEX0 | FVF_TEX1);
+	qdx_vatt_disable(VATT_TEX0 | VATT_TEX1);
 
 	//qglVertexPointer( 3, GL_FLOAT, 16, input->xyz ); // padded for SIMD
-	qdx_fvf_buffer(FVF_VERTEX, input->xyz, 0, 4);
+	qdx_vatt_set_buffer(VATT_VERTEX, input->xyz, 0, 4);
 
 	if ( qglLockArraysEXT ) {
 		qglLockArraysEXT( 0, input->numVertexes );
@@ -285,7 +285,7 @@ static void DrawTris( shaderCommands_t *input ) {
 	}
 
 	//R_DrawElements( input->numIndexes, input->indexes );
-	qdx_fvf_assemble_and_draw(input->numIndexes, input->indexes);
+	qdx_vatt_assemble_and_draw(input->numIndexes, input->indexes);
 
 	if ( qglUnlockArraysEXT ) {
 		qglUnlockArraysEXT();
@@ -303,7 +303,7 @@ DrawNormals
 Draws vertex normals for debugging
 ================
 */
-static fvf_vertcol_t g_viewnormals[2*SHADER_MAX_VERTEXES];
+static vatt_vertcol_t g_viewnormals[2*SHADER_MAX_VERTEXES];
 static void DrawNormals( shaderCommands_t *input ) {
 	int i;
 	//vec3_t temp;
@@ -319,7 +319,7 @@ static void DrawNormals( shaderCommands_t *input ) {
 	GL_State( GLS_POLYMODE_LINE | GLS_DEPTHMASK_TRUE );
 
 	//qglBegin( GL_LINES );
-	fvf_vertcol_t *p = g_viewnormals;
+	vatt_vertcol_t *p = g_viewnormals;
 	for ( i = 0 ; i < input->numVertexes ; i++ ) {
 		//qglVertex3fv( input->xyz[i] );
 		memcpy(p->XYZ, input->xyz[i], sizeof(p->XYZ));
@@ -333,7 +333,7 @@ static void DrawNormals( shaderCommands_t *input ) {
 	//qglEnd();
 	DX9_BEGIN_SCENE();
 
-	IDirect3DDevice9_SetFVF(qdx.device, FVFID_VERTCOL);
+	IDirect3DDevice9_SetFVF(qdx.device, VATTID_VERTCOL);
 
 
 	qdx_texobj_apply(tr.whiteImage->texnum - TEXNUM_OFFSET, 0);
@@ -414,7 +414,7 @@ static void DrawMultitextured( shaderCommands_t *input, int stage ) {
 	//
 	GL_SelectTexture( 0 );
 	//qglTexCoordPointer( 2, GL_FLOAT, 0, input->svars.texcoords[0] );
-	qdx_fvf_buffer(FVF_TEX0, input->svars.texcoords[0], 0, 2);
+	qdx_vatt_set_buffer(VATT_TEX0, input->svars.texcoords[0], 0, 2);
 	R_BindAnimatedImage( &pStage->bundle[0] );
 
 	//
@@ -431,20 +431,20 @@ static void DrawMultitextured( shaderCommands_t *input, int stage ) {
 	}
 
 	//qglTexCoordPointer( 2, GL_FLOAT, 0, input->svars.texcoords[1] );
-	qdx_fvf_buffer(FVF_TEX1, input->svars.texcoords[1], 0, 2);
+	qdx_vatt_set_buffer(VATT_TEX1, input->svars.texcoords[1], 0, 2);
 
 	R_BindAnimatedImage( &pStage->bundle[1] );
 
 	//R_DrawElements( input->numIndexes, input->indexes );
-	qdx_fvf_assemble_and_draw(input->numIndexes, input->indexes);
+	qdx_vatt_assemble_and_draw(input->numIndexes, input->indexes);
 
 	//
 	// disable texturing on TEXTURE1, then select TEXTURE0
 	//
 	//qglDisableClientState( GL_TEXTURE_COORD_ARRAY );
 	//qglDisable( GL_TEXTURE_2D );
-	qdx_fvf_disable(FVF_TEX1);
-	//qdx_fvf_texid(TEXID_NULL, 1);
+	qdx_vatt_disable(VATT_TEX1);
+	//qdx_vatt_texid(TEXID_NULL, 1);
 
 	GL_SelectTexture( 0 );
 }
@@ -634,11 +634,11 @@ static void ProjectDlightTexture( void ) {
 
 		//qglEnableClientState( GL_TEXTURE_COORD_ARRAY );
 		//qglTexCoordPointer( 2, GL_FLOAT, 0, texCoordsArray[0] );
-		qdx_fvf_buffer(FVF_TEX0, texCoordsArray[0], 0, 2);
+		qdx_vatt_set_buffer(VATT_TEX0, texCoordsArray[0], 0, 2);
 
 		//qglEnableClientState( GL_COLOR_ARRAY );
 		//qglColorPointer( 4, GL_UNSIGNED_BYTE, 0, colorArray );
-		qdx_fvf_buffer(FVF_COLOR, colorArray, 0, 4);
+		qdx_vatt_set_buffer(VATT_COLOR, colorArray, 0, 4);
 
 		//----(SA) creating dlight shader to allow for special blends or alternate dlight texture
 		{
@@ -651,7 +651,7 @@ static void ProjectDlightTexture( void ) {
 					R_BindAnimatedImage( &dls->stages[i]->bundle[0] );
 					GL_State( stage->stateBits | GLS_DEPTHFUNC_EQUAL );
 					//R_DrawElements( numIndexes, hitIndexes );
-					qdx_fvf_assemble_and_draw(numIndexes, hitIndexes);
+					qdx_vatt_assemble_and_draw(numIndexes, hitIndexes);
 					backEnd.pc.c_totalIndexes += numIndexes;
 					backEnd.pc.c_dlightIndexes += numIndexes;
 				}
@@ -703,7 +703,7 @@ static void ProjectDlightTexture( void ) {
 				// where they aren't rendered
 				GL_State( GLS_SRCBLEND_DST_COLOR | GLS_DSTBLEND_ONE | GLS_DEPTHFUNC_EQUAL );
 				//R_DrawElements( numIndexes, hitIndexes );
-				qdx_fvf_assemble_and_draw(numIndexes, hitIndexes);
+				qdx_vatt_assemble_and_draw(numIndexes, hitIndexes);
 				backEnd.pc.c_totalIndexes += numIndexes;
 				backEnd.pc.c_dlightIndexes += numIndexes;
 
@@ -711,7 +711,7 @@ static void ProjectDlightTexture( void ) {
 				//	multiple lights through
 				for ( i = 0; i < dl->overdraw; i++ ) {
 					//R_DrawElements( numIndexes, hitIndexes );
-					qdx_fvf_assemble_and_draw(numIndexes, hitIndexes);
+					qdx_vatt_assemble_and_draw(numIndexes, hitIndexes);
 					backEnd.pc.c_totalIndexes += numIndexes;
 					backEnd.pc.c_dlightIndexes += numIndexes;
 				}
@@ -788,11 +788,11 @@ static void RB_FogPass( void ) {
 
 	//qglEnableClientState( GL_COLOR_ARRAY );
 	//qglColorPointer( 4, GL_UNSIGNED_BYTE, 0, tess.svars.colors );
-	qdx_fvf_buffer(FVF_COLOR, tess.svars.colors, 0, 4);
+	qdx_vatt_set_buffer(VATT_COLOR, tess.svars.colors, 0, 4);
 
 	//qglEnableClientState( GL_TEXTURE_COORD_ARRAY );
 	//qglTexCoordPointer( 2, GL_FLOAT, 0, tess.svars.texcoords[0] );
-	qdx_fvf_buffer(FVF_TEX0, tess.svars.texcoords[0], 0, 2);
+	qdx_vatt_set_buffer(VATT_TEX0, tess.svars.texcoords[0], 0, 2);
 
 	fog = tr.world->fogs + tess.fogNum;
 
@@ -811,7 +811,7 @@ static void RB_FogPass( void ) {
 	}
 
 	//R_DrawElements( tess.numIndexes, tess.indexes );
-	qdx_fvf_assemble_and_draw(tess.numIndexes, tess.indexes);
+	qdx_vatt_assemble_and_draw(tess.numIndexes, tess.indexes);
 }
 
 /*
@@ -1243,7 +1243,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input ) {
 		if ( !setArraysOnce ) {
 			//qglEnableClientState( GL_COLOR_ARRAY );
 			//qglColorPointer( 4, GL_UNSIGNED_BYTE, 0, input->svars.colors );
-			qdx_fvf_buffer(FVF_COLOR, input->svars.colors, 0, 4);
+			qdx_vatt_set_buffer(VATT_COLOR, input->svars.colors, 0, 4);
 		}
 
 		//
@@ -1257,7 +1257,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input ) {
 
 			if ( !setArraysOnce ) {
 				//qglTexCoordPointer( 2, GL_FLOAT, 0, input->svars.texcoords[0] );
-				qdx_fvf_buffer(FVF_TEX0, input->svars.texcoords[0], 0, 2);
+				qdx_vatt_set_buffer(VATT_TEX0, input->svars.texcoords[0], 0, 2);
 			}
 
 			//
@@ -1322,7 +1322,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input ) {
 			// draw
 			//
 			//R_DrawElements( input->numIndexes, input->indexes );
-			qdx_fvf_assemble_and_draw(input->numIndexes, input->indexes);
+			qdx_vatt_assemble_and_draw(input->numIndexes, input->indexes);
 		}
 		// allow skipping out to show just lightmaps during development
 		if ( r_lightmap->integer && ( pStage->bundle[0].isLightmap || pStage->bundle[1].isLightmap || pStage->bundle[0].vertexLightmap ) ) {
@@ -1363,7 +1363,7 @@ void RB_StageIteratorGeneric( void ) {
 		qglEnable( GL_PN_TRIANGLES_ATI ); // ATI PN-Triangles extension
 #endif
 	}
-	qdx_fvf_enable(FVF_NORMAL);
+	qdx_vatt_enable(VATT_NORMAL);
 
 
 	//
@@ -1392,8 +1392,8 @@ void RB_StageIteratorGeneric( void ) {
 		setArraysOnce = qfalse;
 		//qglDisableClientState( GL_COLOR_ARRAY );
 		//qglDisableClientState( GL_TEXTURE_COORD_ARRAY );
-		//qdx_fvf_disable(FVF_COLOR);
-		//qdx_fvf_disable(FVF_TEX0);
+		//qdx_vatt_disable(VATT_COLOR);
+		//qdx_vatt_disable(VATT_TEX0);
 
 	} else
 	{
@@ -1401,11 +1401,11 @@ void RB_StageIteratorGeneric( void ) {
 
 		//qglEnableClientState( GL_COLOR_ARRAY );
 		//qglColorPointer( 4, GL_UNSIGNED_BYTE, 0, tess.svars.colors );
-		qdx_fvf_buffer(FVF_COLOR, tess.svars.colors, 0, 4);
+		qdx_vatt_set_buffer(VATT_COLOR, tess.svars.colors, 0, 4);
 
 		//qglEnableClientState( GL_TEXTURE_COORD_ARRAY );
 		//qglTexCoordPointer( 2, GL_FLOAT, 0, tess.svars.texcoords[0] );
-		qdx_fvf_buffer(FVF_TEX0, tess.svars.texcoords[0], 0, 2);
+		qdx_vatt_set_buffer(VATT_TEX0, tess.svars.texcoords[0], 0, 2);
 	}
 
 	// RF, send normals only if required
@@ -1414,13 +1414,13 @@ void RB_StageIteratorGeneric( void ) {
 	if ( qglPNTrianglesiATI && tess.ATI_tess ) {
 		//qglNormalPointer( GL_FLOAT, 16, input->normal );
 	}
-	qdx_fvf_buffer(FVF_NORMAL, input->normal, 0, 4);
+	qdx_vatt_set_buffer(VATT_NORMAL, input->normal, 0, 4);
 
 	//
 	// lock XYZ
 	//
 	//qglVertexPointer( 3, GL_FLOAT, 16, input->xyz ); // padded for SIMD
-	qdx_fvf_buffer(FVF_VERTEX, input->xyz, 0, 4);
+	qdx_vatt_set_buffer(VATT_VERTEX, input->xyz, 0, 4);
 	if ( qglLockArraysEXT ) {
 		qglLockArraysEXT( 0, input->numVertexes );
 		GPUimp_LogComment( "glLockArraysEXT\n" );
@@ -1432,8 +1432,8 @@ void RB_StageIteratorGeneric( void ) {
 	if ( !setArraysOnce ) {
 		//qglEnableClientState( GL_TEXTURE_COORD_ARRAY );
 		//qglEnableClientState( GL_COLOR_ARRAY );
-		//qdx_fvf_enable(FVF_TEX0);
-		//qdx_fvf_enable(FVF_COLOR);
+		//qdx_vatt_enable(VATT_TEX0);
+		//qdx_vatt_enable(VATT_COLOR);
 	}
 
 	//
@@ -1482,7 +1482,7 @@ void RB_StageIteratorGeneric( void ) {
 #endif
 		//qglDisableClientState( GL_NORMAL_ARRAY );
 	}
-	qdx_fvf_disable(FVF_NORMAL);
+	qdx_vatt_disable(VATT_NORMAL);
 
 }
 
@@ -1526,8 +1526,8 @@ void RB_StageIteratorVertexLitTexture( void ) {
 	//
 	//qglEnableClientState( GL_COLOR_ARRAY );
 	//qglEnableClientState( GL_TEXTURE_COORD_ARRAY );
-	qdx_fvf_enable(FVF_COLOR);
-	qdx_fvf_enable(FVF_TEX0);
+	qdx_vatt_enable(VATT_COLOR);
+	qdx_vatt_enable(VATT_TEX0);
 
 	if ( qglPNTrianglesiATI && tess.ATI_tess ) {
 #ifdef __MACOS__    //DAJ ATI
@@ -1538,15 +1538,15 @@ void RB_StageIteratorVertexLitTexture( void ) {
 		//qglEnableClientState( GL_NORMAL_ARRAY );         // RF< so we can send the normals as an array
 		//qglNormalPointer( GL_FLOAT, 16, input->normal );
 	}
-	qdx_fvf_enable(FVF_NORMAL);
-	qdx_fvf_buffer(FVF_NORMAL, input->normal, 0, 4);
+	qdx_vatt_enable(VATT_NORMAL);
+	qdx_vatt_set_buffer(VATT_NORMAL, input->normal, 0, 4);
 
 	//qglColorPointer( 4, GL_UNSIGNED_BYTE, 0, tess.svars.colors );
 	//qglTexCoordPointer( 2, GL_FLOAT, 16, tess.texCoords[0][0] );
 	//qglVertexPointer( 3, GL_FLOAT, 16, input->xyz );
-	qdx_fvf_buffer(FVF_COLOR, tess.svars.colors, 0, 4);
-	qdx_fvf_buffer(FVF_TEX0, tess.texCoords[0][0], 0, 4);
-	qdx_fvf_buffer(FVF_VERTEX, input->xyz, 0, 4);
+	qdx_vatt_set_buffer(VATT_COLOR, tess.svars.colors, 0, 4);
+	qdx_vatt_set_buffer(VATT_TEX0, tess.texCoords[0][0], 0, 4);
+	qdx_vatt_set_buffer(VATT_VERTEX, input->xyz, 0, 4);
 
 
 	if ( qglLockArraysEXT ) {
@@ -1560,7 +1560,7 @@ void RB_StageIteratorVertexLitTexture( void ) {
 	R_BindAnimatedImage( &tess.xstages[0]->bundle[0] );
 	GL_State( tess.xstages[0]->stateBits );
 	//R_DrawElements( input->numIndexes, input->indexes );
-	qdx_fvf_assemble_and_draw(input->numIndexes, input->indexes);
+	qdx_vatt_assemble_and_draw(input->numIndexes, input->indexes);
 
 	//
 	// now do any dynamic lighting needed
@@ -1623,7 +1623,7 @@ void RB_StageIteratorLightmappedMultitexture( void ) {
 	//
 	GL_State( GLS_DEFAULT );
 	//qglVertexPointer( 3, GL_FLOAT, 16, input->xyz );
-	qdx_fvf_buffer(FVF_VERTEX, input->xyz, 0, 4);
+	qdx_vatt_set_buffer(VATT_VERTEX, input->xyz, 0, 4);
 
 	if ( qglPNTrianglesiATI && tess.ATI_tess ) {
 #ifdef __MACOS__    //DAJ ATI
@@ -1641,7 +1641,7 @@ void RB_StageIteratorLightmappedMultitexture( void ) {
 #else
 	//qglEnableClientState( GL_COLOR_ARRAY );
 	//qglColorPointer( 4, GL_UNSIGNED_BYTE, 0, tess.constantColor255 );
-	qdx_fvf_buffer(FVF_COLOR, tess.constantColor255, 0, 4);
+	qdx_vatt_set_buffer(VATT_COLOR, tess.constantColor255, 0, 4);
 #endif
 
 	//
@@ -1652,7 +1652,7 @@ void RB_StageIteratorLightmappedMultitexture( void ) {
 	//qglEnableClientState( GL_TEXTURE_COORD_ARRAY );
 	R_BindAnimatedImage( &tess.xstages[0]->bundle[0] );
 	//qglTexCoordPointer( 2, GL_FLOAT, 16, tess.texCoords[0][0] );
-	qdx_fvf_buffer(FVF_TEX0, tess.texCoords[0][0], 0, 4);
+	qdx_vatt_set_buffer(VATT_TEX0, tess.texCoords[0][0], 0, 4);
 
 	//
 	// configure second stage
@@ -1674,7 +1674,7 @@ void RB_StageIteratorLightmappedMultitexture( void ) {
 
 	//qglEnableClientState( GL_TEXTURE_COORD_ARRAY );
 	//qglTexCoordPointer( 2, GL_FLOAT, 16, tess.texCoords[0][1] );
-	qdx_fvf_buffer(FVF_TEX1, tess.texCoords[0][1], 0, 4);
+	qdx_vatt_set_buffer(VATT_TEX1, tess.texCoords[0][1], 0, 4);
 
 	//
 	// lock arrays
@@ -1685,14 +1685,14 @@ void RB_StageIteratorLightmappedMultitexture( void ) {
 	}
 
 	//R_DrawElements( input->numIndexes, input->indexes );
-	qdx_fvf_assemble_and_draw(input->numIndexes, input->indexes);
+	qdx_vatt_assemble_and_draw(input->numIndexes, input->indexes);
 
 	//
 	// disable texturing on TEXTURE1, then select TEXTURE0
 	//
 	//qglDisable( GL_TEXTURE_2D );
 	//qglDisableClientState( GL_TEXTURE_COORD_ARRAY );
-	qdx_fvf_disable(FVF_TEX1);
+	qdx_vatt_disable(VATT_TEX1);
 
 	GL_SelectTexture( 0 );
 #ifdef REPLACE_MODE

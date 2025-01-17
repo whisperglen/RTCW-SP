@@ -766,7 +766,7 @@ void GL_SetDefaultState( void ) {
 		GL_TextureMode( r_textureMode->string );
 		GL_TexEnv( GL_MODULATE );
 		//qglDisable( GL_TEXTURE_2D );
-		qdx_fvf_texid(TEXID_NULL, 1);
+		qdx_vatt_texid(TEXID_NULL, 1);
 		GL_SelectTexture( 0 );
 	}
 

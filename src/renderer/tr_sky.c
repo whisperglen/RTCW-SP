@@ -371,7 +371,7 @@ static void MakeSkyVec( float s, float t, int axis, float outSt[2], vec3_t outXY
 static int sky_texorder[6] = {0,2,1,3,4,5};
 static vec3_t s_skyPoints[SKY_SUBDIVISIONS + 1][SKY_SUBDIVISIONS + 1];
 static float s_skyTexCoords[SKY_SUBDIVISIONS + 1][SKY_SUBDIVISIONS + 1][2];
-static fvf_vertcoltex_t s_skyFVF[2 * (SKY_SUBDIVISIONS + 1)];
+static vatt_vertcoltex_t s_skyFVF[2 * (SKY_SUBDIVISIONS + 1)];
 
 static void DrawSkySide( struct image_s *image, const int mins[2], const int maxs[2] ) {
 	int s, t;
@@ -381,7 +381,7 @@ static void DrawSkySide( struct image_s *image, const int mins[2], const int max
 	for ( t = mins[1] + HALF_SKY_SUBDIVISIONS; t < maxs[1] + HALF_SKY_SUBDIVISIONS; t++ )
 	{
 		//qglBegin( GL_TRIANGLE_STRIP );
-		fvf_vertcoltex_t *p = s_skyFVF;
+		vatt_vertcoltex_t *p = s_skyFVF;
 		int primitives = -2;
 
 		for ( s = mins[0] + HALF_SKY_SUBDIVISIONS; s <= maxs[0] + HALF_SKY_SUBDIVISIONS; s++ )
@@ -407,7 +407,7 @@ static void DrawSkySide( struct image_s *image, const int mins[2], const int max
 
 		DX9_BEGIN_SCENE();
 		
-		IDirect3DDevice9_SetFVF(qdx.device, FVFID_VERTCOLTEX);
+		IDirect3DDevice9_SetFVF(qdx.device, VATTID_VERTCOLTEX);
 
 		int texid = glState.currenttextures[glState.currenttmu] - TEXNUM_OFFSET;
 		qdx_texobj_apply(texid, 0);
@@ -435,7 +435,7 @@ static void DrawSkySideInner( struct image_s *image, const int mins[2], const in
 	for (t = mins[1] + HALF_SKY_SUBDIVISIONS; t < maxs[1] + HALF_SKY_SUBDIVISIONS; t++)
 	{
 		//qglBegin( GL_TRIANGLE_STRIP );
-		fvf_vertcoltex_t *p = s_skyFVF;
+		vatt_vertcoltex_t *p = s_skyFVF;
 		int primitives = -2;
 
 		for (s = mins[0] + HALF_SKY_SUBDIVISIONS; s <= maxs[0] + HALF_SKY_SUBDIVISIONS; s++)
@@ -461,7 +461,7 @@ static void DrawSkySideInner( struct image_s *image, const int mins[2], const in
 
 		DX9_BEGIN_SCENE();
 
-		IDirect3DDevice9_SetFVF(qdx.device, FVFID_VERTCOLTEX);
+		IDirect3DDevice9_SetFVF(qdx.device, VATTID_VERTCOLTEX);
 
 		int texid = glState.currenttextures[glState.currenttmu] - TEXNUM_OFFSET;
 		qdx_texobj_apply(texid, 0);
@@ -1058,7 +1058,7 @@ void RB_StageIteratorSky( void ) {
 	// draw the outer skybox
 	if ( tess.shader->sky.outerbox[0] && tess.shader->sky.outerbox[0] != tr.defaultImage ) {
 		//qglColor3f( tr.identityLight, tr.identityLight, tr.identityLight );
-		qdx_set_color(D3DCOLOR_COLORVALUE(tr.identityLight, tr.identityLight, tr.identityLight, 1.0f));
+		qdx_set_global_color(D3DCOLOR_COLORVALUE(tr.identityLight, tr.identityLight, tr.identityLight, 1.0f));
 
 		//qglPushMatrix();
 		qdx_matrix_push(D3DTS_WORLD);
@@ -1084,7 +1084,7 @@ void RB_StageIteratorSky( void ) {
 	// Rafael - drawing inner skybox
 	if ( tess.shader->sky.innerbox[0] && tess.shader->sky.innerbox[0] != tr.defaultImage ) {
 		//qglColor3f( tr.identityLight, tr.identityLight, tr.identityLight );
-		qdx_set_color(D3DCOLOR_COLORVALUE(tr.identityLight, tr.identityLight, tr.identityLight, 1.0f));
+		qdx_set_global_color(D3DCOLOR_COLORVALUE(tr.identityLight, tr.identityLight, tr.identityLight, 1.0f));
 
 		//qglPushMatrix();
 		qdx_matrix_push(D3DTS_WORLD);

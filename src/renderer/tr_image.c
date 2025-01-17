@@ -976,7 +976,7 @@ image_t *R_CreateImageExt( const char *name, const byte *pic, int width, int hei
 	//qglTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, glWrapClampMode );
 
 	//qglBindTexture( GL_TEXTURE_2D, 0 );
-	qdx_fvf_texid(TEXID_NULL, image->TMU);
+	qdx_vatt_texid(TEXID_NULL, image->TMU);
 
 	if ( image->TMU == 1 ) {
 		GL_SelectTexture( 0 );
@@ -2459,13 +2459,13 @@ void R_DeleteTextures( void ) {
 		if ( glConfig.maxActiveTextures ) {
 			GL_SelectTexture( 1 );
 			//qglBindTexture( GL_TEXTURE_2D, 0 );
-			qdx_fvf_texid(TEXID_NULL, 1);
+			qdx_vatt_texid(TEXID_NULL, 1);
 			GL_SelectTexture( 0 );
 			//qglBindTexture( GL_TEXTURE_2D, 0 );
-			qdx_fvf_texid(TEXID_NULL, 0);
+			qdx_vatt_texid(TEXID_NULL, 0);
 		} else {
 			//qglBindTexture( GL_TEXTURE_2D, 0 );
-			qdx_fvf_texid(TEXID_NULL, 0);
+			qdx_vatt_texid(TEXID_NULL, 0);
 		}
 	}
 }
@@ -3536,13 +3536,13 @@ void R_PurgeImage( image_t *image ) {
 		if ( glConfig.maxActiveTextures ) {
 			GL_SelectTexture( 1 );
 			//qglBindTexture( GL_TEXTURE_2D, 0 );
-			qdx_fvf_texid(TEXID_NULL, 1);
+			qdx_vatt_texid(TEXID_NULL, 1);
 			GL_SelectTexture( 0 );
 			//qglBindTexture( GL_TEXTURE_2D, 0 );
-			qdx_fvf_texid(TEXID_NULL, 0);
+			qdx_vatt_texid(TEXID_NULL, 0);
 		} else {
 			//qglBindTexture( GL_TEXTURE_2D, 0 );
-			qdx_fvf_texid(TEXID_NULL, 0);
+			qdx_vatt_texid(TEXID_NULL, 0);
 		}
 	}
 }
@@ -3617,13 +3617,13 @@ void R_BackupImages( void ) {
 		if ( glConfig.maxActiveTextures ) {
 			GL_SelectTexture( 1 );
 			//qglBindTexture( GL_TEXTURE_2D, 0 );
-			qdx_fvf_texid(TEXID_NULL, 1);
+			qdx_vatt_texid(TEXID_NULL, 1);
 			GL_SelectTexture( 0 );
 			//qglBindTexture( GL_TEXTURE_2D, 0 );
-			qdx_fvf_texid(TEXID_NULL, 0);
+			qdx_vatt_texid(TEXID_NULL, 0);
 		} else {
 			//qglBindTexture( GL_TEXTURE_2D, 0 );
-			qdx_fvf_texid(TEXID_NULL, 0);
+			qdx_vatt_texid(TEXID_NULL, 0);
 		}
 	}
 }
