@@ -640,7 +640,7 @@ static void R_MarkLeaves( void ) {
 	tr.visCount++;
 	tr.viewCluster = cluster;
 
-	if ( r_novis->integer || tr.viewCluster == -1 ) {
+	if ( (r_novis->integer && !(tr.refdef.rdflags & RDF_SKYBOXPORTAL)) || tr.viewCluster == -1 ) {
 		for ( i = 0 ; i < tr.world->numnodes ; i++ ) {
 			if ( tr.world->nodes[i].contents != CONTENTS_SOLID ) {
 				tr.world->nodes[i].visframe = tr.visCount;
