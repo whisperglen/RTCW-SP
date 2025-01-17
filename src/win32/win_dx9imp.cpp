@@ -41,7 +41,6 @@ If you have questions concerning this license or the applicable additional terms
 ** Note that the GLW_xxx functions are Windows specific GL-subsystem
 ** related functions that are relevant ONLY to win_glimp.c
 */
-#include <assert.h>
 #include "../renderer/qdx9.h"
 extern "C"
 {
@@ -2171,7 +2170,7 @@ void qdx_texobj_upload(BOOL createNew, int id, BOOL usemips, int miplvl, int for
 		}
 		else
 		{
-			assert(FALSE);
+			qassert(FALSE);
 			//well if we do not know the fmmt, elembits is zero, so nothing is set
 			memset(lr.pBits, 0, (elems * elembits) / 8);
 		}
@@ -2219,7 +2218,7 @@ qdx_textureobj_t qdx_texobj_get(int id)
 	}
 	else
 	{
-		assert(FALSE);
+		qassert(FALSE);
 		ret = g_cleartex;
 	}
 
@@ -2236,7 +2235,7 @@ qdx_textureobj_t* qdx_texobj_acc(int id)
 	}
 	else
 	{
-		assert(FALSE);
+		qassert(FALSE);
 	}
 
 	return ret;
@@ -2278,7 +2277,7 @@ void qdx_texobj_setparam(int id, qdx_texparam_t par, int val)
 	}
 	else
 	{
-		assert(FALSE);
+		qassert(FALSE);
 	}
 }
 
@@ -2297,7 +2296,7 @@ void qdx_texobj_delete(int id)
 	}
 	else
 	{
-		assert(FALSE);
+		qassert(FALSE);
 	}
 }
 
@@ -2560,7 +2559,7 @@ void qdx_fvf_texid(int texid, int samplernum)
 	}
 	else
 	{
-		assert(FALSE);
+		qassert(FALSE);
 	}
 }
 
@@ -2614,7 +2613,7 @@ int qdx_fvfparam_to_index(fvf_param_t param)
 		break;
 		C_ASSERT(FVF_PARAM_ARRAYSZ == 6); //make sure we keep these in sync
 	default:
-		assert(FALSE);
+		qassert(FALSE);
 	}
 
 	return ret;
@@ -2674,8 +2673,19 @@ void qdx_fvf_buffer(fvf_param_t param, const void *buffer, UINT elems, UINT stri
 	}
 }
 
-#define ON_FAIL_RET_NULL(X) if(FAILED(X)) { assert(FALSE); return NULL; }
-#define ON_FAIL_RETURN(X) if(FAILED(X)) { assert(FALSE); return; }
+static int qdx_draw_process_vert(int lowindex, int highindex, byte *pVert);
+static int qdx_draw_process_vertcol(int lowindex, int highindex, byte *pVert);
+static int qdx_draw_process_vertnormcol(int lowindex, int highindex, byte *pVert);
+static int qdx_draw_process_vertcoltex(int lowindex, int highindex, byte *pVert);
+static int qdx_draw_process_vertnormcoltex(int lowindex, int highindex, byte *pVert);
+static int qdx_draw_process_2dvertcoltex(int lowindex, int highindex, byte *pVert);
+static int qdx_draw_process_verttex(int lowindex, int highindex, byte *pVert);
+static int qdx_draw_process_vertnormtex(int lowindex, int highindex, byte *pVert);
+static int qdx_draw_process_vertcoltex2(int lowindex, int highindex, byte *pVert);
+static int qdx_draw_process_vertnormcoltex2(int lowindex, int highindex, byte *pVert);
+
+#define ON_FAIL_RET_NULL(X) if(FAILED(X)) { qassert(FALSE); return NULL; }
+#define ON_FAIL_RETURN(X) if(FAILED(X)) { qassert(FALSE); return; }
 
 void qdx_fvf_assemble_and_draw(UINT numindexes, const qdxIndex_t *indexes)
 {
@@ -2749,7 +2759,7 @@ void qdx_fvf_assemble_and_draw(UINT numindexes, const qdxIndex_t *indexes)
 		stride_fvf = sizeof(fvf_vertnormcoltex2_t);
 		break;
 	default:
-		assert(FALSE);
+		qassert(FALSE);
 	}
 
 	LPDIRECT3DINDEXBUFFER9 i_buffer;
@@ -2774,91 +2784,44 @@ void qdx_fvf_assemble_and_draw(UINT numindexes, const qdxIndex_t *indexes)
 	ON_FAIL_RETURN(v_buffer->Lock((lowindex - offindex) * stride_fvf, selectionsize * stride_fvf, (void**)&pVert, D3DLOCK_DISCARD));
 
 	int vpos = 0;
-	for (int i = lowindex; i <= highindex; i++)
-	{
-		switch (selectionbits)
-		{
-		case (FVF_VERTEX): {
-			fvf_vertcol_t *p = (fvf_vertcol_t *)pVert;
-			copy_three(p->XYZ, GFVF_VERTELEM(i));
-			p->COLOR = qdx.crt_color;
-			pVert += sizeof(p[0]);
-			break; }
-		case (FVF_VERTEX | FVF_COLOR): {
-			fvf_vertcol_t *p = (fvf_vertcol_t *)pVert;
-			copy_three(p->XYZ, GFVF_VERTELEM(i));
-			p->COLOR = abgr_to_argb(GFVF_COLRELEM(i));
-			pVert += sizeof(p[0]);
-			break; }
-		case (FVF_VERTEX | FVF_NORMAL | FVF_COLOR): {
-			fvf_vertnormcol_t* p = (fvf_vertnormcol_t*)pVert;
-			copy_three(p->XYZ, GFVF_VERTELEM(i));
-			copy_three(p->NORM, GFVF_NORMELEM(i));
-			p->COLOR = abgr_to_argb(GFVF_COLRELEM(i));
-			pVert += sizeof(p[0]);
-			break; }
-		case (FVF_VERTEX | FVF_COLOR | FVF_TEX0): {
-			fvf_vertcoltex_t *p = (fvf_vertcoltex_t *)pVert;
-			copy_three(p->XYZ, GFVF_VERTELEM(i));
-			p->COLOR = abgr_to_argb(GFVF_COLRELEM(i));
-			copy_two(p->UV, GFVF_TEX0ELEM(i));
-			pVert += sizeof(p[0]);
-			break; }
-		case (FVF_VERTEX | FVF_NORMAL | FVF_COLOR | FVF_TEX0): {
-			fvf_vertnormcoltex_t* p = (fvf_vertnormcoltex_t*)pVert;
-			copy_three(p->XYZ, GFVF_VERTELEM(i));
-			copy_three(p->NORM, GFVF_NORMELEM(i));
-			p->COLOR = abgr_to_argb(GFVF_COLRELEM(i));
-			copy_two(p->UV, GFVF_TEX0ELEM(i));
-			pVert += sizeof(p[0]);
-			break; }
-		case (FVF_2DVERTEX | FVF_COLOR | FVF_TEX0): {
-			fvf_2dvertcoltex_t *p = (fvf_2dvertcoltex_t *)pVert;
-			copy_xyzrhv(p->XYZRHV, GFVF_VERTELEM(i));
-			p->COLOR = abgr_to_argb(GFVF_COLRELEM(i));
-			copy_two(p->UV, GFVF_TEX0ELEM(i));
-			pVert += sizeof(p[0]);
-			break; }
-		case (FVF_VERTEX | FVF_TEX0): {
-			fvf_vertcoltex_t *p = (fvf_vertcoltex_t *)pVert;
-			copy_three(p->XYZ, GFVF_VERTELEM(i));
-			p->COLOR = qdx.crt_color;
-			copy_two(p->UV, GFVF_TEX0ELEM(i));
-			pVert += sizeof(p[0]);
-			break; }
-		case (FVF_VERTEX | FVF_NORMAL | FVF_TEX0): {
-			fvf_vertnormcoltex_t* p = (fvf_vertnormcoltex_t*)pVert;
-			copy_three(p->XYZ, GFVF_VERTELEM(i));
-			copy_three(p->NORM, GFVF_NORMELEM(i));
-			p->COLOR = qdx.crt_color;
-			copy_two(p->UV, GFVF_TEX0ELEM(i));
-			pVert += sizeof(p[0]);
-			break; }
-		case (FVF_VERTEX | FVF_COLOR | FVF_TEX0 | FVF_TEX1): {
-			fvf_vertcoltex2_t *p = (fvf_vertcoltex2_t *)pVert;
-			copy_three(p->XYZ, GFVF_VERTELEM(i));
-			p->COLOR = abgr_to_argb(GFVF_COLRELEM(i));
-			copy_two(p->UV0, GFVF_TEX0ELEM(i));
-			copy_two(p->UV1, GFVF_TEX1ELEM(i));
-			pVert += sizeof(p[0]);
-			break; }
-		case (FVF_VERTEX | FVF_NORMAL | FVF_COLOR | FVF_TEX0 | FVF_TEX1): {
-			fvf_vertnormcoltex2_t* p = (fvf_vertnormcoltex2_t*)pVert;
-			copy_three(p->XYZ, GFVF_VERTELEM(i));
-			copy_three(p->NORM, GFVF_NORMELEM(i));
-			p->COLOR = abgr_to_argb(GFVF_COLRELEM(i));
-			copy_two(p->UV0, GFVF_TEX0ELEM(i));
-			copy_two(p->UV1, GFVF_TEX1ELEM(i));
-			pVert += sizeof(p[0]);
-			break; }
-		default:
-			assert(FALSE);
-		}
 
-		vpos++;
+	switch (selectionbits)
+	{
+	case (FVF_VERTEX): {
+		vpos = qdx_draw_process_vert(lowindex, highindex, pVert);
+		break; }
+	case (FVF_VERTEX | FVF_COLOR): {
+		vpos = qdx_draw_process_vertcol(lowindex, highindex, pVert);
+		break; }
+	case (FVF_VERTEX | FVF_NORMAL | FVF_COLOR): {
+		vpos = qdx_draw_process_vertnormcol(lowindex, highindex, pVert);
+		break; }
+	case (FVF_VERTEX | FVF_COLOR | FVF_TEX0): {
+		vpos = qdx_draw_process_vertcoltex(lowindex, highindex, pVert);
+		break; }
+	case (FVF_VERTEX | FVF_NORMAL | FVF_COLOR | FVF_TEX0): {
+		vpos = qdx_draw_process_vertnormcoltex(lowindex, highindex, pVert);
+		break; }
+	case (FVF_2DVERTEX | FVF_COLOR | FVF_TEX0): {
+		vpos = qdx_draw_process_2dvertcoltex(lowindex, highindex, pVert);
+		break; }
+	case (FVF_VERTEX | FVF_TEX0): {
+		vpos = qdx_draw_process_verttex(lowindex, highindex, pVert);
+		break; }
+	case (FVF_VERTEX | FVF_NORMAL | FVF_TEX0): {
+		vpos = qdx_draw_process_vertnormtex(lowindex, highindex, pVert);
+		break; }
+	case (FVF_VERTEX | FVF_COLOR | FVF_TEX0 | FVF_TEX1): {
+		vpos = qdx_draw_process_vertcoltex2(lowindex, highindex, pVert);
+		break; }
+	case (FVF_VERTEX | FVF_NORMAL | FVF_COLOR | FVF_TEX0 | FVF_TEX1): {
+		vpos = qdx_draw_process_vertnormcoltex2(lowindex, highindex, pVert);
+		break; }
+	default:
+		qassert(FALSE);
 	}
 
-	assert(vpos == selectionsize);
+	qassert(vpos == selectionsize);
 
 	v_buffer->Unlock();
 
@@ -2921,6 +2884,179 @@ qdx_vbuffer_t qdx_vbuffer_upload(qdx_vbuffer_t buf, UINT fvfid, UINT size, void 
 void qdx_vbuffer_release(qdx_vbuffer_t buf)
 {
 	buf->Release();
+}
+
+static int qdx_draw_process_vert(int lowindex, int highindex, byte *pVert)
+{
+	int vpos = 0;
+	for (int i = lowindex; i <= highindex; i++)
+	{
+		fvf_vertcol_t *p = (fvf_vertcol_t *)pVert;
+		copy_three(p->XYZ, GFVF_VERTELEM(i));
+		p->COLOR = qdx.crt_color;
+		pVert += sizeof(p[0]);
+
+		vpos++;
+	}
+
+	return vpos;
+}
+
+static int qdx_draw_process_vertcol(int lowindex, int highindex, byte *pVert)
+{
+	int vpos = 0;
+	for (int i = lowindex; i <= highindex; i++)
+	{
+		fvf_vertcol_t *p = (fvf_vertcol_t *)pVert;
+		copy_three(p->XYZ, GFVF_VERTELEM(i));
+		p->COLOR = abgr_to_argb(GFVF_COLRELEM(i));
+		pVert += sizeof(p[0]);
+
+		vpos++;
+	}
+
+	return vpos;
+}
+
+static int qdx_draw_process_vertnormcol(int lowindex, int highindex, byte *pVert)
+{
+	int vpos = 0;
+	for (int i = lowindex; i <= highindex; i++)
+	{
+		fvf_vertnormcol_t* p = (fvf_vertnormcol_t*)pVert;
+		copy_three(p->XYZ, GFVF_VERTELEM(i));
+		copy_three(p->NORM, GFVF_NORMELEM(i));
+		p->COLOR = abgr_to_argb(GFVF_COLRELEM(i));
+		pVert += sizeof(p[0]);
+
+		vpos++;
+	}
+
+	return vpos;
+}
+
+static int qdx_draw_process_vertcoltex(int lowindex, int highindex, byte *pVert)
+{
+	int vpos = 0;
+	for (int i = lowindex; i <= highindex; i++)
+	{
+		fvf_vertcoltex_t *p = (fvf_vertcoltex_t *)pVert;
+		copy_three(p->XYZ, GFVF_VERTELEM(i));
+		p->COLOR = abgr_to_argb(GFVF_COLRELEM(i));
+		copy_two(p->UV, GFVF_TEX0ELEM(i));
+		pVert += sizeof(p[0]);
+
+		vpos++;
+	}
+
+	return vpos;
+}
+
+static int qdx_draw_process_vertnormcoltex(int lowindex, int highindex, byte *pVert)
+{
+	int vpos = 0;
+	for (int i = lowindex; i <= highindex; i++)
+	{
+		fvf_vertnormcoltex_t* p = (fvf_vertnormcoltex_t*)pVert;
+		copy_three(p->XYZ, GFVF_VERTELEM(i));
+		copy_three(p->NORM, GFVF_NORMELEM(i));
+		p->COLOR = abgr_to_argb(GFVF_COLRELEM(i));
+		copy_two(p->UV, GFVF_TEX0ELEM(i));
+		pVert += sizeof(p[0]);
+
+		vpos++;
+	}
+
+	return vpos;
+}
+
+static int qdx_draw_process_2dvertcoltex(int lowindex, int highindex, byte *pVert)
+{
+	int vpos = 0;
+	for (int i = lowindex; i <= highindex; i++)
+	{
+		fvf_2dvertcoltex_t *p = (fvf_2dvertcoltex_t *)pVert;
+		copy_xyzrhv(p->XYZRHV, GFVF_VERTELEM(i));
+		p->COLOR = abgr_to_argb(GFVF_COLRELEM(i));
+		copy_two(p->UV, GFVF_TEX0ELEM(i));
+		pVert += sizeof(p[0]);
+
+		vpos++;
+	}
+
+	return vpos;
+}
+
+static int qdx_draw_process_verttex(int lowindex, int highindex, byte *pVert)
+{
+	int vpos = 0;
+	for (int i = lowindex; i <= highindex; i++)
+	{
+		fvf_vertcoltex_t *p = (fvf_vertcoltex_t *)pVert;
+		copy_three(p->XYZ, GFVF_VERTELEM(i));
+		p->COLOR = qdx.crt_color;
+		copy_two(p->UV, GFVF_TEX0ELEM(i));
+		pVert += sizeof(p[0]);
+
+		vpos++;
+	}
+
+	return vpos;
+}
+
+static int qdx_draw_process_vertnormtex(int lowindex, int highindex, byte *pVert)
+{
+	int vpos = 0;
+	for (int i = lowindex; i <= highindex; i++)
+	{
+		fvf_vertnormcoltex_t* p = (fvf_vertnormcoltex_t*)pVert;
+		copy_three(p->XYZ, GFVF_VERTELEM(i));
+		copy_three(p->NORM, GFVF_NORMELEM(i));
+		p->COLOR = qdx.crt_color;
+		copy_two(p->UV, GFVF_TEX0ELEM(i));
+		pVert += sizeof(p[0]);
+
+		vpos++;
+	}
+
+	return vpos;
+}
+
+static int qdx_draw_process_vertcoltex2(int lowindex, int highindex, byte *pVert)
+{
+	int vpos = 0;
+	for (int i = lowindex; i <= highindex; i++)
+	{
+		fvf_vertcoltex2_t *p = (fvf_vertcoltex2_t *)pVert;
+		copy_three(p->XYZ, GFVF_VERTELEM(i));
+		p->COLOR = abgr_to_argb(GFVF_COLRELEM(i));
+		copy_two(p->UV0, GFVF_TEX0ELEM(i));
+		copy_two(p->UV1, GFVF_TEX1ELEM(i));
+		pVert += sizeof(p[0]);
+
+		vpos++;
+	}
+
+	return vpos;
+}
+
+static int qdx_draw_process_vertnormcoltex2(int lowindex, int highindex, byte *pVert)
+{
+	int vpos = 0;
+	for (int i = lowindex; i <= highindex; i++)
+	{
+		fvf_vertnormcoltex2_t* p = (fvf_vertnormcoltex2_t*)pVert;
+		copy_three(p->XYZ, GFVF_VERTELEM(i));
+		copy_three(p->NORM, GFVF_NORMELEM(i));
+		p->COLOR = abgr_to_argb(GFVF_COLRELEM(i));
+		copy_two(p->UV0, GFVF_TEX0ELEM(i));
+		copy_two(p->UV1, GFVF_TEX1ELEM(i));
+		pVert += sizeof(p[0]);
+
+		vpos++;
+	}
+
+	return vpos;
 }
 
 #include <stack>
@@ -3036,6 +3172,57 @@ void qdx_depthrange(float znear, float zfar)
 	qdx.device->SetViewport(&vp);
 }
 
+#include <map>
+
+static std::map<std::string, int> asserted_fns;
+#define ASSERT_MAX_PRINTS 5
+
+void qdx_assert_str(int success, const char* expression, const char* function, unsigned line, const char* file)
+{
+	if (success)
+	{
+		//do something, sometime..
+	}
+	else
+	{
+		const char* fn = strrchr(file, '\\');
+		if (!fn) fn = strrchr(file, '/');
+		if (!fn) fn = "fnf";
+
+		bool will_print = false;
+		bool supressed_msg = false;
+
+		std::string mykey = std::string(function);
+		auto searched = asserted_fns.find(mykey);
+		if (asserted_fns.end() != searched)
+		{
+			int nums = searched->second;
+			if (nums <= ASSERT_MAX_PRINTS)
+			{
+				will_print = true;
+				supressed_msg = (nums == ASSERT_MAX_PRINTS);
+			}
+			searched->second = nums + 1;
+		}
+		else
+		{
+			asserted_fns[mykey] = 1;
+			will_print = true;
+		}
+
+		if (will_print)
+		{
+#ifdef NDEBUG
+			if(supressed_msg)
+				ri.Printf(PRINT_ERROR, "assert failed and supressing: %s in %s:%d %s\n", expression, function, line, fn);
+			else
+				ri.Printf(PRINT_ERROR, "assert failed: %s in %s:%d %s\n", expression, function, line, fn);
+#else
+			ri.Error(ERR_FATAL, "assert failed: %s in %s:%d %s\n", expression, function, line, fn);
+#endif
+		}
+	}
+}
 
 /**
 * This will load dxgi and dx11 and dx12 headers and contaminate the namespace with all that new directx info;

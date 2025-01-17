@@ -204,6 +204,14 @@ void qdx_vbuffer_release(qdx_vbuffer_t buf);
 
 HRESULT qdx_compress_texture(int width, int height, const void *indata, void *outdata, int inbits, int outpitch);
 
+
+void qdx_assert_str(int success, const char* expression, const char* function, unsigned line, const char* file);
+
+
+#define qassert(expression) (void)(                                                             \
+            (qdx_assert_str((!!(expression)), _CRT_STRINGIZE(#expression), (__func__), (unsigned)(__LINE__), (__FILE__)), 0) \
+        )
+
 #ifdef __cplusplus
 } //extern "C"
 #endif
