@@ -3173,6 +3173,7 @@ void qdx_depthrange(float znear, float zfar)
 }
 
 #include <map>
+#include <string>
 
 static std::map<std::string, int> asserted_fns;
 #define ASSERT_MAX_PRINTS 5
