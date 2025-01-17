@@ -23,6 +23,7 @@ Will it work? Who knows, let's find out!
 ### Included in this project:
 - The StackWalker [https://github.com/JochenKalmbach/StackWalker] project to print crash info
 - part of Microsoft DirectXTex [https://github.com/microsoft/DirectXTex] for DXT5 texture compression
+- FNV hash [http://isthe.com/chongo/tech/comp/fnv/]
 
 ### *Original README text follows:*
 

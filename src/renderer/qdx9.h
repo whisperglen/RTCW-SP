@@ -63,7 +63,7 @@ void qdx_matrix_mul(D3DTRANSFORMSTATETYPE type, const D3DMATRIX *matrix);
 void qdx_matrix_push(D3DTRANSFORMSTATETYPE type);
 void qdx_matrix_pop(D3DTRANSFORMSTATETYPE type);
 void qdx_matrix_apply(void);
-int qdx_matrix_equals(const float* a, const float* b);
+int  qdx_matrix_equals(const float* a, const float* b);
 
 typedef LPDIRECT3DBASETEXTURE9 textureptr_t;
 typedef struct qdx_textureobject
@@ -96,97 +96,100 @@ void qdx_texobj_map(int id, textureptr_t tex);
 D3DFORMAT qdx_texture_format(UINT in);
 D3DTEXTUREADDRESS qdx_texture_wrapmode(int gl_mode);
 
-typedef enum fvf_param
+typedef enum vatt_param
 {
-	FVF_VERTEX   = 1u << 0,
-	FVF_2DVERTEX = 1u << 1,
-	FVF_NORMAL   = 1u << 2,
-	FVF_COLOR    = 1u << 3,
-	FVF_TEX0     = 1u << 4,
-	FVF_TEX1     = 1u << 5,
-	FVF_COLORVAL = 1u << 6
-} fvf_param_t;
+	VATT_VERTEX   = 1u << 0,
+	VATT_2DVERTEX = 1u << 1,
+	VATT_NORMAL   = 1u << 2,
+	VATT_COLOR    = 1u << 3,
+	VATT_TEX0     = 1u << 4,
+	VATT_TEX1     = 1u << 5,
+	VATT_COLORVAL = 1u << 6
+} vatt_param_t;
 
 #define TEXID_NULL (-1)
 #define TEXSAMPLER_USECFG (-1)
 
-void qdx_fvf_buffer(fvf_param_t param, const void *buffer, UINT elems, UINT stride);
-void qdx_fvf_enable(fvf_param_t param);
-void qdx_fvf_disable(fvf_param_t param);
-#define qdx_fvf_buffer_null(P) qdx_fvf_buffer((P), NULL, 0, 0)
-void qdx_fvf_texid(int texid, int samplernum);
-void qdx_set_color(DWORD color);
-void qdx_fvf_set2d(BOOL state);
-void qdx_fvf_assemble_and_draw(UINT numindexes, const qdxIndex_t *indexes);
+void qdx_vatt_set_buffer(vatt_param_t param, const void *buffer, UINT elems, UINT stride);
+void qdx_vatt_enable_buffer(vatt_param_t param);
+void qdx_vatt_disable_buffer(vatt_param_t param);
+void qdx_vatt_lock_buffers(int num_elements);
+void qdx_vatt_unlock_buffers();
+#define qdx_vatt_set_buffer_null(P) qdx_vatt_set_buffer((P), NULL, 0, 0)
+void qdx_vatt_attach_texture(int texid, int samplernum);
+void qdx_set_global_color(DWORD color);
+void qdx_vatt_set2d(BOOL state);
+void qdx_vatt_assemble_and_draw(UINT numindexes, const qdxIndex_t *indexes, const char *hint);
+void qdx_objects_reset();
 
 #define VERT2D_ZVAL (0.5f)
 #define VERT2D_RHVVAL (1.0f)
 
-typedef struct fvf_2dvertcoltex
+typedef struct vatt_2dvertcoltex
 {
 	FLOAT XYZRHV[4];    // from the D3DFVF_XYZRHW flag
 	DWORD COLOR;    // from the D3DFVF_DIFFUSE flag
 	FLOAT UV[2];
-} fvf_2dvertcoltex_t;
-#define FVFID_2DVERTCOLTEX (D3DFVF_XYZRHW | D3DFVF_DIFFUSE | D3DFVF_TEX1 | D3DFVF_TEXCOORDSIZE2(0))
+} vatt_2dvertcoltex_t;
+#define VATTID_2DVERTCOLTEX (D3DFVF_XYZRHW | D3DFVF_DIFFUSE | D3DFVF_TEX1 | D3DFVF_TEXCOORDSIZE2(0))
 
-typedef struct fvf_vertcol
+typedef struct vatt_vertcol
 {
 	FLOAT XYZ[3];
 	DWORD COLOR;
-} fvf_vertcol_t;
-#define FVFID_VERTCOL (D3DFVF_XYZ | D3DFVF_DIFFUSE)
+} vatt_vertcol_t;
+#define VATTID_VERTCOL (D3DFVF_XYZ | D3DFVF_DIFFUSE)
 
-typedef struct fvf_vertnormcol
-{
-	FLOAT XYZ[3];
-	FLOAT NORM[3];
-	DWORD COLOR;
-} fvf_vertnormcol_t;
-#define FVFID_VERTNORMCOL (D3DFVF_XYZ | D3DFVF_NORMAL | D3DFVF_DIFFUSE)
-
-typedef struct fvf_vertcoltex
-{
-	FLOAT XYZ[3];
-	DWORD COLOR;
-	FLOAT UV[2];
-} fvf_vertcoltex_t;
-#define FVFID_VERTCOLTEX (D3DFVF_XYZ | D3DFVF_DIFFUSE | D3DFVF_TEX1 | D3DFVF_TEXCOORDSIZE2(0))
-
-typedef struct fvf_vertnormcoltex
+typedef struct vatt_vertnormcol
 {
 	FLOAT XYZ[3];
 	FLOAT NORM[3];
 	DWORD COLOR;
-	FLOAT UV[2];
-} fvf_vertnormcoltex_t;
-#define FVFID_VERTNORMCOLTEX (D3DFVF_XYZ | D3DFVF_NORMAL | D3DFVF_DIFFUSE | D3DFVF_TEX1 | D3DFVF_TEXCOORDSIZE2(0))
+} vatt_vertnormcol_t;
+#define VATTID_VERTNORMCOL (D3DFVF_XYZ | D3DFVF_NORMAL | D3DFVF_DIFFUSE)
 
-//typedef struct fvf_verttex
+typedef struct vatt_vertcoltex
+{
+	FLOAT XYZ[3];
+	DWORD COLOR;
+	FLOAT UV[2];
+} vatt_vertcoltex_t;
+#define VATTID_VERTCOLTEX (D3DFVF_XYZ | D3DFVF_DIFFUSE | D3DFVF_TEX1 | D3DFVF_TEXCOORDSIZE2(0))
+
+typedef struct vatt_vertnormcoltex
+{
+	FLOAT XYZ[3];
+	FLOAT NORM[3];
+	DWORD COLOR;
+	FLOAT UV[2];
+} vatt_vertnormcoltex_t;
+#define VATTID_VERTNORMCOLTEX (D3DFVF_XYZ | D3DFVF_NORMAL | D3DFVF_DIFFUSE | D3DFVF_TEX1 | D3DFVF_TEXCOORDSIZE2(0))
+
+//typedef struct vatt_verttex
 //{
 //	FLOAT XYZ[3];
 //	FLOAT UV[2];
-//} fvf_verttex_t;
-//#define FVFID_VERTTEX (D3DFVF_XYZ | D3DFVF_TEX1 | D3DFVF_TEXCOORDSIZE2(0))
+//} vatt_verttex_t;
+//#define VATTID_VERTTEX (D3DFVF_XYZ | D3DFVF_TEX1 | D3DFVF_TEXCOORDSIZE2(0))
 
-typedef struct fvf_vertcoltex2
+typedef struct vatt_vertcoltex2
 {
 	FLOAT XYZ[3];
 	DWORD COLOR;
 	FLOAT UV0[2];
 	FLOAT UV1[2];
-} fvf_vertcoltex2_t;
-#define FVFID_VERTCOLTEX2 (D3DFVF_XYZ | D3DFVF_DIFFUSE | D3DFVF_TEX2 | D3DFVF_TEXCOORDSIZE2(0) | D3DFVF_TEXCOORDSIZE2(1))
+} vatt_vertcoltex2_t;
+#define VATTID_VERTCOLTEX2 (D3DFVF_XYZ | D3DFVF_DIFFUSE | D3DFVF_TEX2 | D3DFVF_TEXCOORDSIZE2(0) | D3DFVF_TEXCOORDSIZE2(1))
 
-typedef struct fvf_vertnormcoltex2
+typedef struct vatt_vertnormcoltex2
 {
 	FLOAT XYZ[3];
 	FLOAT NORM[3];
 	DWORD COLOR;
 	FLOAT UV0[2];
 	FLOAT UV1[2];
-} fvf_vertnormcoltex2_t;
-#define FVFID_VERTNORMCOLTEX2 (D3DFVF_XYZ | D3DFVF_NORMAL | D3DFVF_DIFFUSE | D3DFVF_TEX2 | D3DFVF_TEXCOORDSIZE2(0) | D3DFVF_TEXCOORDSIZE2(1))
+} vatt_vertnormcoltex2_t;
+#define VATTID_VERTNORMCOLTEX2 (D3DFVF_XYZ | D3DFVF_NORMAL | D3DFVF_DIFFUSE | D3DFVF_TEX2 | D3DFVF_TEXCOORDSIZE2(0) | D3DFVF_TEXCOORDSIZE2(1))
 
 #ifdef __cplusplus
 #define DX9_BEGIN_SCENE() qdx.device->BeginScene()
@@ -205,12 +208,12 @@ void qdx_vbuffer_release(qdx_vbuffer_t buf);
 HRESULT qdx_compress_texture(int width, int height, const void *indata, void *outdata, int inbits, int outpitch);
 
 
-void qdx_assert_str(int success, const char* expression, const char* function, unsigned line, const char* file);
+void qdx_assert_failed_str(const char* expression, const char* function, unsigned line, const char* file);
 
 
-#define qassert(expression) (void)(                                                             \
-            (qdx_assert_str((!!(expression)), _CRT_STRINGIZE(#expression), (__func__), (unsigned)(__LINE__), (__FILE__)), 0) \
-        )
+#define qassert(expression) do {                                                             \
+            if((!(expression))) { qdx_assert_failed_str(_CRT_STRINGIZE(#expression), (__func__), (unsigned)(__LINE__), (__FILE__)); } \
+        } while(0)
 
 #ifdef __cplusplus
 } //extern "C"

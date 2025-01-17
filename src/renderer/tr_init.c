@@ -766,7 +766,7 @@ void GL_SetDefaultState( void ) {
 		GL_TextureMode( r_textureMode->string );
 		GL_TexEnv( GL_MODULATE );
 		//qglDisable( GL_TEXTURE_2D );
-		qdx_fvf_texid(TEXID_NULL, 1);
+		qdx_vatt_attach_texture(TEXID_NULL, 1);
 		GL_SelectTexture( 0 );
 	}
 
@@ -1172,6 +1172,8 @@ void R_Init( void ) {
 	int i;
 
 	ri.Printf( PRINT_ALL, "----- R_Init -----\n" );
+
+	qdx_objects_reset();
 
 	// clear all our internal state
 	memset( &tr, 0, sizeof( tr ) );

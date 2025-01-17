@@ -50,6 +50,7 @@ extern "C"
 #include "win_local.h"
 }
 #include <stdint.h>
+#include "fnv.h"
 
 typedef struct
 {
@@ -75,7 +76,7 @@ typedef struct
 
 static void DX9imp_CheckHardwareGamma(void);
 static void DX9imp_RestoreGamma(void);
-static void qdx_log_comment(const char *name, UINT fvfbits, const void *ptr);
+static void qdx_log_comment(const char *name, UINT vattbits, const void *ptr);
 static void qdx_log_matrix(const char *name, const float *mat);
 static void qdx_clear_buffers();
 static void qdx_texobj_delete_all();
@@ -1693,8 +1694,7 @@ void DX9imp_Shutdown(void) {
 	//}
 	if (qdx.device)
 	{
-		qdx_clear_buffers();
-		qdx_texobj_delete_all();
+		qdx_objects_reset();
 #if 1
 		//if (dx9imp_state.cdsFullscreen)
 		{
@@ -2323,7 +2323,7 @@ void qdx_texobj_apply(int id, int sampler)
 		sampler_id = sampler;
 
 	if(r_logFile->integer)
-		qdx_log_comment(__FUNCTION__, (sampler == 0 ? FVF_TEX0 : FVF_TEX1), opt.obj);
+		qdx_log_comment(__FUNCTION__, (sampler == 0 ? VATT_TEX0 : VATT_TEX1), opt.obj);
 
 	if (qdx.device)
 	{
@@ -2338,84 +2338,92 @@ void qdx_texobj_apply(int id, int sampler)
 	}
 }
 
-#define FVF_PARAM_ARRAYSZ 6
-typedef struct fvf_buff_stats
+#define VATT_PARAM_ARRAYSZ 6
+typedef struct vatt_buff_stats
 {
 	uint32_t num_entries;
-	uint32_t checksum[FVF_PARAM_ARRAYSZ];
-} fvf_buff_stats_t;
+	//uint32_t checksum[VATT_PARAM_ARRAYSZ];
+} vatt_buff_stats_t;
 
-struct fvf_buffers
+struct vatt_buffers
 {
 	DWORD owner;
 	LPDIRECT3DINDEXBUFFER9 i_buf;
-	struct fvf_vert_buffer
+	struct vatt_vert_buffer
 	{
 		LPDIRECT3DVERTEXBUFFER9 data;
-		UINT fvf;
+		UINT ident;
+		UINT hash;
 		uint32_t usage;
-		fvf_buff_stats_t stats;
-	} v_buffs [10];
-} g_fvf_buffers[2];
+		vatt_buff_stats_t stats;
+	} v_buffs [500];
+} g_vatt_buffers[2];
 
-static int g_used_fvf_buffers = 0;
+static int g_used_vatt_buffers = 0;
 
 static void qdx_clear_buffers()
 {
 	int i = 0, j = 0;
-	for (; i < g_used_fvf_buffers; i++)
+	for (; i < g_used_vatt_buffers; i++)
 	{
-		if (g_fvf_buffers[i].i_buf)
-			g_fvf_buffers[i].i_buf->Release();
+		if (g_vatt_buffers[i].i_buf)
+			g_vatt_buffers[i].i_buf->Release();
 
-		for (j = 0; j < ARRAYSIZE(g_fvf_buffers[i].v_buffs); j++)
+		for (j = 0; j < ARRAYSIZE(g_vatt_buffers[i].v_buffs); j++)
 		{
-			if (g_fvf_buffers[i].v_buffs[j].data)
+			if (g_vatt_buffers[i].v_buffs[j].data)
 			{
-				g_fvf_buffers[i].v_buffs[j].data->Release();
+				g_vatt_buffers[i].v_buffs[j].data->Release();
 			}
 		}
 	}
-	g_used_fvf_buffers = 0;
+	g_used_vatt_buffers = 0;
 }
 
-static int qdx_get_buffers(LPDIRECT3DINDEXBUFFER9 *index_buf, LPDIRECT3DVERTEXBUFFER9 *vertex_buf, UINT fvf_spec, UINT fvf_stride, fvf_buff_stats_t **stats)
+void qdx_objects_reset()
+{
+	qdx_clear_buffers();
+	qdx_texobj_delete_all();
+}
+
+static int qdx_get_buffers(LPDIRECT3DINDEXBUFFER9 *index_buf, LPDIRECT3DVERTEXBUFFER9 *vertex_buf, UINT vatt_spec, UINT vatt_stride, UINT hash, vatt_buff_stats_t **stats)
 {
 	DWORD whoami = GetCurrentThreadId();
 	int i = 0, j = 0;
-	for (; i < g_used_fvf_buffers; i++)
+	for (; i < g_used_vatt_buffers; i++)
 	{
-		if (g_fvf_buffers[i].owner == whoami)
+		if (g_vatt_buffers[i].owner == whoami)
 		{
 			if (index_buf)
-				*index_buf = g_fvf_buffers[i].i_buf;
+				*index_buf = g_vatt_buffers[i].i_buf;
 
-			for (j = 0; j < ARRAYSIZE(g_fvf_buffers[i].v_buffs); j++)
+			for (j = 0; j < ARRAYSIZE(g_vatt_buffers[i].v_buffs); j++)
 			{
-				if (g_fvf_buffers[i].v_buffs[j].fvf == fvf_spec)
+				if (g_vatt_buffers[i].v_buffs[j].ident == vatt_spec && g_vatt_buffers[i].v_buffs[j].hash == hash)
 				{
 					if (vertex_buf)
-						*vertex_buf = g_fvf_buffers[i].v_buffs[j].data;
+						*vertex_buf = g_vatt_buffers[i].v_buffs[j].data;
 					if (stats)
-						*stats = &g_fvf_buffers[i].v_buffs[j].stats;
+						*stats = &g_vatt_buffers[i].v_buffs[j].stats;
 
 					return 0;
 				}
-				else if (g_fvf_buffers[i].v_buffs[j].fvf == 0)
+				else if (g_vatt_buffers[i].v_buffs[j].ident == 0)
 				{
 					LPDIRECT3DVERTEXBUFFER9 b;
-					if (FAILED(qdx.device->CreateVertexBuffer(SHADER_MAX_VERTEXES * fvf_stride, 0, fvf_spec, D3DPOOL_MANAGED, &b, NULL)))
+					if (FAILED(qdx.device->CreateVertexBuffer(SHADER_MAX_VERTEXES * vatt_stride, 0, vatt_spec, D3DPOOL_MANAGED, &b, NULL)))
 					{
 						return -1;
 					}
-					g_fvf_buffers[i].v_buffs[j].fvf = fvf_spec;
-					g_fvf_buffers[i].v_buffs[j].data = b;
-					memset(&g_fvf_buffers[i].v_buffs[j].stats, 0, sizeof(g_fvf_buffers[i].v_buffs[j].stats));
+					g_vatt_buffers[i].v_buffs[j].ident = vatt_spec;
+					g_vatt_buffers[i].v_buffs[j].hash = hash;
+					g_vatt_buffers[i].v_buffs[j].data = b;
+					memset(&g_vatt_buffers[i].v_buffs[j].stats, 0, sizeof(g_vatt_buffers[i].v_buffs[j].stats));
 
 					if (vertex_buf)
 						*vertex_buf = b;
 					if (stats)
-						*stats = &g_fvf_buffers[i].v_buffs[j].stats;
+						*stats = &g_vatt_buffers[i].v_buffs[j].stats;
 
 					return 0;
 				}
@@ -2425,7 +2433,7 @@ static int qdx_get_buffers(LPDIRECT3DINDEXBUFFER9 *index_buf, LPDIRECT3DVERTEXBU
 		}
 	}
 
-	if (g_used_fvf_buffers < ARRAYSIZE(g_fvf_buffers))
+	if (g_used_vatt_buffers < ARRAYSIZE(g_vatt_buffers))
 	{
 		LPDIRECT3DINDEXBUFFER9 ib;
 		if (FAILED(qdx.device->CreateIndexBuffer(sizeof(qdxIndex_t) * SHADER_MAX_INDEXES, 0, QDX_INDEX_TYPE, D3DPOOL_MANAGED, &ib, NULL)))
@@ -2433,18 +2441,19 @@ static int qdx_get_buffers(LPDIRECT3DINDEXBUFFER9 *index_buf, LPDIRECT3DVERTEXBU
 			return -1;
 		}
 		LPDIRECT3DVERTEXBUFFER9 vb;
-		if (FAILED(qdx.device->CreateVertexBuffer(SHADER_MAX_VERTEXES * fvf_stride, 0, fvf_spec, D3DPOOL_MANAGED, &vb, NULL)))
+		if (FAILED(qdx.device->CreateVertexBuffer(SHADER_MAX_VERTEXES * vatt_stride, 0, vatt_spec, D3DPOOL_MANAGED, &vb, NULL)))
 		{
 			ib->Release();
 			return -1;
 		}
 
-		struct fvf_buffers *p = &g_fvf_buffers[g_used_fvf_buffers];
-		g_used_fvf_buffers++;
+		struct vatt_buffers *p = &g_vatt_buffers[g_used_vatt_buffers];
+		g_used_vatt_buffers++;
 		p->owner = whoami;
 		p->i_buf = ib;
 		memset(p->v_buffs, 0, sizeof(p->v_buffs));
-		p->v_buffs[0].fvf = fvf_spec;
+		p->v_buffs[0].ident = vatt_spec;
+		p->v_buffs[0].hash = hash;
 		p->v_buffs[0].data = vb;
 
 		if (index_buf)
@@ -2460,24 +2469,26 @@ static int qdx_get_buffers(LPDIRECT3DINDEXBUFFER9 *index_buf, LPDIRECT3DVERTEXBU
 	return -2;
 }
 
-struct fvf_state
+struct vatt_state
 {
 	BOOL is2dprojection;
-	UINT bits;
+	UINT active_vatts;
+	UINT locked_vatts;
+	UINT num_vatts;
 	const float *vertexes;
-	UINT numverts;
+	//UINT numverts;
 	UINT strideverts;
 	const float *normals;
-	UINT numnorms;
+	//UINT numnorms;
 	UINT stridenorms;
 	const byte *colors;
-	UINT numcols;
+	//UINT numcols;
 	UINT stridecols;
 	const float *texcoord[2];
-	UINT numtexcoords[2];
+	//UINT numtexcoords[2];
 	UINT stridetexcoords[2];
 	INT textureids[2];
-} g_fvfs = { 0 };
+} g_vattribs = { 0 };
 
 ID_INLINE void copy_two(float *dst, const float *src)
 {
@@ -2509,26 +2520,31 @@ ID_INLINE DWORD abgr_to_argb(const byte *in)
 	return (axgx | (r << 16) | b);
 }
 
-#define GFVF_VERTELEM(IDX) (g_fvfs.vertexes + (IDX) * g_fvfs.strideverts)
-#define GFVF_NORMELEM(IDX) (g_fvfs.normals + (IDX) * g_fvfs.stridenorms)
-#define GFVF_COLRELEM(IDX) (g_fvfs.colors + (IDX) * g_fvfs.stridecols)
-#define GFVF_TEX0ELEM(IDX) (g_fvfs.texcoord[0] + (IDX) * g_fvfs.stridetexcoords[0])
-#define GFVF_TEX1ELEM(IDX) (g_fvfs.texcoord[1] + (IDX) * g_fvfs.stridetexcoords[1])
+#define GVATT_VERTELEM(IDX) (g_vattribs.vertexes + (IDX) * g_vattribs.strideverts)
+#define GVATT_INCVERTP(PTR) ((PTR) += g_vattribs.strideverts)
+#define GVATT_NORMELEM(IDX) (g_vattribs.normals + (IDX) * g_vattribs.stridenorms)
+#define GVATT_INCNORMP(PTR) ((PTR) += g_vattribs.stridenorms)
+#define GVATT_COLRELEM(IDX) (g_vattribs.colors + (IDX) * g_vattribs.stridecols)
+#define GVATT_INCCOLRP(PTR) ((PTR) += g_vattribs.stridecols)
+#define GVATT_TEX0ELEM(IDX) (g_vattribs.texcoord[0] + (IDX) * g_vattribs.stridetexcoords[0])
+#define GVATT_INCTEX0P(PTR) ((PTR) += g_vattribs.stridetexcoords[0])
+#define GVATT_TEX1ELEM(IDX) (g_vattribs.texcoord[1] + (IDX) * g_vattribs.stridetexcoords[1])
+#define GVATT_INCTEX1P(PTR) ((PTR) += g_vattribs.stridetexcoords[1])
 
-static void qdx_log_comment(const char *name, UINT fvfbits, const void *ptr)
+static void qdx_log_comment(const char *name, UINT vattbits, const void *ptr)
 {
-	int fvfci = 0;
-	char fvfc[10];
-	memset(fvfc, 0, sizeof(fvfc));
-	if (fvfbits & FVF_VERTEX) fvfc[fvfci++] = 'v';
-	if (fvfbits & FVF_2DVERTEX) fvfc[fvfci++] = 'V';
-	if (fvfbits & FVF_NORMAL) fvfc[fvfci++] = 'n';
-	if (fvfbits & FVF_COLOR) fvfc[fvfci++] = 'c';
-	if (fvfbits & FVF_TEX0) fvfc[fvfci++] = 't';
-	if (fvfbits & FVF_TEX1) fvfc[fvfci++] = 'T';
-	if (fvfbits & FVF_COLORVAL) fvfc[fvfci++] = 'C';
+	int vattci = 0;
+	char vattc[10];
+	memset(vattc, 0, sizeof(vattc));
+	if (vattbits & VATT_VERTEX) vattc[vattci++] = 'v';
+	if (vattbits & VATT_2DVERTEX) vattc[vattci++] = 'V';
+	if (vattbits & VATT_NORMAL) vattc[vattci++] = 'n';
+	if (vattbits & VATT_COLOR) vattc[vattci++] = 'c';
+	if (vattbits & VATT_TEX0) vattc[vattci++] = 't';
+	if (vattbits & VATT_TEX1) vattc[vattci++] = 'T';
+	if (vattbits & VATT_COLORVAL) vattc[vattci++] = 'C';
 	char comment[256];
-	snprintf(comment, sizeof(comment), "%s: %s %p\n", name, fvfc, ptr);
+	snprintf(comment, sizeof(comment), "%s: %s %p\n", name, vattc, ptr);
 	DX9imp_LogComment(comment);
 }
 
@@ -2543,19 +2559,19 @@ static void qdx_log_matrix(const char *name, const float *mat)
 	DX9imp_LogComment(comment);
 }
 
-void qdx_fvf_set2d(BOOL state)
+void qdx_vatt_set2d(BOOL state)
 {
-	g_fvfs.is2dprojection = state;
+	g_vattribs.is2dprojection = state;
 }
 
-void qdx_fvf_texid(int texid, int samplernum)
+void qdx_vatt_attach_texture(int texid, int samplernum)
 {
 	if (r_logFile->integer)
-		qdx_log_comment(__FUNCTION__, (samplernum == 0 ? FVF_TEX0 : FVF_TEX1), (const void*)texid);
+		qdx_log_comment(__FUNCTION__, (samplernum == 0 ? VATT_TEX0 : VATT_TEX1), (const void*)texid);
 
 	if (0 <= samplernum && samplernum <= 1)
 	{
-		g_fvfs.textureids[samplernum] = texid;
+		g_vattribs.textureids[samplernum] = texid;
 	}
 	else
 	{
@@ -2563,7 +2579,7 @@ void qdx_fvf_texid(int texid, int samplernum)
 	}
 }
 
-void qdx_set_color(DWORD color)
+void qdx_set_global_color(DWORD color)
 {
 	if (r_logFile->integer)
 		qdx_log_comment(__FUNCTION__, 0, (const void*)color);
@@ -2571,47 +2587,63 @@ void qdx_set_color(DWORD color)
 	qdx.crt_color = color;
 }
 
-void qdx_fvf_enable(fvf_param_t param)
+void qdx_vatt_enable_buffer(vatt_param_t param)
 {
 	if (r_logFile->integer)
 		qdx_log_comment(__FUNCTION__, param, NULL);
 
-	g_fvfs.bits |= param;
+	g_vattribs.active_vatts |= param;
 }
 
-void qdx_fvf_disable(fvf_param_t param)
+void qdx_vatt_disable_buffer(vatt_param_t param)
 {
 	if (r_logFile->integer)
 		qdx_log_comment(__FUNCTION__, param, NULL);
 
-	g_fvfs.bits &= ~param;
+	g_vattribs.active_vatts &= ~param;
 }
 
-int qdx_fvfparam_to_index(fvf_param_t param)
+void qdx_vatt_lock_buffers(int num_elements)
+{
+	if (r_logFile->integer)
+		qdx_log_comment(__FUNCTION__, g_vattribs.active_vatts, (void*)num_elements);
+
+	g_vattribs.locked_vatts = g_vattribs.active_vatts;
+}
+
+void qdx_vatt_unlock_buffers()
+{
+	if (r_logFile->integer)
+		qdx_log_comment(__FUNCTION__, g_vattribs.locked_vatts, (void*)g_vattribs.active_vatts);
+
+	g_vattribs.locked_vatts = 0;
+}
+
+int qdx_vattparam_to_index(vatt_param_t param)
 {
 	int ret = 0;
 
 	switch (param)
 	{
-	case FVF_VERTEX:
+	case VATT_VERTEX:
 		ret = 1;
 		break;
-	case FVF_NORMAL:
+	case VATT_NORMAL:
 		ret = 2;
 		break;
-	case FVF_COLOR:
+	case VATT_COLOR:
 		ret = 3;
 		break;
-	case FVF_TEX0:
+	case VATT_TEX0:
 		ret = 4;
 		break;
-	case FVF_TEX1:
+	case VATT_TEX1:
 		ret = 5;
 		break;
-	case FVF_COLORVAL:
+	case VATT_COLORVAL:
 		ret = 6;
 		break;
-		C_ASSERT(FVF_PARAM_ARRAYSZ == 6); //make sure we keep these in sync
+		C_ASSERT(VATT_PARAM_ARRAYSZ == 6); //make sure we keep these in sync
 	default:
 		qassert(FALSE);
 	}
@@ -2619,45 +2651,45 @@ int qdx_fvfparam_to_index(fvf_param_t param)
 	return ret;
 }
 
-void qdx_fvf_buffer(fvf_param_t param, const void *buffer, UINT elems, UINT stride)
+void qdx_vatt_set_buffer(vatt_param_t param, const void *buffer, UINT elems, UINT stride)
 {
 	if (r_logFile->integer)
 		qdx_log_comment(__FUNCTION__, param, buffer);
 
 	switch (param)
 	{
-	case FVF_VERTEX:
-		g_fvfs.vertexes = (float*)buffer;
-		g_fvfs.numverts = elems;
-		g_fvfs.strideverts = stride;
+	case VATT_VERTEX:
+		g_vattribs.vertexes = (float*)buffer;
+		//g_vattribs.numverts = elems;
+		g_vattribs.strideverts = stride;
 		break;
-	case FVF_NORMAL:
-		g_fvfs.normals = (float*)buffer;
-		g_fvfs.numnorms = elems;
-		g_fvfs.stridenorms = stride;
+	case VATT_NORMAL:
+		g_vattribs.normals = (float*)buffer;
+		//g_vattribs.numnorms = elems;
+		g_vattribs.stridenorms = stride;
 		break;
-	case FVF_COLOR:
-		g_fvfs.colors = (byte*)buffer;
-		g_fvfs.numcols = elems;
-		g_fvfs.stridecols = stride;
+	case VATT_COLOR:
+		g_vattribs.colors = (byte*)buffer;
+		//g_vattribs.numcols = elems;
+		g_vattribs.stridecols = stride;
 		break;
-	case FVF_TEX0:
-		g_fvfs.texcoord[0] = (float*)buffer;
-		g_fvfs.numtexcoords[0] = elems;
-		g_fvfs.stridetexcoords[0] = stride;
+	case VATT_TEX0:
+		g_vattribs.texcoord[0] = (float*)buffer;
+		//g_vattribs.numtexcoords[0] = elems;
+		g_vattribs.stridetexcoords[0] = stride;
 		break;
-	case FVF_TEX1:
-		g_fvfs.texcoord[1] = (float*)buffer;
-		g_fvfs.numtexcoords[1] = elems;
-		g_fvfs.stridetexcoords[1] = stride;
+	case VATT_TEX1:
+		g_vattribs.texcoord[1] = (float*)buffer;
+		//g_vattribs.numtexcoords[1] = elems;
+		g_vattribs.stridetexcoords[1] = stride;
 		break;
-	case FVF_TEX0 | FVF_TEX1:
-		g_fvfs.texcoord[0] = (float*)buffer;
-		g_fvfs.numtexcoords[0] = elems;
-		g_fvfs.stridetexcoords[0] = stride;
-		g_fvfs.texcoord[1] = (float*)buffer;
-		g_fvfs.numtexcoords[1] = elems;
-		g_fvfs.stridetexcoords[1] = stride;
+	case VATT_TEX0 | VATT_TEX1:
+		g_vattribs.texcoord[0] = (float*)buffer;
+		//g_vattribs.numtexcoords[0] = elems;
+		g_vattribs.stridetexcoords[0] = stride;
+		g_vattribs.texcoord[1] = (float*)buffer;
+		//g_vattribs.numtexcoords[1] = elems;
+		g_vattribs.stridetexcoords[1] = stride;
 		break;
 	default:
 		return;
@@ -2665,11 +2697,11 @@ void qdx_fvf_buffer(fvf_param_t param, const void *buffer, UINT elems, UINT stri
 
 	if (buffer == NULL)
 	{
-		g_fvfs.bits &= ~param;
+		g_vattribs.active_vatts &= ~param;
 	}
 	else
 	{
-		g_fvfs.bits |= param;
+		g_vattribs.active_vatts |= param;
 	}
 }
 
@@ -2687,22 +2719,28 @@ static int qdx_draw_process_vertnormcoltex2(int lowindex, int highindex, byte *p
 #define ON_FAIL_RET_NULL(X) if(FAILED(X)) { qassert(FALSE); return NULL; }
 #define ON_FAIL_RETURN(X) if(FAILED(X)) { qassert(FALSE); return; }
 
-void qdx_fvf_assemble_and_draw(UINT numindexes, const qdxIndex_t *indexes)
+void qdx_vatt_assemble_and_draw(UINT numindexes, const qdxIndex_t *indexes, const char *hint)
 {
-	DWORD selected_fvf = FVFID_VERTCOL;
-	UINT stride_fvf = sizeof(fvf_vertcol_t);
+	DWORD selected_vatt = VATTID_VERTCOL;
+	UINT stride_vatt = sizeof(vatt_vertcol_t);
 	qdxIndex_t lowindex = SHADER_MAX_INDEXES, highindex = 0, offindex = 0;
 	UINT selectionsize = 0;
+	UINT hash = 0;
 
 	if (r_logFile->integer)
-		qdx_log_comment(__FUNCTION__, g_fvfs.bits, (const void*)numindexes);
+		qdx_log_comment(__FUNCTION__, g_vattribs.active_vatts, (const void*)numindexes);
 
-	if (0 == (g_fvfs.bits & FVF_VERTEX))
+	if (0 == (g_vattribs.active_vatts & VATT_VERTEX))
 	{
 		//see comment in RE_BeginRegistration for the call to RE_StretchPic
 		//the vertex buffer pointer gets set when RB_StageIteratorGeneric is called, which is triggered by that RE_StretchPic 
 		//todo: I guess this is something we can actually fix now, since we know why it happens
 		return;
+	}
+
+	if (hint)
+	{
+		hash = fnv_32a_str((char*)hint, 0);
 	}
 
 	for (int i = 0; i < numindexes; i++)
@@ -2718,45 +2756,45 @@ void qdx_fvf_assemble_and_draw(UINT numindexes, const qdxIndex_t *indexes)
 		}
 	}
 
-	UINT selectionbits = g_fvfs.bits;
-	//if (g_fvfs.is2dprojection && (0 != (g_fvfs.bits & FVF_VERTEX)))
+	UINT selectionbits = g_vattribs.active_vatts;
+	//if (g_vattribs.is2dprojection && (0 != (g_vattribs.bits & VATT_VERTEX)))
 	//{
-	//	selectionbits &= ~FVF_VERTEX;
-	//	selectionbits |= FVF_2DVERTEX;
+	//	selectionbits &= ~VATT_VERTEX;
+	//	selectionbits |= VATT_2DVERTEX;
 	//}
 
 	switch (selectionbits)
 	{
-	case (FVF_VERTEX):
-	case (FVF_VERTEX | FVF_COLOR):
-		selected_fvf = FVFID_VERTCOL;
-		stride_fvf = sizeof(fvf_vertcol_t);
+	case (VATT_VERTEX):
+	case (VATT_VERTEX | VATT_COLOR):
+		selected_vatt = VATTID_VERTCOL;
+		stride_vatt = sizeof(vatt_vertcol_t);
 		break;
-	case (FVF_VERTEX | FVF_NORMAL | FVF_COLOR):
-		selected_fvf = FVFID_VERTNORMCOL;
-		stride_fvf = sizeof(fvf_vertnormcol_t);
+	case (VATT_VERTEX | VATT_NORMAL | VATT_COLOR):
+		selected_vatt = VATTID_VERTNORMCOL;
+		stride_vatt = sizeof(vatt_vertnormcol_t);
 		break;
-	case (FVF_VERTEX | FVF_TEX0):
-	case (FVF_VERTEX | FVF_COLOR | FVF_TEX0):
-		selected_fvf = FVFID_VERTCOLTEX;
-		stride_fvf = sizeof(fvf_vertcoltex_t);
+	case (VATT_VERTEX | VATT_TEX0):
+	case (VATT_VERTEX | VATT_COLOR | VATT_TEX0):
+		selected_vatt = VATTID_VERTCOLTEX;
+		stride_vatt = sizeof(vatt_vertcoltex_t);
 		break;
-	case (FVF_VERTEX | FVF_NORMAL | FVF_TEX0):
-	case (FVF_VERTEX | FVF_NORMAL | FVF_COLOR | FVF_TEX0):
-		selected_fvf = FVFID_VERTNORMCOLTEX;
-		stride_fvf = sizeof(fvf_vertnormcoltex_t);
+	case (VATT_VERTEX | VATT_NORMAL | VATT_TEX0):
+	case (VATT_VERTEX | VATT_NORMAL | VATT_COLOR | VATT_TEX0):
+		selected_vatt = VATTID_VERTNORMCOLTEX;
+		stride_vatt = sizeof(vatt_vertnormcoltex_t);
 		break;
-	case (FVF_2DVERTEX | FVF_COLOR | FVF_TEX0):
-		selected_fvf = FVFID_2DVERTCOLTEX;
-		stride_fvf = sizeof(fvf_2dvertcoltex_t);
+	case (VATT_2DVERTEX | VATT_COLOR | VATT_TEX0):
+		selected_vatt = VATTID_2DVERTCOLTEX;
+		stride_vatt = sizeof(vatt_2dvertcoltex_t);
 		break;
-	case (FVF_VERTEX | FVF_COLOR | FVF_TEX0 | FVF_TEX1):
-		selected_fvf = FVFID_VERTCOLTEX2;
-		stride_fvf = sizeof(fvf_vertcoltex2_t);
+	case (VATT_VERTEX | VATT_COLOR | VATT_TEX0 | VATT_TEX1):
+		selected_vatt = VATTID_VERTCOLTEX2;
+		stride_vatt = sizeof(vatt_vertcoltex2_t);
 		break;
-	case (FVF_VERTEX | FVF_NORMAL | FVF_COLOR | FVF_TEX0 | FVF_TEX1):
-		selected_fvf = FVFID_VERTNORMCOLTEX2;
-		stride_fvf = sizeof(fvf_vertnormcoltex2_t);
+	case (VATT_VERTEX | VATT_NORMAL | VATT_COLOR | VATT_TEX0 | VATT_TEX1):
+		selected_vatt = VATTID_VERTNORMCOLTEX2;
+		stride_vatt = sizeof(vatt_vertnormcoltex2_t);
 		break;
 	default:
 		qassert(FALSE);
@@ -2764,11 +2802,11 @@ void qdx_fvf_assemble_and_draw(UINT numindexes, const qdxIndex_t *indexes)
 
 	LPDIRECT3DINDEXBUFFER9 i_buffer;
 	LPDIRECT3DVERTEXBUFFER9 v_buffer;
-	struct fvf_buff_stats *bufstats;
+	struct vatt_buff_stats *bufstats;
 
-	qdx_get_buffers(&i_buffer, &v_buffer, selected_fvf, stride_fvf, &bufstats);
+	qdx_get_buffers(&i_buffer, &v_buffer, selected_vatt, stride_vatt, hash, &bufstats);
 
-	//offindex = lowindex;
+	offindex = lowindex;
 
 	qdxIndex_t *pInd;
 	ON_FAIL_RETURN(i_buffer->Lock(0, numindexes * sizeof(qdxIndex_t), (void**)&pInd, D3DLOCK_DISCARD));//always discard old contents
@@ -2781,40 +2819,40 @@ void qdx_fvf_assemble_and_draw(UINT numindexes, const qdxIndex_t *indexes)
 	selectionsize = 1 + highindex - lowindex;
 
 	byte *pVert;
-	ON_FAIL_RETURN(v_buffer->Lock((lowindex - offindex) * stride_fvf, selectionsize * stride_fvf, (void**)&pVert, D3DLOCK_DISCARD));
+	ON_FAIL_RETURN(v_buffer->Lock((lowindex - offindex) * stride_vatt, selectionsize * stride_vatt, (void**)&pVert, D3DLOCK_DISCARD));
 
 	int vpos = 0;
 
 	switch (selectionbits)
 	{
-	case (FVF_VERTEX): {
+	case (VATT_VERTEX): {
 		vpos = qdx_draw_process_vert(lowindex, highindex, pVert);
 		break; }
-	case (FVF_VERTEX | FVF_COLOR): {
+	case (VATT_VERTEX | VATT_COLOR): {
 		vpos = qdx_draw_process_vertcol(lowindex, highindex, pVert);
 		break; }
-	case (FVF_VERTEX | FVF_NORMAL | FVF_COLOR): {
+	case (VATT_VERTEX | VATT_NORMAL | VATT_COLOR): {
 		vpos = qdx_draw_process_vertnormcol(lowindex, highindex, pVert);
 		break; }
-	case (FVF_VERTEX | FVF_COLOR | FVF_TEX0): {
+	case (VATT_VERTEX | VATT_COLOR | VATT_TEX0): {
 		vpos = qdx_draw_process_vertcoltex(lowindex, highindex, pVert);
 		break; }
-	case (FVF_VERTEX | FVF_NORMAL | FVF_COLOR | FVF_TEX0): {
+	case (VATT_VERTEX | VATT_NORMAL | VATT_COLOR | VATT_TEX0): {
 		vpos = qdx_draw_process_vertnormcoltex(lowindex, highindex, pVert);
 		break; }
-	case (FVF_2DVERTEX | FVF_COLOR | FVF_TEX0): {
+	case (VATT_2DVERTEX | VATT_COLOR | VATT_TEX0): {
 		vpos = qdx_draw_process_2dvertcoltex(lowindex, highindex, pVert);
 		break; }
-	case (FVF_VERTEX | FVF_TEX0): {
+	case (VATT_VERTEX | VATT_TEX0): {
 		vpos = qdx_draw_process_verttex(lowindex, highindex, pVert);
 		break; }
-	case (FVF_VERTEX | FVF_NORMAL | FVF_TEX0): {
+	case (VATT_VERTEX | VATT_NORMAL | VATT_TEX0): {
 		vpos = qdx_draw_process_vertnormtex(lowindex, highindex, pVert);
 		break; }
-	case (FVF_VERTEX | FVF_COLOR | FVF_TEX0 | FVF_TEX1): {
+	case (VATT_VERTEX | VATT_COLOR | VATT_TEX0 | VATT_TEX1): {
 		vpos = qdx_draw_process_vertcoltex2(lowindex, highindex, pVert);
 		break; }
-	case (FVF_VERTEX | FVF_NORMAL | FVF_COLOR | FVF_TEX0 | FVF_TEX1): {
+	case (VATT_VERTEX | VATT_NORMAL | VATT_COLOR | VATT_TEX0 | VATT_TEX1): {
 		vpos = qdx_draw_process_vertnormcoltex2(lowindex, highindex, pVert);
 		break; }
 	default:
@@ -2832,19 +2870,19 @@ void qdx_fvf_assemble_and_draw(UINT numindexes, const qdxIndex_t *indexes)
 
 	qdx.device->BeginScene();
 
-	qdx.device->SetFVF(selected_fvf);
+	qdx.device->SetFVF(selected_vatt);
 
-	qdx.device->SetStreamSource(0, v_buffer, 0, stride_fvf);
+	qdx.device->SetStreamSource(0, v_buffer, 0, stride_vatt);
 	qdx.device->SetIndices(i_buffer);
 
-	if (g_fvfs.bits & FVF_TEX0)
+	if (g_vattribs.active_vatts & VATT_TEX0)
 	{
-		qdx_texobj_apply(g_fvfs.textureids[0], 0);
+		qdx_texobj_apply(g_vattribs.textureids[0], 0);
 	}
 	else qdx_texobj_apply(TEXID_NULL, 0);
-	if (g_fvfs.bits & FVF_TEX1)
+	if (g_vattribs.active_vatts & VATT_TEX1)
 	{
-		qdx_texobj_apply(g_fvfs.textureids[1], 1);
+		qdx_texobj_apply(g_vattribs.textureids[1], 1);
 	}
 	else qdx_texobj_apply(TEXID_NULL, 1);
 
@@ -2854,7 +2892,7 @@ void qdx_fvf_assemble_and_draw(UINT numindexes, const qdxIndex_t *indexes)
 	qdx.device->EndScene();
 }
 
-qdx_vbuffer_t qdx_vbuffer_upload(qdx_vbuffer_t buf, UINT fvfid, UINT size, void *data)
+qdx_vbuffer_t qdx_vbuffer_upload(qdx_vbuffer_t buf, UINT vattid, UINT size, void *data)
 {
 	LPDIRECT3DVERTEXBUFFER9 v_buffer = buf;
 
@@ -2863,7 +2901,7 @@ qdx_vbuffer_t qdx_vbuffer_upload(qdx_vbuffer_t buf, UINT fvfid, UINT size, void 
 		ON_FAIL_RET_NULL(
 			qdx.device->CreateVertexBuffer(size,
 				0,
-				fvfid,
+				vattid,
 				D3DPOOL_MANAGED,
 				&v_buffer,
 				NULL));
@@ -2889,11 +2927,13 @@ void qdx_vbuffer_release(qdx_vbuffer_t buf)
 static int qdx_draw_process_vert(int lowindex, int highindex, byte *pVert)
 {
 	int vpos = 0;
+	const float* dv = GVATT_VERTELEM(lowindex);
 	for (int i = lowindex; i <= highindex; i++)
 	{
-		fvf_vertcol_t *p = (fvf_vertcol_t *)pVert;
-		copy_three(p->XYZ, GFVF_VERTELEM(i));
+		vatt_vertcol_t *p = (vatt_vertcol_t *)pVert;
+		copy_three(p->XYZ, dv);
 		p->COLOR = qdx.crt_color;
+		GVATT_INCVERTP(dv);
 		pVert += sizeof(p[0]);
 
 		vpos++;
@@ -2905,11 +2945,15 @@ static int qdx_draw_process_vert(int lowindex, int highindex, byte *pVert)
 static int qdx_draw_process_vertcol(int lowindex, int highindex, byte *pVert)
 {
 	int vpos = 0;
+	const float* dv = GVATT_VERTELEM(lowindex);
+	const byte* dc = GVATT_COLRELEM(lowindex);
 	for (int i = lowindex; i <= highindex; i++)
 	{
-		fvf_vertcol_t *p = (fvf_vertcol_t *)pVert;
-		copy_three(p->XYZ, GFVF_VERTELEM(i));
-		p->COLOR = abgr_to_argb(GFVF_COLRELEM(i));
+		vatt_vertcol_t *p = (vatt_vertcol_t *)pVert;
+		copy_three(p->XYZ, dv);
+		p->COLOR = abgr_to_argb(dc);
+		GVATT_INCVERTP(dv);
+		GVATT_INCCOLRP(dc);
 		pVert += sizeof(p[0]);
 
 		vpos++;
@@ -2921,12 +2965,18 @@ static int qdx_draw_process_vertcol(int lowindex, int highindex, byte *pVert)
 static int qdx_draw_process_vertnormcol(int lowindex, int highindex, byte *pVert)
 {
 	int vpos = 0;
+	const float* dv = GVATT_VERTELEM(lowindex);
+	const float* dn = GVATT_NORMELEM(lowindex);
+	const byte* dc = GVATT_COLRELEM(lowindex);
 	for (int i = lowindex; i <= highindex; i++)
 	{
-		fvf_vertnormcol_t* p = (fvf_vertnormcol_t*)pVert;
-		copy_three(p->XYZ, GFVF_VERTELEM(i));
-		copy_three(p->NORM, GFVF_NORMELEM(i));
-		p->COLOR = abgr_to_argb(GFVF_COLRELEM(i));
+		vatt_vertnormcol_t* p = (vatt_vertnormcol_t*)pVert;
+		copy_three(p->XYZ, dv);
+		copy_three(p->NORM, dn);
+		p->COLOR = abgr_to_argb(dc);
+		GVATT_INCVERTP(dv);
+		GVATT_INCNORMP(dn);
+		GVATT_INCCOLRP(dc);
 		pVert += sizeof(p[0]);
 
 		vpos++;
@@ -2938,12 +2988,18 @@ static int qdx_draw_process_vertnormcol(int lowindex, int highindex, byte *pVert
 static int qdx_draw_process_vertcoltex(int lowindex, int highindex, byte *pVert)
 {
 	int vpos = 0;
+	const float* dv = GVATT_VERTELEM(lowindex);
+	const byte* dc = GVATT_COLRELEM(lowindex);
+	const float* dt0 = GVATT_TEX0ELEM(lowindex);
 	for (int i = lowindex; i <= highindex; i++)
 	{
-		fvf_vertcoltex_t *p = (fvf_vertcoltex_t *)pVert;
-		copy_three(p->XYZ, GFVF_VERTELEM(i));
-		p->COLOR = abgr_to_argb(GFVF_COLRELEM(i));
-		copy_two(p->UV, GFVF_TEX0ELEM(i));
+		vatt_vertcoltex_t *p = (vatt_vertcoltex_t *)pVert;
+		copy_three(p->XYZ, dv);
+		p->COLOR = abgr_to_argb(dc);
+		copy_two(p->UV, dt0);
+		GVATT_INCVERTP(dv);
+		GVATT_INCCOLRP(dc);
+		GVATT_INCTEX0P(dt0);
 		pVert += sizeof(p[0]);
 
 		vpos++;
@@ -2955,13 +3011,21 @@ static int qdx_draw_process_vertcoltex(int lowindex, int highindex, byte *pVert)
 static int qdx_draw_process_vertnormcoltex(int lowindex, int highindex, byte *pVert)
 {
 	int vpos = 0;
+	const float* dv = GVATT_VERTELEM(lowindex);
+	const float* dn = GVATT_NORMELEM(lowindex);
+	const byte* dc = GVATT_COLRELEM(lowindex);
+	const float* dt0 = GVATT_TEX0ELEM(lowindex);
 	for (int i = lowindex; i <= highindex; i++)
 	{
-		fvf_vertnormcoltex_t* p = (fvf_vertnormcoltex_t*)pVert;
-		copy_three(p->XYZ, GFVF_VERTELEM(i));
-		copy_three(p->NORM, GFVF_NORMELEM(i));
-		p->COLOR = abgr_to_argb(GFVF_COLRELEM(i));
-		copy_two(p->UV, GFVF_TEX0ELEM(i));
+		vatt_vertnormcoltex_t* p = (vatt_vertnormcoltex_t*)pVert;
+		copy_three(p->XYZ, dv);
+		copy_three(p->NORM, dn);
+		p->COLOR = abgr_to_argb(dc);
+		copy_two(p->UV, dt0);
+		GVATT_INCVERTP(dv);
+		GVATT_INCNORMP(dn);
+		GVATT_INCCOLRP(dc);
+		GVATT_INCTEX0P(dt0);
 		pVert += sizeof(p[0]);
 
 		vpos++;
@@ -2973,12 +3037,18 @@ static int qdx_draw_process_vertnormcoltex(int lowindex, int highindex, byte *pV
 static int qdx_draw_process_2dvertcoltex(int lowindex, int highindex, byte *pVert)
 {
 	int vpos = 0;
+	const float* dv = GVATT_VERTELEM(lowindex);
+	const byte* dc = GVATT_COLRELEM(lowindex);
+	const float* dt0 = GVATT_TEX0ELEM(lowindex);
 	for (int i = lowindex; i <= highindex; i++)
 	{
-		fvf_2dvertcoltex_t *p = (fvf_2dvertcoltex_t *)pVert;
-		copy_xyzrhv(p->XYZRHV, GFVF_VERTELEM(i));
-		p->COLOR = abgr_to_argb(GFVF_COLRELEM(i));
-		copy_two(p->UV, GFVF_TEX0ELEM(i));
+		vatt_2dvertcoltex_t *p = (vatt_2dvertcoltex_t *)pVert;
+		copy_xyzrhv(p->XYZRHV, dv);
+		p->COLOR = abgr_to_argb(dc);
+		copy_two(p->UV, dt0);
+		GVATT_INCVERTP(dv);
+		GVATT_INCCOLRP(dc);
+		GVATT_INCTEX0P(dt0);
 		pVert += sizeof(p[0]);
 
 		vpos++;
@@ -2990,12 +3060,16 @@ static int qdx_draw_process_2dvertcoltex(int lowindex, int highindex, byte *pVer
 static int qdx_draw_process_verttex(int lowindex, int highindex, byte *pVert)
 {
 	int vpos = 0;
+	const float* dv = GVATT_VERTELEM(lowindex);
+	const float* dt0 = GVATT_TEX0ELEM(lowindex);
 	for (int i = lowindex; i <= highindex; i++)
 	{
-		fvf_vertcoltex_t *p = (fvf_vertcoltex_t *)pVert;
-		copy_three(p->XYZ, GFVF_VERTELEM(i));
+		vatt_vertcoltex_t *p = (vatt_vertcoltex_t *)pVert;
+		copy_three(p->XYZ, dv);
 		p->COLOR = qdx.crt_color;
-		copy_two(p->UV, GFVF_TEX0ELEM(i));
+		copy_two(p->UV, dt0);
+		GVATT_INCVERTP(dv);
+		GVATT_INCTEX0P(dt0);
 		pVert += sizeof(p[0]);
 
 		vpos++;
@@ -3007,13 +3081,19 @@ static int qdx_draw_process_verttex(int lowindex, int highindex, byte *pVert)
 static int qdx_draw_process_vertnormtex(int lowindex, int highindex, byte *pVert)
 {
 	int vpos = 0;
+	const float* dv = GVATT_VERTELEM(lowindex);
+	const float* dn = GVATT_NORMELEM(lowindex);
+	const float* dt0 = GVATT_TEX0ELEM(lowindex);
 	for (int i = lowindex; i <= highindex; i++)
 	{
-		fvf_vertnormcoltex_t* p = (fvf_vertnormcoltex_t*)pVert;
-		copy_three(p->XYZ, GFVF_VERTELEM(i));
-		copy_three(p->NORM, GFVF_NORMELEM(i));
+		vatt_vertnormcoltex_t* p = (vatt_vertnormcoltex_t*)pVert;
+		copy_three(p->XYZ, dv);
+		copy_three(p->NORM, dn);
 		p->COLOR = qdx.crt_color;
-		copy_two(p->UV, GFVF_TEX0ELEM(i));
+		copy_two(p->UV, dt0);
+		GVATT_INCVERTP(dv);
+		GVATT_INCNORMP(dn);
+		GVATT_INCTEX0P(dt0);
 		pVert += sizeof(p[0]);
 
 		vpos++;
@@ -3025,13 +3105,21 @@ static int qdx_draw_process_vertnormtex(int lowindex, int highindex, byte *pVert
 static int qdx_draw_process_vertcoltex2(int lowindex, int highindex, byte *pVert)
 {
 	int vpos = 0;
+	const float* dv = GVATT_VERTELEM(lowindex);
+	const byte* dc = GVATT_COLRELEM(lowindex);
+	const float* dt0 = GVATT_TEX0ELEM(lowindex);
+	const float* dt1 = GVATT_TEX1ELEM(lowindex);
 	for (int i = lowindex; i <= highindex; i++)
 	{
-		fvf_vertcoltex2_t *p = (fvf_vertcoltex2_t *)pVert;
-		copy_three(p->XYZ, GFVF_VERTELEM(i));
-		p->COLOR = abgr_to_argb(GFVF_COLRELEM(i));
-		copy_two(p->UV0, GFVF_TEX0ELEM(i));
-		copy_two(p->UV1, GFVF_TEX1ELEM(i));
+		vatt_vertcoltex2_t *p = (vatt_vertcoltex2_t *)pVert;
+		copy_three(p->XYZ, dv);
+		p->COLOR = abgr_to_argb(dc);
+		copy_two(p->UV0, dt0);
+		copy_two(p->UV1, dt1);
+		GVATT_INCVERTP(dv);
+		GVATT_INCCOLRP(dc);
+		GVATT_INCTEX0P(dt0);
+		GVATT_INCTEX1P(dt1);
 		pVert += sizeof(p[0]);
 
 		vpos++;
@@ -3043,14 +3131,24 @@ static int qdx_draw_process_vertcoltex2(int lowindex, int highindex, byte *pVert
 static int qdx_draw_process_vertnormcoltex2(int lowindex, int highindex, byte *pVert)
 {
 	int vpos = 0;
+	const float* dv = GVATT_VERTELEM(lowindex);
+	const float* dn = GVATT_NORMELEM(lowindex);
+	const byte* dc = GVATT_COLRELEM(lowindex);
+	const float* dt0 = GVATT_TEX0ELEM(lowindex);
+	const float* dt1 = GVATT_TEX1ELEM(lowindex);
 	for (int i = lowindex; i <= highindex; i++)
 	{
-		fvf_vertnormcoltex2_t* p = (fvf_vertnormcoltex2_t*)pVert;
-		copy_three(p->XYZ, GFVF_VERTELEM(i));
-		copy_three(p->NORM, GFVF_NORMELEM(i));
-		p->COLOR = abgr_to_argb(GFVF_COLRELEM(i));
-		copy_two(p->UV0, GFVF_TEX0ELEM(i));
-		copy_two(p->UV1, GFVF_TEX1ELEM(i));
+		vatt_vertnormcoltex2_t* p = (vatt_vertnormcoltex2_t*)pVert;
+		copy_three(p->XYZ, dv);
+		copy_three(p->NORM, dn);
+		p->COLOR = abgr_to_argb(dc);
+		copy_two(p->UV0, dt0);
+		copy_two(p->UV1, dt1);
+		GVATT_INCVERTP(dv);
+		GVATT_INCNORMP(dn);
+		GVATT_INCCOLRP(dc);
+		GVATT_INCTEX0P(dt0);
+		GVATT_INCTEX1P(dt1);
 		pVert += sizeof(p[0]);
 
 		vpos++;
@@ -3149,7 +3247,6 @@ void qdx_matrix_apply(void)
 
 int qdx_matrix_equals(const float *a, const float *b)
 {
-	int ret = 1;
 	int diff0 = 0;
 
 	for (int i = 0; i < 16; i++)
@@ -3178,13 +3275,7 @@ void qdx_depthrange(float znear, float zfar)
 static std::map<std::string, int> asserted_fns;
 #define ASSERT_MAX_PRINTS 5
 
-void qdx_assert_str(int success, const char* expression, const char* function, unsigned line, const char* file)
-{
-	if (success)
-	{
-		//do something, sometime..
-	}
-	else
+void qdx_assert_failed_str(const char* expression, const char* function, unsigned line, const char* file)
 	{
 		const char* fn = strrchr(file, '\\');
 		if (!fn) fn = strrchr(file, '/');

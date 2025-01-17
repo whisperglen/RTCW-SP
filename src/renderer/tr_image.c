@@ -613,7 +613,8 @@ static void Upload32(   int texnum, unsigned *data,
 						qboolean lightMap,
 						int *format,
 						int *pUploadWidth, int *pUploadHeight,
-						qboolean noCompress ) {
+						qboolean noCompress,
+						const char *texname) {
 	int samples;
 	int scaled_width, scaled_height;
 	unsigned    *scaledBuffer = NULL;
@@ -639,7 +640,7 @@ static void Upload32(   int texnum, unsigned *data,
 			data = resampledBuffer;
 			width = width >> 1;
 			height = height >> 1;
-			ri.Printf( PRINT_ALL, "r_rmse of %f has saved %dkb\n", r_rmse->value, ( rmse_saved / 1024 ) );
+			ri.Printf( PRINT_ALL, "r_rmse of %f has saved %dkb in %s\n", r_rmse->value, ( rmse_saved / 1024 ), texname );
 		}
 	} else {
 		// just do the RMSE of 1 (reduce perfect)
@@ -650,7 +651,7 @@ static void Upload32(   int texnum, unsigned *data,
 			data = resampledBuffer;
 			width = width >> 1;
 			height = height >> 1;
-			ri.Printf( PRINT_ALL, "r_rmse of %f has saved %dkb\n", r_rmse->value, ( rmse_saved / 1024 ) );
+			ri.Printf( PRINT_ALL, "r_rmse of %f has saved %dkb in %s\n", r_rmse->value, ( rmse_saved / 1024 ), texname );
 		}
 	}
 	//
@@ -969,14 +970,15 @@ image_t *R_CreateImageExt( const char *name, const byte *pic, int width, int hei
 			  &image->internalFormat,
 			  &image->uploadWidth,
 			  &image->uploadHeight,
-			  noCompress );
+			  noCompress,
+			  image->imgName);
 
 	qdx_texobj_setparam(image->texnum - TEXNUM_OFFSET, TEXP_WRAP_U | TEXP_WRAP_V, qdx_texture_wrapmode(glWrapClampMode));
 	//qglTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, glWrapClampMode );
 	//qglTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, glWrapClampMode );
 
 	//qglBindTexture( GL_TEXTURE_2D, 0 );
-	qdx_fvf_texid(TEXID_NULL, image->TMU);
+	qdx_vatt_attach_texture(TEXID_NULL, image->TMU);
 
 	if ( image->TMU == 1 ) {
 		GL_SelectTexture( 0 );
@@ -2459,13 +2461,13 @@ void R_DeleteTextures( void ) {
 		if ( glConfig.maxActiveTextures ) {
 			GL_SelectTexture( 1 );
 			//qglBindTexture( GL_TEXTURE_2D, 0 );
-			qdx_fvf_texid(TEXID_NULL, 1);
+			qdx_vatt_attach_texture(TEXID_NULL, 1);
 			GL_SelectTexture( 0 );
 			//qglBindTexture( GL_TEXTURE_2D, 0 );
-			qdx_fvf_texid(TEXID_NULL, 0);
+			qdx_vatt_attach_texture(TEXID_NULL, 0);
 		} else {
 			//qglBindTexture( GL_TEXTURE_2D, 0 );
-			qdx_fvf_texid(TEXID_NULL, 0);
+			qdx_vatt_attach_texture(TEXID_NULL, 0);
 		}
 	}
 }
@@ -3536,13 +3538,13 @@ void R_PurgeImage( image_t *image ) {
 		if ( glConfig.maxActiveTextures ) {
 			GL_SelectTexture( 1 );
 			//qglBindTexture( GL_TEXTURE_2D, 0 );
-			qdx_fvf_texid(TEXID_NULL, 1);
+			qdx_vatt_attach_texture(TEXID_NULL, 1);
 			GL_SelectTexture( 0 );
 			//qglBindTexture( GL_TEXTURE_2D, 0 );
-			qdx_fvf_texid(TEXID_NULL, 0);
+			qdx_vatt_attach_texture(TEXID_NULL, 0);
 		} else {
 			//qglBindTexture( GL_TEXTURE_2D, 0 );
-			qdx_fvf_texid(TEXID_NULL, 0);
+			qdx_vatt_attach_texture(TEXID_NULL, 0);
 		}
 	}
 }
@@ -3617,13 +3619,13 @@ void R_BackupImages( void ) {
 		if ( glConfig.maxActiveTextures ) {
 			GL_SelectTexture( 1 );
 			//qglBindTexture( GL_TEXTURE_2D, 0 );
-			qdx_fvf_texid(TEXID_NULL, 1);
+			qdx_vatt_attach_texture(TEXID_NULL, 1);
 			GL_SelectTexture( 0 );
 			//qglBindTexture( GL_TEXTURE_2D, 0 );
-			qdx_fvf_texid(TEXID_NULL, 0);
+			qdx_vatt_attach_texture(TEXID_NULL, 0);
 		} else {
 			//qglBindTexture( GL_TEXTURE_2D, 0 );
-			qdx_fvf_texid(TEXID_NULL, 0);
+			qdx_vatt_attach_texture(TEXID_NULL, 0);
 		}
 	}
 }
