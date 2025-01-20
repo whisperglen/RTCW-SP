@@ -39,6 +39,7 @@ If you have questions concerning this license or the applicable additional terms
 #include <direct.h>
 #include <io.h>
 #include <conio.h>
+#include <tchar.h>
 
 //#define	CD_BASEDIR	"wolf"
 #define CD_BASEDIR  ""
@@ -176,6 +177,36 @@ void Sys_BeginProfiling( void ) {
 }
 
 /*
+==================
+Sys_Exit
+
+Calls TerminateProcess in case the directx9 dll is loaded from the local folder
+==================
+*/
+void Sys_Exit( int errorcode )
+{
+	char dllname[256];
+	dllname[0] = 0;
+
+	
+	if (0 != GetModuleFileName(NULL, dllname, sizeof(dllname)))
+	{
+		char *fname = _tcsrchr(dllname, _T('\\'));
+		if (fname) {
+			fname[0] = 0;
+		}
+		_tcscat_s(dllname, sizeof(dllname), "\\d3d9.dll");
+
+		if (NULL == GetModuleHandle(dllname))
+		{
+			exit( 0 );
+		}
+	}
+
+	TerminateProcess( GetCurrentProcess(), 0 );
+}
+
+/*
 =============
 Sys_Error
 
@@ -212,7 +243,7 @@ void QDECL Sys_Error( const char *error, ... ) {
 
 	Sys_DestroyConsole();
 
-	exit( 1 );
+	Sys_Exit( 1 );
 }
 
 /*
@@ -225,7 +256,7 @@ void Sys_Quit( void ) {
 	IN_Shutdown();
 	Sys_DestroyConsole();
 
-	exit( 0 );
+	Sys_Exit( 0 );
 }
 
 /*
@@ -1348,7 +1379,8 @@ int WINAPI WinMain( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLin
 		}
 		__except (ExpFilter(GetExceptionInformation(), GetExceptionCode()))
 		{
-			ExitProcess(0xDEAD);
+			//ExitProcess(0xDEAD);
+			TerminateProcess( GetCurrentProcess(), 0xDEAD );
 		}
 
 		endTime = Sys_Milliseconds();
