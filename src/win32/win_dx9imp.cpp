@@ -1530,7 +1530,7 @@ void DX9imp_EndFrame(void) {
 			HRESULT hr = qdx.device->Present(NULL, NULL, NULL, NULL);
 			if (FAILED(hr))
 			{
-				if (hr == D3DERR_DEVICELOST)
+				if (hr == D3DERR_DEVICELOST || hr == D3DERR_DEVICENOTRESET) //D3DERR_DEVICEHUNG?
 				{
 					qdx.devicelost = qtrue;
 				}
@@ -1696,9 +1696,9 @@ void DX9imp_Shutdown(void) {
 		qdx_clear_buffers();
 		qdx_texobj_delete_all();
 #if 1
-		if (dx9imp_state.cdsFullscreen)
+		//if (dx9imp_state.cdsFullscreen)
 		{
-			//there seems to be a problem with releasing and recreating the device if fullscreen
+			//there seems to be a problem with releasing and recreating the device if fullscreen edit: or windowed
 			//todo: am I doing something wrong with the objects? not releasing everything?
 			//dx9imp_state.cdsFullscreen = qfalse;
 			D3DPRESENT_PARAMETERS d3dpp;
