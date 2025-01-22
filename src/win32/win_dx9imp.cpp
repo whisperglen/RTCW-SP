@@ -50,6 +50,7 @@ extern "C"
 #include "win_local.h"
 }
 #include <stdint.h>
+#include "fnv.h"
 
 typedef struct
 {
@@ -2342,7 +2343,7 @@ void qdx_texobj_apply(int id, int sampler)
 typedef struct vatt_buff_stats
 {
 	uint32_t num_entries;
-	uint32_t checksum[VATT_PARAM_ARRAYSZ];
+	//uint32_t checksum[VATT_PARAM_ARRAYSZ];
 } vatt_buff_stats_t;
 
 struct vatt_buffers
@@ -2353,9 +2354,10 @@ struct vatt_buffers
 	{
 		LPDIRECT3DVERTEXBUFFER9 data;
 		UINT ident;
+		UINT hash;
 		uint32_t usage;
 		vatt_buff_stats_t stats;
-	} v_buffs [10];
+	} v_buffs [500];
 } g_vatt_buffers[2];
 
 static int g_used_vatt_buffers = 0;
@@ -2379,7 +2381,7 @@ static void qdx_clear_buffers()
 	g_used_vatt_buffers = 0;
 }
 
-static int qdx_get_buffers(LPDIRECT3DINDEXBUFFER9 *index_buf, LPDIRECT3DVERTEXBUFFER9 *vertex_buf, UINT vatt_spec, UINT vatt_stride, vatt_buff_stats_t **stats)
+static int qdx_get_buffers(LPDIRECT3DINDEXBUFFER9 *index_buf, LPDIRECT3DVERTEXBUFFER9 *vertex_buf, UINT vatt_spec, UINT vatt_stride, UINT hash, vatt_buff_stats_t **stats)
 {
 	DWORD whoami = GetCurrentThreadId();
 	int i = 0, j = 0;
@@ -2392,7 +2394,7 @@ static int qdx_get_buffers(LPDIRECT3DINDEXBUFFER9 *index_buf, LPDIRECT3DVERTEXBU
 
 			for (j = 0; j < ARRAYSIZE(g_vatt_buffers[i].v_buffs); j++)
 			{
-				if (g_vatt_buffers[i].v_buffs[j].ident == vatt_spec)
+				if (g_vatt_buffers[i].v_buffs[j].ident == vatt_spec && g_vatt_buffers[i].v_buffs[j].hash == hash)
 				{
 					if (vertex_buf)
 						*vertex_buf = g_vatt_buffers[i].v_buffs[j].data;
@@ -2409,6 +2411,7 @@ static int qdx_get_buffers(LPDIRECT3DINDEXBUFFER9 *index_buf, LPDIRECT3DVERTEXBU
 						return -1;
 					}
 					g_vatt_buffers[i].v_buffs[j].ident = vatt_spec;
+					g_vatt_buffers[i].v_buffs[j].hash = hash;
 					g_vatt_buffers[i].v_buffs[j].data = b;
 					memset(&g_vatt_buffers[i].v_buffs[j].stats, 0, sizeof(g_vatt_buffers[i].v_buffs[j].stats));
 
@@ -2445,6 +2448,7 @@ static int qdx_get_buffers(LPDIRECT3DINDEXBUFFER9 *index_buf, LPDIRECT3DVERTEXBU
 		p->i_buf = ib;
 		memset(p->v_buffs, 0, sizeof(p->v_buffs));
 		p->v_buffs[0].ident = vatt_spec;
+		p->v_buffs[0].hash = hash;
 		p->v_buffs[0].data = vb;
 
 		if (index_buf)
@@ -2463,18 +2467,20 @@ static int qdx_get_buffers(LPDIRECT3DINDEXBUFFER9 *index_buf, LPDIRECT3DVERTEXBU
 struct vatt_state
 {
 	BOOL is2dprojection;
-	UINT bits;
+	UINT active_vatts;
+	UINT locked_vatts;
+	UINT num_vatts;
 	const float *vertexes;
-	UINT numverts;
+	//UINT numverts;
 	UINT strideverts;
 	const float *normals;
-	UINT numnorms;
+	//UINT numnorms;
 	UINT stridenorms;
 	const byte *colors;
-	UINT numcols;
+	//UINT numcols;
 	UINT stridecols;
 	const float *texcoord[2];
-	UINT numtexcoords[2];
+	//UINT numtexcoords[2];
 	UINT stridetexcoords[2];
 	INT textureids[2];
 } g_vattribs = { 0 };
@@ -2576,7 +2582,7 @@ void qdx_vatt_enable(vatt_param_t param)
 	if (r_logFile->integer)
 		qdx_log_comment(__FUNCTION__, param, NULL);
 
-	g_vattribs.bits |= param;
+	g_vattribs.active_vatts |= param;
 }
 
 void qdx_vatt_disable(vatt_param_t param)
@@ -2584,15 +2590,23 @@ void qdx_vatt_disable(vatt_param_t param)
 	if (r_logFile->integer)
 		qdx_log_comment(__FUNCTION__, param, NULL);
 
-	g_vattribs.bits &= ~param;
+	g_vattribs.active_vatts &= ~param;
 }
 
 void qdx_vatt_lock_buffers(int num_elements)
 {
+	if (r_logFile->integer)
+		qdx_log_comment(__FUNCTION__, g_vattribs.active_vatts, (void*)num_elements);
+
+	g_vattribs.locked_vatts = g_vattribs.active_vatts;
 }
 
-void qdx_vatt_unlock_buffers(int num_elements)
+void qdx_vatt_unlock_buffers()
 {
+	if (r_logFile->integer)
+		qdx_log_comment(__FUNCTION__, g_vattribs.locked_vatts, (void*)g_vattribs.active_vatts);
+
+	g_vattribs.locked_vatts = 0;
 }
 
 int qdx_vattparam_to_index(vatt_param_t param)
@@ -2636,35 +2650,35 @@ void qdx_vatt_set_buffer(vatt_param_t param, const void *buffer, UINT elems, UIN
 	{
 	case VATT_VERTEX:
 		g_vattribs.vertexes = (float*)buffer;
-		g_vattribs.numverts = elems;
+		//g_vattribs.numverts = elems;
 		g_vattribs.strideverts = stride;
 		break;
 	case VATT_NORMAL:
 		g_vattribs.normals = (float*)buffer;
-		g_vattribs.numnorms = elems;
+		//g_vattribs.numnorms = elems;
 		g_vattribs.stridenorms = stride;
 		break;
 	case VATT_COLOR:
 		g_vattribs.colors = (byte*)buffer;
-		g_vattribs.numcols = elems;
+		//g_vattribs.numcols = elems;
 		g_vattribs.stridecols = stride;
 		break;
 	case VATT_TEX0:
 		g_vattribs.texcoord[0] = (float*)buffer;
-		g_vattribs.numtexcoords[0] = elems;
+		//g_vattribs.numtexcoords[0] = elems;
 		g_vattribs.stridetexcoords[0] = stride;
 		break;
 	case VATT_TEX1:
 		g_vattribs.texcoord[1] = (float*)buffer;
-		g_vattribs.numtexcoords[1] = elems;
+		//g_vattribs.numtexcoords[1] = elems;
 		g_vattribs.stridetexcoords[1] = stride;
 		break;
 	case VATT_TEX0 | VATT_TEX1:
 		g_vattribs.texcoord[0] = (float*)buffer;
-		g_vattribs.numtexcoords[0] = elems;
+		//g_vattribs.numtexcoords[0] = elems;
 		g_vattribs.stridetexcoords[0] = stride;
 		g_vattribs.texcoord[1] = (float*)buffer;
-		g_vattribs.numtexcoords[1] = elems;
+		//g_vattribs.numtexcoords[1] = elems;
 		g_vattribs.stridetexcoords[1] = stride;
 		break;
 	default:
@@ -2673,11 +2687,11 @@ void qdx_vatt_set_buffer(vatt_param_t param, const void *buffer, UINT elems, UIN
 
 	if (buffer == NULL)
 	{
-		g_vattribs.bits &= ~param;
+		g_vattribs.active_vatts &= ~param;
 	}
 	else
 	{
-		g_vattribs.bits |= param;
+		g_vattribs.active_vatts |= param;
 	}
 }
 
@@ -2695,22 +2709,28 @@ static int qdx_draw_process_vertnormcoltex2(int lowindex, int highindex, byte *p
 #define ON_FAIL_RET_NULL(X) if(FAILED(X)) { qassert(FALSE); return NULL; }
 #define ON_FAIL_RETURN(X) if(FAILED(X)) { qassert(FALSE); return; }
 
-void qdx_vatt_assemble_and_draw(UINT numindexes, const qdxIndex_t *indexes)
+void qdx_vatt_assemble_and_draw(UINT numindexes, const qdxIndex_t *indexes, const char *hint)
 {
 	DWORD selected_vatt = VATTID_VERTCOL;
 	UINT stride_vatt = sizeof(vatt_vertcol_t);
 	qdxIndex_t lowindex = SHADER_MAX_INDEXES, highindex = 0, offindex = 0;
 	UINT selectionsize = 0;
+	UINT hash = 0;
 
 	if (r_logFile->integer)
-		qdx_log_comment(__FUNCTION__, g_vattribs.bits, (const void*)numindexes);
+		qdx_log_comment(__FUNCTION__, g_vattribs.active_vatts, (const void*)numindexes);
 
-	if (0 == (g_vattribs.bits & VATT_VERTEX))
+	if (0 == (g_vattribs.active_vatts & VATT_VERTEX))
 	{
 		//see comment in RE_BeginRegistration for the call to RE_StretchPic
 		//the vertex buffer pointer gets set when RB_StageIteratorGeneric is called, which is triggered by that RE_StretchPic 
 		//todo: I guess this is something we can actually fix now, since we know why it happens
 		return;
+	}
+
+	if (hint)
+	{
+		hash = fnv_32a_str((char*)hint, 0);
 	}
 
 	for (int i = 0; i < numindexes; i++)
@@ -2726,7 +2746,7 @@ void qdx_vatt_assemble_and_draw(UINT numindexes, const qdxIndex_t *indexes)
 		}
 	}
 
-	UINT selectionbits = g_vattribs.bits;
+	UINT selectionbits = g_vattribs.active_vatts;
 	//if (g_vattribs.is2dprojection && (0 != (g_vattribs.bits & VATT_VERTEX)))
 	//{
 	//	selectionbits &= ~VATT_VERTEX;
@@ -2774,9 +2794,9 @@ void qdx_vatt_assemble_and_draw(UINT numindexes, const qdxIndex_t *indexes)
 	LPDIRECT3DVERTEXBUFFER9 v_buffer;
 	struct vatt_buff_stats *bufstats;
 
-	qdx_get_buffers(&i_buffer, &v_buffer, selected_vatt, stride_vatt, &bufstats);
+	qdx_get_buffers(&i_buffer, &v_buffer, selected_vatt, stride_vatt, hash, &bufstats);
 
-	//offindex = lowindex;
+	offindex = lowindex;
 
 	qdxIndex_t *pInd;
 	ON_FAIL_RETURN(i_buffer->Lock(0, numindexes * sizeof(qdxIndex_t), (void**)&pInd, D3DLOCK_DISCARD));//always discard old contents
@@ -2845,12 +2865,12 @@ void qdx_vatt_assemble_and_draw(UINT numindexes, const qdxIndex_t *indexes)
 	qdx.device->SetStreamSource(0, v_buffer, 0, stride_vatt);
 	qdx.device->SetIndices(i_buffer);
 
-	if (g_vattribs.bits & VATT_TEX0)
+	if (g_vattribs.active_vatts & VATT_TEX0)
 	{
 		qdx_texobj_apply(g_vattribs.textureids[0], 0);
 	}
 	else qdx_texobj_apply(TEXID_NULL, 0);
-	if (g_vattribs.bits & VATT_TEX1)
+	if (g_vattribs.active_vatts & VATT_TEX1)
 	{
 		qdx_texobj_apply(g_vattribs.textureids[1], 1);
 	}

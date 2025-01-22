@@ -114,12 +114,12 @@ void qdx_vatt_set_buffer(vatt_param_t param, const void *buffer, UINT elems, UIN
 void qdx_vatt_enable(vatt_param_t param);
 void qdx_vatt_disable(vatt_param_t param);
 void qdx_vatt_lock_buffers(int num_elements);
-void qdx_vatt_unlock_buffers(int num_elements);
+void qdx_vatt_unlock_buffers();
 #define qdx_vatt_buffer_null(P) qdx_vatt_set_buffer((P), NULL, 0, 0)
 void qdx_vatt_texid(int texid, int samplernum);
 void qdx_set_global_color(DWORD color);
 void qdx_vatt_set2d(BOOL state);
-void qdx_vatt_assemble_and_draw(UINT numindexes, const qdxIndex_t *indexes);
+void qdx_vatt_assemble_and_draw(UINT numindexes, const qdxIndex_t *indexes, const char *hint);
 
 #define VERT2D_ZVAL (0.5f)
 #define VERT2D_RHVVAL (1.0f)

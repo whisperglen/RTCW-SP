@@ -31,6 +31,9 @@
     <Filter Include="Source Files\DirectXTex">
       <UniqueIdentifier>{c61a6990-3111-40c3-97fe-59e187c05bac}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\FNVHash">
+      <UniqueIdentifier>{bedc2555-303c-4790-adc6-dec796ce35f8}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <None Include="ref_trin.def">
@@ -335,6 +338,12 @@
     <ClCompile Include="DirectXTex\DirectXTexCompress.cpp">
       <Filter>Source Files\DirectXTex</Filter>
     </ClCompile>
+    <ClCompile Include="fnvhash\hash_32.c">
+      <Filter>Source Files\FNVHash</Filter>
+    </ClCompile>
+    <ClCompile Include="fnvhash\hash_32a.c">
+      <Filter>Source Files\FNVHash</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="anorms256.h">
@@ -582,6 +591,9 @@
     </ClInclude>
     <ClInclude Include="DirectXTex\scoped.h">
       <Filter>Source Files\DirectXTex</Filter>
+    </ClInclude>
+    <ClInclude Include="fnvhash\fnv.h">
+      <Filter>Source Files\FNVHash</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

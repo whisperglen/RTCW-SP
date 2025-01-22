@@ -65,7 +65,7 @@
       <ProgramDataBaseFileName>.\Release/</ProgramDataBaseFileName>
       <WarningLevel>Level4</WarningLevel>
       <SuppressStartupBanner>true</SuppressStartupBanner>
-      <AdditionalIncludeDirectories>$(ProjectDir)dx9sdk\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)dx9sdk\include;$(ProjectDir)fnvhash;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -96,7 +96,7 @@
       <WarningLevel>Level3</WarningLevel>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
-      <AdditionalIncludeDirectories>$(ProjectDir)dx9sdk\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)dx9sdk\include;$(ProjectDir)fnvhash;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -191,6 +191,8 @@
     <ClCompile Include="..\win32\win_qgl_dummy.c" />
     <ClCompile Include="DirectXTex\BC.cpp" />
     <ClCompile Include="DirectXTex\DirectXTexCompress.cpp" />
+    <ClCompile Include="fnvhash\hash_32.c" />
+    <ClCompile Include="fnvhash\hash_32a.c" />
     <ClCompile Include="helpers.cpp" />
     <ClCompile Include="tr_animation.c" />
     <ClCompile Include="tr_backend.c" />
@@ -296,6 +298,7 @@
     <ClInclude Include="DirectXTex\DirectXTex.h" />
     <ClInclude Include="DirectXTex\DirectXTexP.h" />
     <ClInclude Include="DirectXTex\scoped.h" />
+    <ClInclude Include="fnvhash\fnv.h" />
     <ClInclude Include="qgl.h" />
     <ClInclude Include="qdx9.h" />
     <ClInclude Include="tr_local.h" />

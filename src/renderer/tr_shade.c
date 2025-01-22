@@ -285,7 +285,7 @@ static void DrawTris( shaderCommands_t *input ) {
 	}
 
 	//R_DrawElements( input->numIndexes, input->indexes );
-	qdx_vatt_assemble_and_draw(input->numIndexes, input->indexes);
+	qdx_vatt_assemble_and_draw(input->numIndexes, input->indexes, input->shader->name);
 
 	if ( qglUnlockArraysEXT ) {
 		qglUnlockArraysEXT();
@@ -436,7 +436,7 @@ static void DrawMultitextured( shaderCommands_t *input, int stage ) {
 	R_BindAnimatedImage( &pStage->bundle[1] );
 
 	//R_DrawElements( input->numIndexes, input->indexes );
-	qdx_vatt_assemble_and_draw(input->numIndexes, input->indexes);
+	qdx_vatt_assemble_and_draw(input->numIndexes, input->indexes, input->shader->name);
 
 	//
 	// disable texturing on TEXTURE1, then select TEXTURE0
@@ -528,7 +528,7 @@ static void ProjectDlightTexture( void ) {
 			light.Position.y = dl->transformed[1];
 			light.Position.z = dl->transformed[2];
 			light.Range = 2 * dl->radius;
-			light.Attenuation0 = 0.0f;
+			light.Attenuation0 = 1.5f;
 			light.Attenuation1 = scale;
 			light.Attenuation2 = 0.0f;
 
@@ -651,7 +651,7 @@ static void ProjectDlightTexture( void ) {
 					R_BindAnimatedImage( &dls->stages[i]->bundle[0] );
 					GL_State( stage->stateBits | GLS_DEPTHFUNC_EQUAL );
 					//R_DrawElements( numIndexes, hitIndexes );
-					qdx_vatt_assemble_and_draw(numIndexes, hitIndexes);
+					qdx_vatt_assemble_and_draw(numIndexes, hitIndexes, "ProjectDlightTexture");
 					backEnd.pc.c_totalIndexes += numIndexes;
 					backEnd.pc.c_dlightIndexes += numIndexes;
 				}
@@ -703,7 +703,7 @@ static void ProjectDlightTexture( void ) {
 				// where they aren't rendered
 				GL_State( GLS_SRCBLEND_DST_COLOR | GLS_DSTBLEND_ONE | GLS_DEPTHFUNC_EQUAL );
 				//R_DrawElements( numIndexes, hitIndexes );
-				qdx_vatt_assemble_and_draw(numIndexes, hitIndexes);
+				qdx_vatt_assemble_and_draw(numIndexes, hitIndexes, "ProjectDlightTexture");
 				backEnd.pc.c_totalIndexes += numIndexes;
 				backEnd.pc.c_dlightIndexes += numIndexes;
 
@@ -711,7 +711,7 @@ static void ProjectDlightTexture( void ) {
 				//	multiple lights through
 				for ( i = 0; i < dl->overdraw; i++ ) {
 					//R_DrawElements( numIndexes, hitIndexes );
-					qdx_vatt_assemble_and_draw(numIndexes, hitIndexes);
+					qdx_vatt_assemble_and_draw(numIndexes, hitIndexes, "ProjectDlightTexture");
 					backEnd.pc.c_totalIndexes += numIndexes;
 					backEnd.pc.c_dlightIndexes += numIndexes;
 				}
@@ -811,7 +811,7 @@ static void RB_FogPass( void ) {
 	}
 
 	//R_DrawElements( tess.numIndexes, tess.indexes );
-	qdx_vatt_assemble_and_draw(tess.numIndexes, tess.indexes);
+	qdx_vatt_assemble_and_draw(tess.numIndexes, tess.indexes, "FogPass");
 }
 
 /*
@@ -1322,7 +1322,7 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input ) {
 			// draw
 			//
 			//R_DrawElements( input->numIndexes, input->indexes );
-			qdx_vatt_assemble_and_draw(input->numIndexes, input->indexes);
+			qdx_vatt_assemble_and_draw(input->numIndexes, input->indexes, input->shader->name);
 		}
 		// allow skipping out to show just lightmaps during development
 		if ( r_lightmap->integer && ( pStage->bundle[0].isLightmap || pStage->bundle[1].isLightmap || pStage->bundle[0].vertexLightmap ) ) {
@@ -1392,8 +1392,8 @@ void RB_StageIteratorGeneric( void ) {
 		setArraysOnce = qfalse;
 		//qglDisableClientState( GL_COLOR_ARRAY );
 		//qglDisableClientState( GL_TEXTURE_COORD_ARRAY );
-		//qdx_vatt_disable(VATT_COLOR);
-		//qdx_vatt_disable(VATT_TEX0);
+		qdx_vatt_disable(VATT_COLOR);
+		qdx_vatt_disable(VATT_TEX0);
 
 	} else
 	{
@@ -1421,10 +1421,11 @@ void RB_StageIteratorGeneric( void ) {
 	//
 	//qglVertexPointer( 3, GL_FLOAT, 16, input->xyz ); // padded for SIMD
 	qdx_vatt_set_buffer(VATT_VERTEX, input->xyz, 0, 4);
-	if ( qglLockArraysEXT ) {
-		qglLockArraysEXT( 0, input->numVertexes );
-		GPUimp_LogComment( "glLockArraysEXT\n" );
-	}
+	//if ( qglLockArraysEXT ) {
+	//	qglLockArraysEXT( 0, input->numVertexes );
+	//	GPUimp_LogComment( "glLockArraysEXT\n" );
+	//}
+	qdx_vatt_lock_buffers(input->numVertexes);
 
 	//
 	// enable color and texcoord arrays after the lock if necessary
@@ -1432,8 +1433,8 @@ void RB_StageIteratorGeneric( void ) {
 	if ( !setArraysOnce ) {
 		//qglEnableClientState( GL_TEXTURE_COORD_ARRAY );
 		//qglEnableClientState( GL_COLOR_ARRAY );
-		//qdx_vatt_enable(VATT_TEX0);
-		//qdx_vatt_enable(VATT_COLOR);
+		qdx_vatt_enable(VATT_TEX0);
+		qdx_vatt_enable(VATT_COLOR);
 	}
 
 	//
@@ -1459,10 +1460,11 @@ void RB_StageIteratorGeneric( void ) {
 	//
 	// unlock arrays
 	//
-	if ( qglUnlockArraysEXT ) {
-		qglUnlockArraysEXT();
-		GPUimp_LogComment( "glUnlockArraysEXT\n" );
-	}
+	//if ( qglUnlockArraysEXT ) {
+	//	qglUnlockArraysEXT();
+	//	GPUimp_LogComment( "glUnlockArraysEXT\n" );
+	//}
+	qdx_vatt_unlock_buffers();
 
 	//
 	// reset polygon offset
@@ -1549,10 +1551,11 @@ void RB_StageIteratorVertexLitTexture( void ) {
 	qdx_vatt_set_buffer(VATT_VERTEX, input->xyz, 0, 4);
 
 
-	if ( qglLockArraysEXT ) {
-		qglLockArraysEXT( 0, input->numVertexes );
-		GPUimp_LogComment( "glLockArraysEXT\n" );
-	}
+	//if ( qglLockArraysEXT ) {
+	//	qglLockArraysEXT( 0, input->numVertexes );
+	//	GPUimp_LogComment( "glLockArraysEXT\n" );
+	//}
+	qdx_vatt_lock_buffers(input->numVertexes);
 
 	//
 	// call special shade routine
@@ -1560,7 +1563,7 @@ void RB_StageIteratorVertexLitTexture( void ) {
 	R_BindAnimatedImage( &tess.xstages[0]->bundle[0] );
 	GL_State( tess.xstages[0]->stateBits );
 	//R_DrawElements( input->numIndexes, input->indexes );
-	qdx_vatt_assemble_and_draw(input->numIndexes, input->indexes);
+	qdx_vatt_assemble_and_draw(input->numIndexes, input->indexes, input->shader->name);
 
 	//
 	// now do any dynamic lighting needed
@@ -1579,10 +1582,11 @@ void RB_StageIteratorVertexLitTexture( void ) {
 	//
 	// unlock arrays
 	//
-	if ( qglUnlockArraysEXT ) {
-		qglUnlockArraysEXT();
-		GPUimp_LogComment( "glUnlockArraysEXT\n" );
-	}
+	//if ( qglUnlockArraysEXT ) {
+	//	qglUnlockArraysEXT();
+	//	GPUimp_LogComment( "glUnlockArraysEXT\n" );
+	//}
+	qdx_vatt_unlock_buffers();
 
 	if ( qglPNTrianglesiATI && tess.ATI_tess )
 #ifdef __MACOS__ //DAJ ATI{
@@ -1679,13 +1683,14 @@ void RB_StageIteratorLightmappedMultitexture( void ) {
 	//
 	// lock arrays
 	//
-	if ( qglLockArraysEXT ) {
-		qglLockArraysEXT( 0, input->numVertexes );
-		GPUimp_LogComment( "glLockArraysEXT\n" );
-	}
+	//if ( qglLockArraysEXT ) {
+	//	qglLockArraysEXT( 0, input->numVertexes );
+	//	GPUimp_LogComment( "glLockArraysEXT\n" );
+	//}
+	qdx_vatt_lock_buffers(input->numVertexes);
 
 	//R_DrawElements( input->numIndexes, input->indexes );
-	qdx_vatt_assemble_and_draw(input->numIndexes, input->indexes);
+	qdx_vatt_assemble_and_draw(input->numIndexes, input->indexes, input->shader->name);
 
 	//
 	// disable texturing on TEXTURE1, then select TEXTURE0
@@ -1717,10 +1722,11 @@ void RB_StageIteratorLightmappedMultitexture( void ) {
 	//
 	// unlock arrays
 	//
-	if ( qglUnlockArraysEXT ) {
-		qglUnlockArraysEXT();
-		GPUimp_LogComment( "glUnlockArraysEXT\n" );
-	}
+	//if ( qglUnlockArraysEXT ) {
+	//	qglUnlockArraysEXT();
+	//	GPUimp_LogComment( "glUnlockArraysEXT\n" );
+	//}
+	qdx_vatt_unlock_buffers();
 
 	if ( qglPNTrianglesiATI && tess.ATI_tess )
 #ifdef __MACOS__ //DAJ ATI{
