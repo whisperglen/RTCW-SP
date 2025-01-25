@@ -412,6 +412,7 @@ void ( APIENTRY * qglVertex4sv )( const GLshort *v );
 void ( APIENTRY * qglVertexPointer )( GLint size, GLenum type, GLsizei stride, const GLvoid *pointer );
 void ( APIENTRY * qglViewport )( GLint x, GLint y, GLsizei width, GLsizei height );
 
+void ( APIENTRY * matrix_print_s)(const float* mat, const char* info);
 
 
 static void ( APIENTRY * dllAccum )( GLenum op, GLfloat value );
@@ -2469,6 +2470,12 @@ static void APIENTRY logViewport( GLint x, GLint y, GLsizei width, GLsizei heigh
 	fprintf( glw_state.log_fp, "glViewport( %d, %d, %d, %d )\n", x, y, width, height );
 	dllViewport( x, y, width, height );
 }
+static void APIENTRY logmatrix_print_s(const float* mat, const char* info) {
+	if (glw_state.log_fp)
+	{
+		fprintf(glw_state.log_fp, "matrix_print_s( %p, %s )\n", mat, info);
+	}
+}
 
 /*
 ** QGL_Shutdown
@@ -2845,6 +2852,8 @@ void QGL_Shutdown( void ) {
 	qwglGetPixelFormat           = NULL;
 	qwglSetPixelFormat           = NULL;
 	qwglSwapBuffers              = NULL;
+
+	matrix_print_s = NULL;
 }
 
 #define GR_NUM_BOARDS 0x0f
@@ -3270,6 +3279,12 @@ qboolean QGL_Init( const char *dllname ) {
 	qglVertex4sv                 =  dllVertex4sv                 = GPA( "glVertex4sv" );
 	qglVertexPointer             =  dllVertexPointer             = GPA( "glVertexPointer" );
 	qglViewport                  =  dllViewport                  = GPA( "glViewport" );
+
+	matrix_print_s = GPA("matrix_print_s");
+	if (matrix_print_s == NULL)
+	{
+		matrix_print_s = logmatrix_print_s;
+	}
 
 	qwglCopyContext             = GPA( "wglCopyContext" );
 	qwglCreateContext           = GPA( "wglCreateContext" );

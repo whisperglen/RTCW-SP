@@ -1265,7 +1265,6 @@ void R_RotateForEntity( const trRefEntity_t * ent, const viewParms_t * viewParms
 */
 void    GL_Bind( image_t *image );
 void    GL_SetDefaultState( void );
-ID_INLINE
 void    GL_SelectTexture( int unit );
 void    GL_TextureMode( const char *string );
 void    GL_CheckErrors( void );
