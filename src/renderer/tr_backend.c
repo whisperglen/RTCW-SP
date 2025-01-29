@@ -64,7 +64,7 @@ void GL_Bind( image_t *image ) {
 			image->frameUsed = tr.frameCount;
 		}
 		glState.currenttextures[glState.currenttmu] = texnum;
-		qdx_vatt_texid(texnum - TEXNUM_OFFSET, glState.currenttmu);
+		qdx_vatt_attach_texture(texnum - TEXNUM_OFFSET, glState.currenttmu);
 		//qglBindTexture( GL_TEXTURE_2D, texnum );
 	}
 }
@@ -113,14 +113,14 @@ void GL_BindMultitexture( image_t *image0, GLuint env0, image_t *image1, GLuint 
 		image1->frameUsed = tr.frameCount;
 		glState.currenttextures[1] = texnum1;
 		//qglBindTexture( GL_TEXTURE_2D, texnum1 );
-		qdx_vatt_texid(texnum1 - TEXNUM_OFFSET, 1);
+		qdx_vatt_attach_texture(texnum1 - TEXNUM_OFFSET, 1);
 	}
 	if ( glState.currenttextures[0] != texnum0 ) {
 		GL_SelectTexture( 0 );
 		image0->frameUsed = tr.frameCount;
 		glState.currenttextures[0] = texnum0;
 		//qglBindTexture( GL_TEXTURE_2D, texnum0 );
-		qdx_vatt_texid(texnum0 - TEXNUM_OFFSET, 0);
+		qdx_vatt_attach_texture(texnum0 - TEXNUM_OFFSET, 0);
 	}
 }
 
@@ -1008,6 +1008,7 @@ void RB_RenderDrawSurfList( drawSurf_t *drawSurfs, int numDrawSurfs ) {
 	int i;
 	drawSurf_t      *drawSurf;
 	int oldSort;
+	surfaceType_t oldSurfType;
 	float originalTime;
 	int oldNumVerts, oldNumIndex;
 //GR - tessellation flag
@@ -1036,6 +1037,7 @@ void RB_RenderDrawSurfList( drawSurf_t *drawSurfs, int numDrawSurfs ) {
 	oldDepthRange = qfalse;
 	oldDlighted = qfalse;
 	oldSort = -1;
+	oldSurfType = SS_BAD;
 	depthRange = qfalse;
 // GR - tessellation also forces to draw everything
 	oldAtiTess = -1;
@@ -1043,7 +1045,7 @@ void RB_RenderDrawSurfList( drawSurf_t *drawSurfs, int numDrawSurfs ) {
 	backEnd.pc.c_surfaces += numDrawSurfs;
 
 	for ( i = 0, drawSurf = drawSurfs ; i < numDrawSurfs ; i++, drawSurf++ ) {
-		if ( drawSurf->sort == oldSort ) {
+		if ( drawSurf->sort == oldSort /*&& *drawSurf->surface == oldSurfType*/ ) {
 			// fast path, same as previous sort
 			oldNumVerts = tess.numVertexes;
 			oldNumIndex = tess.numIndexes;
@@ -1071,7 +1073,8 @@ void RB_RenderDrawSurfList( drawSurf_t *drawSurfs, int numDrawSurfs ) {
 		if ( shader != oldShader || fogNum != oldFogNum || dlighted != oldDlighted
 // GR - force draw on tessellation flag change
 			 || ( atiTess != oldAtiTess )
-			 || ( entityNum != oldEntityNum && !shader->entityMergable ) ) {
+			 || ( entityNum != oldEntityNum && !shader->entityMergable
+			 /*|| (*drawSurf->surface != oldSurfType)*/)) {
 			if ( oldShader != NULL ) {
 #ifdef __MACOS__    // crutch up the mac's limited buffer queue size
 				int t;
@@ -1095,6 +1098,7 @@ void RB_RenderDrawSurfList( drawSurf_t *drawSurfs, int numDrawSurfs ) {
 // GR - update old tessellation flag
 			oldAtiTess = atiTess;
 		}
+		oldSurfType = *drawSurf->surface;
 
 		//
 		// change the modelview matrix if needed

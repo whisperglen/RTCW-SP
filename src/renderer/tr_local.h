@@ -54,6 +54,7 @@ C_ASSERT(sizeof(qdxIndex_t) == sizeof(UINT));
 #if id386 && !( ( defined __linux__ || defined __FreeBSD__ ) && ( defined __i386__ ) ) // rb010123
 long myftol( float f );
 #else
+#error "FIXME Nobody wants float truncation!"
 #define myftol( x ) ( (int)( x ) )
 #endif
 

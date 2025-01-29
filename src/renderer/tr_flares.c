@@ -226,7 +226,7 @@ void RB_AddDlightFlares( void ) {
 	int id = 0;
 	fog_t           *fog;
 
-	if ( r_flares->integer < 2 ) {
+	if ( r_flares->integer != 2 && r_flares->integer != 3 ) {
 		return;
 	}
 
@@ -265,7 +265,7 @@ void RB_AddCoronaFlares( void ) {
 	int i, j, k;
 	fog_t           *fog;
 
-	if ( r_flares->integer != 1 && r_flares->integer != 3 ) {
+	if ( r_flares->integer != 1 && r_flares->integer != 3 && r_flares->integer != 4 ) {
 		return;
 	}
 
@@ -277,22 +277,36 @@ void RB_AddCoronaFlares( void ) {
 	fog = tr.world->fogs;
 	for ( i = 0 ; i < backEnd.refdef.num_coronas ; i++, cor++ ) {
 
-		// find which fog volume the corona is in
-		for ( j = 1 ; j < tr.world->numfogs ; j++ ) {
-			fog = &tr.world->fogs[j];
-			for ( k = 0 ; k < 3 ; k++ ) {
-				if ( cor->origin[k] < fog->bounds[0][k] || cor->origin[k] > fog->bounds[1][k] ) {
+		if (r_flares->integer == 4)
+		{
+			vec3_t temp;
+
+			VectorSubtract( cor->origin, backEnd.or.origin, temp );
+			cor->transformed[0] = DotProduct( temp,  backEnd.or.axis[0] );
+			cor->transformed[1] = DotProduct( temp,  backEnd.or.axis[1] );
+			cor->transformed[2] = DotProduct( temp,  backEnd.or.axis[2] );
+
+			qdx_light_add(LIGHT_FLARE, i, cor->origin, cor->transformed, cor->color, 0.0f, cor->scale);
+		}
+		else
+		{
+			// find which fog volume the corona is in
+			for ( j = 1 ; j < tr.world->numfogs ; j++ ) {
+				fog = &tr.world->fogs[j];
+				for ( k = 0 ; k < 3 ; k++ ) {
+					if ( cor->origin[k] < fog->bounds[0][k] || cor->origin[k] > fog->bounds[1][k] ) {
+						break;
+					}
+				}
+				if ( k == 3 ) {
 					break;
 				}
 			}
-			if ( k == 3 ) {
-				break;
+			if ( j == tr.world->numfogs ) {
+				j = 0;
 			}
+			RB_AddFlare( (void *)cor, j, cor->origin, cor->color, cor->scale, NULL, cor->id, cor->flags );
 		}
-		if ( j == tr.world->numfogs ) {
-			j = 0;
-		}
-		RB_AddFlare( (void *)cor, j, cor->origin, cor->color, cor->scale, NULL, cor->id, cor->flags );
 	}
 }
 

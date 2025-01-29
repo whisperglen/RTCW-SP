@@ -3306,14 +3306,48 @@ qboolean QGL_DMY_Init( const char *dllname ) {
 	return qtrue;
 }
 
+static void close_logfile()
+{
+	if ( glw_state.log_fp ) {
+		fprintf( glw_state.log_fp, "*** CLOSING LOG ***\n" );
+		fclose( glw_state.log_fp );
+		glw_state.log_fp = NULL;
+	}
+}
+
+static void open_logfile(int count)
+{
+	if ( !glw_state.log_fp ) {
+		struct tm *newtime;
+		time_t aclock;
+		char buffer[1024];
+		cvar_t  *basedir;
+
+		time( &aclock );
+		newtime = localtime( &aclock );
+
+		asctime( newtime );
+
+		basedir = ri.Cvar_Get( "fs_basepath", "", 0 );
+		Com_sprintf( buffer, sizeof( buffer ), "%s/gl_%02d.log", basedir->string, count );
+		glw_state.log_fp = fopen( buffer, "wt" );
+
+		fprintf( glw_state.log_fp, "%s\n", asctime( newtime ) );
+	}
+}
+
 void QGL_DMY_EnableLogging( qboolean enable ) {
 	static qboolean isEnabled;
+	static int counter = 0;
 
 	// return if we're already active
 	if ( isEnabled && enable ) {
 		// decrement log counter and stop if it has reached 0
 		ri.Cvar_Set( "r_logFile", va( "%d", r_logFile->integer - 1 ) );
 		if ( r_logFile->integer ) {
+			close_logfile();
+			counter++;
+			open_logfile(counter);
 			return;
 		}
 		enable = qfalse;
@@ -3327,30 +3361,11 @@ void QGL_DMY_EnableLogging( qboolean enable ) {
 	isEnabled = enable;
 
 	if ( enable ) {
-		if ( !glw_state.log_fp ) {
-			struct tm *newtime;
-			time_t aclock;
-			char buffer[1024];
-			cvar_t  *basedir;
-
-			time( &aclock );
-			newtime = localtime( &aclock );
-
-			asctime( newtime );
-
-			basedir = ri.Cvar_Get( "fs_basepath", "", 0 );
-			Com_sprintf( buffer, sizeof( buffer ), "%s/gl.log", basedir->string );
-			glw_state.log_fp = fopen( buffer, "wt" );
-
-			fprintf( glw_state.log_fp, "%s\n", asctime( newtime ) );
-		}
+		open_logfile(counter);
 	} else
 	{
-		if ( glw_state.log_fp ) {
-			fprintf( glw_state.log_fp, "*** CLOSING LOG ***\n" );
-			fclose( glw_state.log_fp );
-			glw_state.log_fp = NULL;
-		}
+		close_logfile();
+		counter++;
 	}
 }
 

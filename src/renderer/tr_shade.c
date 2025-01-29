@@ -272,9 +272,9 @@ static void DrawTris( shaderCommands_t *input ) {
 	}
 
 	//qglDisableClientState( GL_COLOR_ARRAY );
-	qdx_vatt_disable(VATT_COLOR);
+	qdx_vatt_disable_buffer(VATT_COLOR);
 	//qglDisableClientState( GL_TEXTURE_COORD_ARRAY );
-	qdx_vatt_disable(VATT_TEX0 | VATT_TEX1);
+	qdx_vatt_disable_buffer(VATT_TEX0 | VATT_TEX1);
 
 	//qglVertexPointer( 3, GL_FLOAT, 16, input->xyz ); // padded for SIMD
 	qdx_vatt_set_buffer(VATT_VERTEX, input->xyz, 0, 4);
@@ -443,7 +443,7 @@ static void DrawMultitextured( shaderCommands_t *input, int stage ) {
 	//
 	//qglDisableClientState( GL_TEXTURE_COORD_ARRAY );
 	//qglDisable( GL_TEXTURE_2D );
-	qdx_vatt_disable(VATT_TEX1);
+	qdx_vatt_disable_buffer(VATT_TEX1);
 	//qdx_vatt_texid(TEXID_NULL, 1);
 
 	GL_SelectTexture( 0 );
@@ -463,10 +463,10 @@ static void ProjectDlightTexture( void ) {
 	vec3_t origin;
 	float   *texCoords;
 	byte    *colors;
-	byte clipBits[SHADER_MAX_VERTEXES];
-	MAC_STATIC float texCoordsArray[SHADER_MAX_VERTEXES][2];
-	byte colorArray[SHADER_MAX_VERTEXES][4];
-	glIndex_t hitIndexes[SHADER_MAX_INDEXES];
+	static byte clipBits[SHADER_MAX_VERTEXES];
+	static float texCoordsArray[SHADER_MAX_VERTEXES][2];
+	static byte colorArray[SHADER_MAX_VERTEXES][4];
+	static glIndex_t hitIndexes[SHADER_MAX_INDEXES];
 	int numIndexes;
 	float scale;
 	float radius;
@@ -481,14 +481,6 @@ static void ProjectDlightTexture( void ) {
 		return;
 	}
 
-	{
-		static int prevLights = 0;
-		for (int i = backEnd.refdef.num_dlights; i < prevLights; i++)
-		{
-			IDirect3DDevice9_LightEnable(qdx.device, i, FALSE);
-		}
-		prevLights = backEnd.refdef.num_dlights;
-	}
 
 	for ( l = 0 ; l < backEnd.refdef.num_dlights ; l++ ) {
 		dlight_t    *dl;
@@ -507,34 +499,7 @@ static void ProjectDlightTexture( void ) {
 		floatColor[1] = dl->color[1] * 255.0f;
 		floatColor[2] = dl->color[2] * 255.0f;
 
-		{
-			D3DLIGHT9 light;
-			ZeroMemory(&light, sizeof(light));
-
-			light.Type = D3DLIGHT_POINT;
-			light.Diffuse.r = dl->color[0];
-			light.Diffuse.g = dl->color[1];
-			light.Diffuse.b = dl->color[2];
-			light.Diffuse.a = 1.0f;
-			light.Specular.r = 1.0f;
-			light.Specular.g = 1.0f;
-			light.Specular.b = 1.0f;
-			light.Specular.a = 1.0f;
-			light.Ambient.r = 1.0f;
-			light.Ambient.g = 1.0f;
-			light.Ambient.b = 1.0f;
-			light.Ambient.a = 1.0f;
-			light.Position.x = dl->transformed[0];
-			light.Position.y = dl->transformed[1];
-			light.Position.z = dl->transformed[2];
-			light.Range = 2 * dl->radius;
-			light.Attenuation0 = 1.5f;
-			light.Attenuation1 = scale;
-			light.Attenuation2 = 0.0f;
-
-			IDirect3DDevice9_SetLight(qdx.device, l, &light);    // send the light struct properties to light #l
-			IDirect3DDevice9_LightEnable(qdx.device, l, TRUE);    // turn on light #l
-		}
+		qdx_light_add(LIGHT_DYNAMIC, l, dl->origin, dl->transformed, dl->color, radius, scale);
 
 		if (r_vertexLight->integer)
 		{
@@ -1363,7 +1328,7 @@ void RB_StageIteratorGeneric( void ) {
 		qglEnable( GL_PN_TRIANGLES_ATI ); // ATI PN-Triangles extension
 #endif
 	}
-	qdx_vatt_enable(VATT_NORMAL);
+	qdx_vatt_enable_buffer(VATT_NORMAL);
 
 
 	//
@@ -1392,8 +1357,8 @@ void RB_StageIteratorGeneric( void ) {
 		setArraysOnce = qfalse;
 		//qglDisableClientState( GL_COLOR_ARRAY );
 		//qglDisableClientState( GL_TEXTURE_COORD_ARRAY );
-		qdx_vatt_disable(VATT_COLOR);
-		qdx_vatt_disable(VATT_TEX0);
+		qdx_vatt_disable_buffer(VATT_COLOR);
+		qdx_vatt_disable_buffer(VATT_TEX0);
 
 	} else
 	{
@@ -1433,8 +1398,8 @@ void RB_StageIteratorGeneric( void ) {
 	if ( !setArraysOnce ) {
 		//qglEnableClientState( GL_TEXTURE_COORD_ARRAY );
 		//qglEnableClientState( GL_COLOR_ARRAY );
-		qdx_vatt_enable(VATT_TEX0);
-		qdx_vatt_enable(VATT_COLOR);
+		qdx_vatt_enable_buffer(VATT_TEX0);
+		qdx_vatt_enable_buffer(VATT_COLOR);
 	}
 
 	//
@@ -1484,7 +1449,7 @@ void RB_StageIteratorGeneric( void ) {
 #endif
 		//qglDisableClientState( GL_NORMAL_ARRAY );
 	}
-	qdx_vatt_disable(VATT_NORMAL);
+	qdx_vatt_disable_buffer(VATT_NORMAL);
 
 }
 
@@ -1528,8 +1493,8 @@ void RB_StageIteratorVertexLitTexture( void ) {
 	//
 	//qglEnableClientState( GL_COLOR_ARRAY );
 	//qglEnableClientState( GL_TEXTURE_COORD_ARRAY );
-	qdx_vatt_enable(VATT_COLOR);
-	qdx_vatt_enable(VATT_TEX0);
+	qdx_vatt_enable_buffer(VATT_COLOR);
+	qdx_vatt_enable_buffer(VATT_TEX0);
 
 	if ( qglPNTrianglesiATI && tess.ATI_tess ) {
 #ifdef __MACOS__    //DAJ ATI
@@ -1540,7 +1505,7 @@ void RB_StageIteratorVertexLitTexture( void ) {
 		//qglEnableClientState( GL_NORMAL_ARRAY );         // RF< so we can send the normals as an array
 		//qglNormalPointer( GL_FLOAT, 16, input->normal );
 	}
-	qdx_vatt_enable(VATT_NORMAL);
+	qdx_vatt_enable_buffer(VATT_NORMAL);
 	qdx_vatt_set_buffer(VATT_NORMAL, input->normal, 0, 4);
 
 	//qglColorPointer( 4, GL_UNSIGNED_BYTE, 0, tess.svars.colors );
@@ -1697,7 +1662,7 @@ void RB_StageIteratorLightmappedMultitexture( void ) {
 	//
 	//qglDisable( GL_TEXTURE_2D );
 	//qglDisableClientState( GL_TEXTURE_COORD_ARRAY );
-	qdx_vatt_disable(VATT_TEX1);
+	qdx_vatt_disable_buffer(VATT_TEX1);
 
 	GL_SelectTexture( 0 );
 #ifdef REPLACE_MODE

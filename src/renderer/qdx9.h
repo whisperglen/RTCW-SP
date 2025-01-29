@@ -111,15 +111,16 @@ typedef enum vatt_param
 #define TEXSAMPLER_USECFG (-1)
 
 void qdx_vatt_set_buffer(vatt_param_t param, const void *buffer, UINT elems, UINT stride);
-void qdx_vatt_enable(vatt_param_t param);
-void qdx_vatt_disable(vatt_param_t param);
+void qdx_vatt_enable_buffer(vatt_param_t param);
+void qdx_vatt_disable_buffer(vatt_param_t param);
 void qdx_vatt_lock_buffers(int num_elements);
 void qdx_vatt_unlock_buffers();
-#define qdx_vatt_buffer_null(P) qdx_vatt_set_buffer((P), NULL, 0, 0)
-void qdx_vatt_texid(int texid, int samplernum);
+#define qdx_vatt_set_buffer_null(P) qdx_vatt_set_buffer((P), NULL, 0, 0)
+void qdx_vatt_attach_texture(int texid, int samplernum);
 void qdx_set_global_color(DWORD color);
 void qdx_vatt_set2d(BOOL state);
 void qdx_vatt_assemble_and_draw(UINT numindexes, const qdxIndex_t *indexes, const char *hint);
+void qdx_objects_reset();
 
 #define VERT2D_ZVAL (0.5f)
 #define VERT2D_RHVVAL (1.0f)
@@ -203,16 +204,24 @@ typedef LPDIRECT3DVERTEXBUFFER9 qdx_vbuffer_t;
 qdx_vbuffer_t qdx_vbuffer_upload(qdx_vbuffer_t buf, UINT fvfid, UINT size, void *data);
 void qdx_vbuffer_release(qdx_vbuffer_t buf);
 
+enum light_type
+{
+	LIGHT_DYNAMIC = 1,
+	LIGHT_FLARE = 2,
+};
+
+void qdx_light_add(int light_type, int ord, float *position, float *transformed, float *color, float radius, float scale);
+
 
 HRESULT qdx_compress_texture(int width, int height, const void *indata, void *outdata, int inbits, int outpitch);
 
 
-void qdx_assert_str(int success, const char* expression, const char* function, unsigned line, const char* file);
+void qdx_assert_failed_str(const char* expression, const char* function, unsigned line, const char* file);
 
 
-#define qassert(expression) (void)(                                                             \
-            (qdx_assert_str((!!(expression)), _CRT_STRINGIZE(#expression), (__func__), (unsigned)(__LINE__), (__FILE__)), 0) \
-        )
+#define qassert(expression) do {                                                             \
+            if((!(expression))) { qdx_assert_failed_str(_CRT_STRINGIZE(#expression), (__func__), (unsigned)(__LINE__), (__FILE__)); } \
+        } while(0)
 
 #ifdef __cplusplus
 } //extern "C"

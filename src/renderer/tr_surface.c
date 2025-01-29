@@ -58,6 +58,8 @@ void RB_CheckOverflow( int verts, int indexes ) {
 		return;
 	}
 
+	qassert(FALSE && "RB_CheckOverflow");
+
 	RB_EndSurface();
 
 	if ( verts >= SHADER_MAX_VERTEXES ) {

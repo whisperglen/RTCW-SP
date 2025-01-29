@@ -34,6 +34,7 @@ If you have questions concerning this license or the applicable additional terms
 */
 
 #include "tr_local.h"
+#include <search.h>
 
 trGlobals_t tr;
 
@@ -1420,7 +1421,44 @@ static void shortsort(drawSurf_t *lo, drawSurf_t *hi) {
 	}
 }
 
+static int qsort_compare( const void *arg1, const void *arg2 )
+{
+	int ret = 0;
+	drawSurf_t* s1 = (drawSurf_t*)arg1;
+	drawSurf_t* s2 = (drawSurf_t*)arg2;
+	if (s1->sort > s2->sort)
+	{
+		ret = 1;
+	}
+	else if (s1->sort < s2->sort)
+	{
+		ret = -1;
+	}
+	else
+	{
+		if (s1->surface > s2->surface)
+		{
+			ret = 1;
+		}
+		else
+		{
+			ret = -1;
+		}
+	}
 
+	return ret;
+}
+
+#if 1
+void qsortFast(
+	void* base,
+	unsigned num,
+	unsigned width
+)
+{
+	qsort(base, num, width, qsort_compare);
+}
+#else
 /* sort the array between lo and hi (inclusive)
 FIXME: this was lifted and modified from the microsoft lib source...
  */
@@ -1580,6 +1618,7 @@ recurse:
 		return;                 /* all subarrays done */
 	}
 }
+#endif
 
 
 //==========================================================================================
@@ -1656,12 +1695,21 @@ void R_SortDrawSurfs(drawSurf_t *drawSurfs, int numDrawSurfs) {
 
 	// check for any pass through drawing, which
 	// may cause another view to be rendered first
-	for (i = 0; i < numDrawSurfs; i++) {
+	drawSurf_t* psurf = drawSurfs;
+	for (i = 0; i < numDrawSurfs; i++, psurf++) {
 		// GR - decompose with tessellation flag
-		R_DecomposeSort((drawSurfs + i)->sort, &entityNum, &shader, &fogNum, &dlighted, &atiTess);
+		R_DecomposeSort(psurf->sort, &entityNum, &shader, &fogNum, &dlighted, &atiTess);
 
+		if (0 == strcmp(shader->name, "textures/castle_wall/castle_c46_a"))
+		{
+			if (shader->sort == SS_BAD)
+			{
+				ri.Printf(0,"\n");
+			}
+		}
 		if (shader->sort > SS_PORTAL) {
 			break;
+			//continue;
 		}
 
 		// no shader should ever have this sort type

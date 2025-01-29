@@ -617,6 +617,13 @@ static void R_MarkLeaves( void ) {
 		return;
 	}
 
+	//static vec3_t oldOrigin = { -1285.89502, 403.723175, 416.125 };
+	//vec_t* pvsOrigin = tr.viewParms.pvsOrigin;
+	//if (!(tr.refdef.rdflags & RDF_SKYBOXPORTAL))
+	//{
+	//	//pvsOrigin = oldOrigin;
+	//}
+	//leaf = R_PointInLeaf( pvsOrigin );
 	// current viewcluster
 	leaf = R_PointInLeaf( tr.viewParms.pvsOrigin );
 	cluster = leaf->cluster;

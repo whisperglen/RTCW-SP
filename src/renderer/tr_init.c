@@ -766,7 +766,7 @@ void GL_SetDefaultState( void ) {
 		GL_TextureMode( r_textureMode->string );
 		GL_TexEnv( GL_MODULATE );
 		//qglDisable( GL_TEXTURE_2D );
-		qdx_vatt_texid(TEXID_NULL, 1);
+		qdx_vatt_attach_texture(TEXID_NULL, 1);
 		GL_SelectTexture( 0 );
 	}
 
@@ -860,6 +860,7 @@ void GfxInfo_f( void ) {
 	//ri.Printf( PRINT_ALL, "EXTENSIONS: %s\n", glConfig.extensions_string );
 	ri.Printf( PRINT_ALL, "MAX_TEXTURE_SIZE: %d\n", glConfig.maxTextureSize );
 	ri.Printf( PRINT_ALL, "MAX_ACTIVE_TEXTURES_ARB: %d\n", glConfig.maxActiveTextures );
+	ri.Printf( PRINT_ALL, "MAX_ACTIVE_LIGHTS: %d\n", qdx.caps.MaxActiveLights );
 	ri.Printf( PRINT_ALL, "\nPIXELFORMAT: color(%d-bits) Z(%d-bit) stencil(%d-bits)\n", glConfig.colorBits, glConfig.depthBits, glConfig.stencilBits );
 	ri.Printf( PRINT_ALL, "MODE: %d, %d x %d %s hz:", r_mode->integer, glConfig.vidWidth, glConfig.vidHeight, fsstrings[r_fullscreen->integer == 1] );
 	if ( glConfig.displayFrequency ) {
@@ -1172,6 +1173,8 @@ void R_Init( void ) {
 	int i;
 
 	ri.Printf( PRINT_ALL, "----- R_Init -----\n" );
+
+	qdx_objects_reset();
 
 	// clear all our internal state
 	memset( &tr, 0, sizeof( tr ) );
