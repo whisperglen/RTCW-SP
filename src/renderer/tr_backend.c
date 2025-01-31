@@ -1648,6 +1648,7 @@ const void  *RB_DrawBuffer( const void *data ) {
 	cmd = (const drawBufferCommand_t *)data;
 
 	//qglDrawBuffer( cmd->buffer );
+	//WG nothing to do for glDrawBuffer (GL_FRONT, GL_BACK)
 
 	// clear screen for debugging
 	if ( r_clear->integer ) {

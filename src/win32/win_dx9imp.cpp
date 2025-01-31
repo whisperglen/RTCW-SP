@@ -234,7 +234,7 @@ static qboolean GLW_StartDriverAndSetMode(const char *drivername,
 		m++;
 	}
 
-	err = GLW_SetMode(drivername, r_mode->integer, colorbits, cdsFullscreen);
+	err = GLW_SetMode(drivername, mode, colorbits, cdsFullscreen);
 
 	switch (err)
 	{
@@ -1413,10 +1413,10 @@ static qboolean GLW_LoadOpenGL(const char *drivername) {
 			// if we're on a 24/32-bit desktop and we're going fullscreen on an ICD,
 			// try it again but with a 16-bit desktop
 			if (glConfig.driverType == GLDRV_ICD) {
-				if (r_colorbits->integer != 16 ||
+				if (r_colorbits->integer != 32 ||
 					cdsFullscreen != qtrue ||
-					r_mode->integer != 3) {
-					if (!GLW_StartDriverAndSetMode(drivername, 3, 16, qtrue)) {
+					r_mode->integer != 4) {
+					if (!GLW_StartDriverAndSetMode(drivername, 4, 32, qtrue)) {
 						goto fail;
 					}
 				}
@@ -3901,6 +3901,7 @@ void qdx_assert_failed_str(const char* expression, const char* function, unsigne
 typedef struct light_data
 {
 	uint64_t hash;
+	bool isRemix;
 	union
 	{
 		DWORD number;
@@ -3912,20 +3913,19 @@ typedef struct light_data
 static int MAX_LIGHTS = 0;
 std::map<uint64_t, light_data_t> g_lights_dynamic;
 std::map<uint64_t, light_data_t> g_lights_flares;
-//static light_data_t *g_lightmapping = NULL;
 static int g_lights_number = 0;
 
 //no idea what to choose here
-#define LIGHT_RADIANCE_DYNAMIC 10.0f
+#define LIGHT_RADIANCE_DYNAMIC 15000.0f
 #define LIGHT_RADIANCE_FLARES 50.0f
 #define LIGHT_RADIANCE_KILL_REDFLARES 0.3f
 
-static void qdx_ligt_color_to_radiance(remixapi_Float3D* rad, const vec3_t color, int light_type)
+static void qdx_ligt_color_to_radiance(remixapi_Float3D* rad, const vec3_t color, float scale, int light_type)
 {
 	float radiance = 1.0f;
 	if (light_type == LIGHT_DYNAMIC)
 	{
-		radiance = LIGHT_RADIANCE_DYNAMIC;
+		radiance = LIGHT_RADIANCE_DYNAMIC * scale;
 	}
 	else if (light_type == LIGHT_FLARE)
 	{
@@ -3952,11 +3952,11 @@ static void qdx_lights_clear(unsigned int light_types)
 		{
 			for (auto it = g_lights_dynamic.begin(); it != g_lights_dynamic.end(); it++)
 			{
-				//if (remixOnline)
-				//{
-				//	remixInterface.DestroyLight(it->second.handle);
-				//}
-				//else
+				if (remixOnline && it->second.isRemix)
+				{
+					remixInterface.DestroyLight(it->second.handle);
+				}
+				else
 				{
 					qdx.device->LightEnable(it->second.number, FALSE);
 				}
@@ -3967,7 +3967,7 @@ static void qdx_lights_clear(unsigned int light_types)
 		{
 			for (auto it = g_lights_flares.begin(); it != g_lights_flares.end(); it++)
 			{
-				if (remixOnline)
+				if (remixOnline && it->second.isRemix)
 				{
 					remixInterface.DestroyLight(it->second.handle);
 				}
@@ -3983,27 +3983,32 @@ static void qdx_lights_clear(unsigned int light_types)
 
 static void qdx_lights_draw()
 {
-	//for (auto it = g_lights_dynamic.begin(); it != g_lights_dynamic.end(); it++)
-	//{
-	//	if (remixOnline)
-	//	{
-	//		remixInterface.DrawLightInstance(it->second.handle);
-	//	}
-	//	else
-	//	{
-	//		qdx.device->LightEnable(it->second.number, TRUE);
-	//	}
-	//}
+	for (auto it = g_lights_dynamic.begin(); it != g_lights_dynamic.end(); it++)
+	{
+		if (remixOnline && it->second.isRemix)
+		{
+			remixInterface.DrawLightInstance(it->second.handle);
+		}
+		else
+		{
+			qdx.device->LightEnable(it->second.number, TRUE);
+		}
+	}
 	for (auto it = g_lights_flares.begin(); it != g_lights_flares.end(); it++)
 	{
 		remixInterface.DrawLightInstance(it->second.handle);
 	}
 }
 
+#define DYNAMIC_LIGHTS_USE_DX9 1
+
 void qdx_light_add(int light_type, int ord, float *position, float *transformed, float *color, float radius, float scale)
 {
 	remixapi_ErrorCode rercd;
 	uint64_t hash = 0;
+	uint64_t hashpos = 0;
+	uint64_t hashclr = 0;
+	uint64_t hashord = 0;
 	bool found = false;
 
 	if (0 != memcmp(position, transformed, sizeof(float)*3))
@@ -4016,16 +4021,18 @@ void qdx_light_add(int light_type, int ord, float *position, float *transformed,
 
 	//remixOnline = false;
 
-	hash = fnv_32a_buf(position, 3*sizeof(float), hash);
-	//hash = fnv_32a_buf(color, 3*sizeof(float), hash);
-	//hash = fnv_32a_buf(&ord, sizeof(ord), hash);
+	hashpos = fnv_32a_buf(position, 3*sizeof(float), 0x55FF);
+	//hashclr = fnv_32a_buf(color, 3*sizeof(float), 0x55FF);
+	hashord = fnv_32a_buf(&ord, sizeof(ord), 0x55FF);
 
 	if (light_type == LIGHT_DYNAMIC)
 	{
+		hash = hashord;
 		//return;
 	}
 	if (light_type == LIGHT_FLARE)
 	{
+		hash = hashpos;
 		auto itm = g_lights_flares.find(hash);
 		if (itm != g_lights_flares.end())
 		{
@@ -4040,9 +4047,11 @@ void qdx_light_add(int light_type, int ord, float *position, float *transformed,
 	}
 
 	light_data_t light_store;
+	ZeroMemory(&light_store, sizeof(light_store));
 	light_store.hash = hash;
-	light_store.distance = 0.0f;
+	//light_store.distance = 0.0f;
 
+#if DYNAMIC_LIGHTS_USE_DX9
 	if (light_type == LIGHT_DYNAMIC)
 	{
 		D3DLIGHT9 light;
@@ -4073,11 +4082,13 @@ void qdx_light_add(int light_type, int ord, float *position, float *transformed,
 		qdx.device->SetLight(ord, &light);
 		qdx.device->LightEnable(ord, TRUE);
 
+		light_store.isRemix = false;
 		light_store.number = ord;
 		g_lights_dynamic[hash] = light_store;
 
 		return;
 	}
+#endif
 
 	if (remixOnline)
 	{
@@ -4088,7 +4099,7 @@ void qdx_light_add(int light_type, int ord, float *position, float *transformed,
 		light_sphere.position.x = position[0];
 		light_sphere.position.y = position[1];
 		light_sphere.position.z = position[2];
-		light_sphere.radius = (light_type == LIGHT_DYNAMIC) ? radius : 6.0f;
+		light_sphere.radius = /*(light_type == LIGHT_DYNAMIC) ? radius :*/ 6.0f;
 		light_sphere.shaping_hasvalue = 0;
 
 		remixapi_LightInfo lightinfo;
@@ -4097,20 +4108,15 @@ void qdx_light_add(int light_type, int ord, float *position, float *transformed,
 		lightinfo.sType = REMIXAPI_STRUCT_TYPE_LIGHT_INFO;
 		lightinfo.pNext = &light_sphere;
 		lightinfo.hash = hash;
-		qdx_ligt_color_to_radiance(&lightinfo.radiance, color, light_type);
+		qdx_ligt_color_to_radiance(&lightinfo.radiance, color, scale, light_type);
 
+		light_store.isRemix = true;
 		rercd = remixInterface.CreateLight(&lightinfo, &light_store.handle);
 		if (rercd != REMIXAPI_ERROR_CODE_SUCCESS)
 		{
 			ri.Printf(PRINT_ERROR, "RMX failed to create light %d\n", rercd);
+			return;
 		}
-
-		//rercd = remixInterface.DrawLightInstance(light_store.handle);
-		//if(rercd != REMIXAPI_ERROR_CODE_SUCCESS)
-		//{
-		//	ri.Printf(PRINT_ERROR, "RMX failed to activate light %d\n", rercd);
-		//}
-
 		switch (light_type)
 		{
 		case LIGHT_DYNAMIC:
