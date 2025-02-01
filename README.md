@@ -7,18 +7,24 @@ Since the sources are available I decided to add a DX9 adapter, and then maybe, 
 Will it work? Who knows, let's find out!  
 
 ### WIP:  
-- translate OGL calls to DX9: 90%
-- add camera: 60%
-- tinker with the geometry to get stable hashes: 0%
-- convert dynamic lights to T&L: 90%
+- translate OGL calls to DX9: 90% (some debug drawcalls still remain)
+- add camera: 99%
+- tinker with the geometry to get stable hashes: 70% (we have stable hashes with r_novis, need optimisation)
+- convert dynamic lights to T&L: 90% (dynamic lights [torches, fireplaces, flamethrower] are sent via DX9 lights [max. 8], coronas are sent as Remix sphere lights)
 
 ### Notable engine cvars:
+- r_flares (default "1"): set to "4" to convert flares into remix sphere lights
+- cg_coronas (default "1"): set to "2" to send all coronas to renderer -since coronas are converted into remix lights, this avoids the pop-in effect
+- r_nocull (default "0"): set to "1" so that geometry in player proximity, which is not in camera-view, is still drawn -this prevents building shadows dissapearing
+- r_novis (default "0"): set to "1" so that all map surfaces(triangles) are drawn -this helps to stabilize the geometry hashes in remix
 - r_wolffog (default "1"): set to "0" to disable ingame fog (there may still be geometry with fog texture applied, those will not be disabled)
 - r_nomipmaps (default "0"): set to "1" to disable mipmap creation for all textures
 - r_swapInterval (default "1"): controls VSYNC; "1" is VSYNC-ON, "0" is VSYNC-OFF
 - r_multisample (default "4"): controls multisample antialiasing
 - r_ext_texture_filter_anisotropic (default "0"): was disabled in OGL mode, it can now be set to 1,2,4,8,16 with Texture filter "trilinear" (r_textureMode "GL_LINEAR_MIPMAP_LINEAR") to allow anisotropy for texture minification filter (when textured object gets farther/smaller)
 - r_systemdll (default "0"): set only on command line; a value of "1" loads the system's d3d9.dll, and ignores any d3d9.dll present in the executable's current dir
+
+New console commands: increment/decrement can be used for integer cvars
 
 ### Included in this project:
 - The StackWalker [https://github.com/JochenKalmbach/StackWalker] project to print crash info

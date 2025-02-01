@@ -52,6 +52,9 @@ extern "C"
 #include <stdint.h>
 #include "fnv.h"
 
+#define REMIX_ALLOW_X86
+#include "remix_c.h"
+
 typedef struct
 {
 	WNDPROC wndproc;
@@ -78,8 +81,13 @@ static void DX9imp_CheckHardwareGamma(void);
 static void DX9imp_RestoreGamma(void);
 static void qdx_log_comment(const char *name, UINT vattbits, const void *ptr);
 static void qdx_log_matrix(const char *name, const float *mat);
+static void qdx_log_dump_buffer(const char* name, const uint32_t* buffer, uint32_t size, int wide, uint32_t hashid, uint32_t hashbuf);
+static void qdx_before_frame_end();
+static void qdx_frame_ended();
 static void qdx_clear_buffers();
 static void qdx_texobj_delete_all();
+static void qdx_lights_clear(unsigned int light_types);
+static void qdx_lights_draw();
 
 typedef enum {
 	RSERR_OK,
@@ -133,6 +141,8 @@ extern "C" void     QGL_DMY_Shutdown(void);
 //
 static dx9state_t dx9imp_state = { 0 };
 struct qdx9_state qdx;
+static remixapi_Interface remixInterface = { 0 };
+static bool remixOnline = false;
 
 cvar_t  *r_allowSoftwareGL;     // don't abort out if the pixelformat claims software
 cvar_t  *r_maskMinidriver;      // allow a different dll name to be treated as if it were opengl32.dll
@@ -169,6 +179,32 @@ static qboolean GLW_StartDriverAndSetMode(const char *drivername,
 			ri.Printf(PRINT_ALL, "...Error: cannot find Direct3DCreate9\n");
 			return qfalse;
 		}
+
+		PFN_remixapi_InitializeLibrary remix_init = (PFN_remixapi_InitializeLibrary)GetProcAddress(dx9imp_state.instDX9, "remixapi_InitializeLibrary");
+		if (remix_init == NULL)
+		{
+			ri.Printf(PRINT_WARNING, "Remix API not found\n");
+		}
+		else
+		{
+			remixapi_InitializeLibraryInfo info;
+			ZeroMemory(&info, sizeof(info));
+			{
+				info.sType = REMIXAPI_STRUCT_TYPE_INITIALIZE_LIBRARY_INFO;
+				info.version = REMIXAPI_VERSION_MAKE(REMIXAPI_VERSION_MAJOR,
+					REMIXAPI_VERSION_MINOR,
+					REMIXAPI_VERSION_PATCH);
+			}
+
+			remixapi_ErrorCode status = remix_init(&info, &remixInterface);
+			if (status != REMIXAPI_ERROR_CODE_SUCCESS) {
+				ri.Printf(PRINT_WARNING, "Remix API init error %d, did you set 'exposeRemixApi = True' in .trex\\bridge.conf ? \n", status);
+			}
+			else
+			{
+				remixOnline = true;
+			}
+		}
 	}
 
 	ZeroMemory(&qdx, sizeof(qdx));
@@ -198,7 +234,7 @@ static qboolean GLW_StartDriverAndSetMode(const char *drivername,
 		m++;
 	}
 
-	err = GLW_SetMode(drivername, r_mode->integer, colorbits, cdsFullscreen);
+	err = GLW_SetMode(drivername, mode, colorbits, cdsFullscreen);
 
 	switch (err)
 	{
@@ -1161,6 +1197,15 @@ static rserr_t GLW_SetMode(const char *drivername,
 			ri.Error(ERR_FATAL, "GLW_SetMode - Direct3D9 CreateDevice failed %d\n", HRESULT_CODE(hr));
 		}
 		qdx.devicelost = qfalse;
+
+		//if (remixOnline)
+		//{
+		//	remixapi_ErrorCode rercd = remixInterface.dxvk_RegisterD3D9Device((IDirect3DDevice9Ex*)qdx.device);
+		//	if (rercd != REMIXAPI_ERROR_CODE_SUCCESS)
+		//	{
+		//		ri.Printf(PRINT_ERROR, "RMX failed to register device %d\n", rercd);
+		//	}
+		//}
 	}
 
 	//
@@ -1477,10 +1522,10 @@ static qboolean GLW_LoadOpenGL(const char *drivername) {
 			// if we're on a 24/32-bit desktop and we're going fullscreen on an ICD,
 			// try it again but with a 16-bit desktop
 			if (glConfig.driverType == GLDRV_ICD) {
-				if (r_colorbits->integer != 16 ||
+				if (r_colorbits->integer != 32 ||
 					cdsFullscreen != qtrue ||
-					r_mode->integer != 3) {
-					if (!GLW_StartDriverAndSetMode(drivername, 3, 16, qtrue)) {
+					r_mode->integer != 4) {
+					if (!GLW_StartDriverAndSetMode(drivername, 4, 32, qtrue)) {
 						goto fail;
 					}
 				}
@@ -1517,6 +1562,7 @@ void DX9imp_EndFrame(void) {
 		}
 	}
 
+	qdx_before_frame_end();
 
 	// don't flip if drawing to front buffer
 	if (Q_stricmp(r_drawBuffer->string, "GL_FRONT") != 0) {
@@ -1538,6 +1584,8 @@ void DX9imp_EndFrame(void) {
 			}
 		}
 	}
+
+	qdx_frame_ended();
 
 	// check logging
 	QGL_DMY_EnableLogging((qboolean)r_logFile->integer);
@@ -2338,26 +2386,27 @@ void qdx_texobj_apply(int id, int sampler)
 	}
 }
 
-#define VATT_PARAM_ARRAYSZ 6
+#define VATT_PARAM_ARRAYSZ 2
 typedef struct vatt_buff_stats
 {
 	uint32_t num_entries;
-	//uint32_t checksum[VATT_PARAM_ARRAYSZ];
+	uint32_t checksum[VATT_PARAM_ARRAYSZ];
 } vatt_buff_stats_t;
 
 struct vatt_buffers
 {
 	DWORD owner;
-	LPDIRECT3DINDEXBUFFER9 i_buf;
+	UINT usage;
 	struct vatt_vert_buffer
 	{
-		LPDIRECT3DVERTEXBUFFER9 data;
+		LPDIRECT3DINDEXBUFFER9 i_buf;
+		LPDIRECT3DVERTEXBUFFER9 v_buf;
 		UINT ident;
 		UINT hash;
 		uint32_t usage;
 		vatt_buff_stats_t stats;
-	} v_buffs [500];
-} g_vatt_buffers[2];
+	} v_buffs [5000];
+} g_vatt_buffers[1];
 
 static int g_used_vatt_buffers = 0;
 
@@ -2366,14 +2415,16 @@ static void qdx_clear_buffers()
 	int i = 0, j = 0;
 	for (; i < g_used_vatt_buffers; i++)
 	{
-		if (g_vatt_buffers[i].i_buf)
-			g_vatt_buffers[i].i_buf->Release();
-
 		for (j = 0; j < ARRAYSIZE(g_vatt_buffers[i].v_buffs); j++)
 		{
-			if (g_vatt_buffers[i].v_buffs[j].data)
+			if (g_vatt_buffers[i].v_buffs[j].i_buf)
 			{
-				g_vatt_buffers[i].v_buffs[j].data->Release();
+				g_vatt_buffers[i].v_buffs[j].i_buf->Release();
+			}
+
+			if (g_vatt_buffers[i].v_buffs[j].v_buf)
+			{
+				g_vatt_buffers[i].v_buffs[j].v_buf->Release();
 			}
 		}
 	}
@@ -2384,6 +2435,16 @@ void qdx_objects_reset()
 {
 	qdx_clear_buffers();
 	qdx_texobj_delete_all();
+	qdx_lights_clear(LIGHT_DYNAMIC | LIGHT_FLARE);
+}
+
+static void qdx_frame_ended()
+{
+}
+
+static void qdx_before_frame_end()
+{
+	qdx_lights_draw();
 }
 
 static int qdx_get_buffers(LPDIRECT3DINDEXBUFFER9 *index_buf, LPDIRECT3DVERTEXBUFFER9 *vertex_buf, UINT vatt_spec, UINT vatt_stride, UINT hash, vatt_buff_stats_t **stats)
@@ -2394,15 +2455,14 @@ static int qdx_get_buffers(LPDIRECT3DINDEXBUFFER9 *index_buf, LPDIRECT3DVERTEXBU
 	{
 		if (g_vatt_buffers[i].owner == whoami)
 		{
-			if (index_buf)
-				*index_buf = g_vatt_buffers[i].i_buf;
-
 			for (j = 0; j < ARRAYSIZE(g_vatt_buffers[i].v_buffs); j++)
 			{
 				if (g_vatt_buffers[i].v_buffs[j].ident == vatt_spec && g_vatt_buffers[i].v_buffs[j].hash == hash)
 				{
+					if (index_buf)
+						*index_buf = g_vatt_buffers[i].v_buffs[j].i_buf;
 					if (vertex_buf)
-						*vertex_buf = g_vatt_buffers[i].v_buffs[j].data;
+						*vertex_buf = g_vatt_buffers[i].v_buffs[j].v_buf;
 					if (stats)
 						*stats = &g_vatt_buffers[i].v_buffs[j].stats;
 
@@ -2410,18 +2470,28 @@ static int qdx_get_buffers(LPDIRECT3DINDEXBUFFER9 *index_buf, LPDIRECT3DVERTEXBU
 				}
 				else if (g_vatt_buffers[i].v_buffs[j].ident == 0)
 				{
-					LPDIRECT3DVERTEXBUFFER9 b;
-					if (FAILED(qdx.device->CreateVertexBuffer(SHADER_MAX_VERTEXES * vatt_stride, 0, vatt_spec, D3DPOOL_MANAGED, &b, NULL)))
+					LPDIRECT3DINDEXBUFFER9 ib;
+					if (FAILED(qdx.device->CreateIndexBuffer(sizeof(qdxIndex_t) * SHADER_MAX_INDEXES, 0, QDX_INDEX_TYPE, D3DPOOL_MANAGED, &ib, NULL)))
 					{
 						return -1;
 					}
+					LPDIRECT3DVERTEXBUFFER9 vb;
+					if (FAILED(qdx.device->CreateVertexBuffer(SHADER_MAX_VERTEXES * vatt_stride, 0, vatt_spec, D3DPOOL_MANAGED, &vb, NULL)))
+					{
+						ib->Release();
+						return -1;
+					}
+					g_vatt_buffers[i].usage++;
 					g_vatt_buffers[i].v_buffs[j].ident = vatt_spec;
 					g_vatt_buffers[i].v_buffs[j].hash = hash;
-					g_vatt_buffers[i].v_buffs[j].data = b;
+					g_vatt_buffers[i].v_buffs[j].i_buf = ib;
+					g_vatt_buffers[i].v_buffs[j].v_buf = vb;
 					memset(&g_vatt_buffers[i].v_buffs[j].stats, 0, sizeof(g_vatt_buffers[i].v_buffs[j].stats));
 
+					if (index_buf)
+						*index_buf = ib;
 					if (vertex_buf)
-						*vertex_buf = b;
+						*vertex_buf = vb;
 					if (stats)
 						*stats = &g_vatt_buffers[i].v_buffs[j].stats;
 
@@ -2450,11 +2520,12 @@ static int qdx_get_buffers(LPDIRECT3DINDEXBUFFER9 *index_buf, LPDIRECT3DVERTEXBU
 		struct vatt_buffers *p = &g_vatt_buffers[g_used_vatt_buffers];
 		g_used_vatt_buffers++;
 		p->owner = whoami;
-		p->i_buf = ib;
+		p->usage = 1;
 		memset(p->v_buffs, 0, sizeof(p->v_buffs));
 		p->v_buffs[0].ident = vatt_spec;
 		p->v_buffs[0].hash = hash;
-		p->v_buffs[0].data = vb;
+		p->v_buffs[0].i_buf = ib;
+		p->v_buffs[0].v_buf = vb;
 
 		if (index_buf)
 			*index_buf = ib;
@@ -2559,6 +2630,71 @@ static void qdx_log_matrix(const char *name, const float *mat)
 	DX9imp_LogComment(comment);
 }
 
+static void qdx_log_dump_buffer(const char *name, const uint32_t *buffer, uint32_t size, int wide, uint32_t hashid, uint32_t hashbuf)
+{
+	char comment[256];
+	snprintf(comment, sizeof(comment), "[%s] %p %d hashes: %08x %08x\n", name, buffer, size, hashid, hashbuf);
+	DX9imp_LogComment(comment);
+	const uint32_t* pos = buffer;
+	int i = 0;
+	for (; i + wide < size; i += wide, pos += wide)
+	{
+		//this is crazy, need a better idea
+		switch (wide)
+		{
+		case 4:
+			snprintf(comment, sizeof(comment), "%08x %08x %08x %08x\n",
+				pos[0], pos[1], pos[2], pos[3]);
+			break;
+		case 5:
+			snprintf(comment, sizeof(comment), "%08x %08x %08x %08x %08x\n",
+				pos[0], pos[1], pos[2], pos[3], pos[4]);
+			break;
+		case 6:
+			snprintf(comment, sizeof(comment), "%08x %08x %08x %08x %08x %08x\n",
+				pos[0], pos[1], pos[2], pos[3], pos[4], pos[5]);
+			break;
+		case 7:
+			snprintf(comment, sizeof(comment), "%08x %08x %08x %08x %08x %08x %08x\n",
+				pos[0], pos[1], pos[2], pos[3], pos[4], pos[5], pos[6]);
+			break;
+		case 8:
+			snprintf(comment, sizeof(comment), "%08x %08x %08x %08x %08x %08x %08x %08x\n",
+				pos[0], pos[1], pos[2], pos[3], pos[4], pos[5], pos[6], pos[7]);
+			break;
+		case 9:
+			snprintf(comment, sizeof(comment), "%08x %08x %08x %08x %08x %08x %08x %08x %08x\n",
+				pos[0], pos[1], pos[2], pos[3], pos[4], pos[5], pos[6], pos[7], pos[8]);
+			break;
+		case 10:
+			snprintf(comment, sizeof(comment), "%08x %08x %08x %08x %08x %08x %08x %08x %08x %08x\n",
+				pos[0], pos[1], pos[2], pos[3], pos[4], pos[5], pos[6], pos[7], pos[8], pos[9]);
+			break;
+		case 11:
+			snprintf(comment, sizeof(comment), "%08x %08x %08x %08x %08x %08x %08x %08x %08x %08x %08x\n",
+				pos[0], pos[1], pos[2], pos[3], pos[4], pos[5], pos[6], pos[7], pos[8], pos[9], pos[10]);
+			break;
+		case 16:
+			snprintf(comment, sizeof(comment), "%x %x %x %x %x %x %x %x %x %x %x %x %x %x %x %x\n",
+				pos[0], pos[1], pos[2], pos[3], pos[4], pos[5], pos[6], pos[7], pos[8], pos[9], pos[10], pos[11], pos[12], pos[13], pos[14], pos[15]);
+			break;
+		default:
+			strcpy(comment, "please implement :D\n");
+			break;
+		}
+
+		DX9imp_LogComment(comment);
+	}
+	for (; i < size; i++, pos++)
+	{
+		snprintf(comment, sizeof(comment), (wide == 16 ? "%x " : "%08x "), pos[0]);
+
+		DX9imp_LogComment(comment);
+	}
+	if(size)
+		DX9imp_LogComment("\n");
+}
+
 void qdx_vatt_set2d(BOOL state)
 {
 	g_vattribs.is2dprojection = state;
@@ -2643,10 +2779,10 @@ int qdx_vattparam_to_index(vatt_param_t param)
 	case VATT_COLORVAL:
 		ret = 6;
 		break;
-		C_ASSERT(VATT_PARAM_ARRAYSZ == 6); //make sure we keep these in sync
 	default:
 		qassert(FALSE);
 	}
+	C_ASSERT(VATT_PARAM_ARRAYSZ == 2); //make sure we keep these in sync
 
 	return ret;
 }
@@ -2719,18 +2855,58 @@ static int qdx_draw_process_vertnormcoltex2(int lowindex, int highindex, byte *p
 #define ON_FAIL_RET_NULL(X) if(FAILED(X)) { qassert(FALSE); return NULL; }
 #define ON_FAIL_RETURN(X) if(FAILED(X)) { qassert(FALSE); return; }
 
+static void qdx_draw_process(uint32_t selectionbits, int index, byte* buf)
+{
+	switch (selectionbits)
+	{
+	case (VATT_VERTEX): {
+		qdx_draw_process_vert(index, index, buf);
+		break; }
+	case (VATT_VERTEX | VATT_COLOR): {
+		qdx_draw_process_vertcol(index, index, buf);
+		break; }
+	case (VATT_VERTEX | VATT_NORMAL | VATT_COLOR): {
+		qdx_draw_process_vertnormcol(index, index, buf);
+		break; }
+	case (VATT_VERTEX | VATT_COLOR | VATT_TEX0): {
+		qdx_draw_process_vertcoltex(index, index, buf);
+		break; }
+	case (VATT_VERTEX | VATT_NORMAL | VATT_COLOR | VATT_TEX0): {
+		qdx_draw_process_vertnormcoltex(index, index, buf);
+		break; }
+	case (VATT_2DVERTEX | VATT_COLOR | VATT_TEX0): {
+		qdx_draw_process_2dvertcoltex(index, index, buf);
+		break; }
+	case (VATT_VERTEX | VATT_TEX0): {
+		qdx_draw_process_verttex(index, index, buf);
+		break; }
+	case (VATT_VERTEX | VATT_NORMAL | VATT_TEX0): {
+		qdx_draw_process_vertnormtex(index, index, buf);
+		break; }
+	case (VATT_VERTEX | VATT_COLOR | VATT_TEX0 | VATT_TEX1): {
+		qdx_draw_process_vertcoltex2(index, index, buf);
+		break; }
+	case (VATT_VERTEX | VATT_NORMAL | VATT_COLOR | VATT_TEX0 | VATT_TEX1): {
+		qdx_draw_process_vertnormcoltex2(index, index, buf);
+		break; }
+	default:
+		break;
+	}
+}
+
 void qdx_vatt_assemble_and_draw(UINT numindexes, const qdxIndex_t *indexes, const char *hint)
 {
 	DWORD selected_vatt = VATTID_VERTCOL;
 	UINT stride_vatt = sizeof(vatt_vertcol_t);
-	qdxIndex_t lowindex = SHADER_MAX_INDEXES, highindex = 0, offindex = 0;
+	qdxIndex_t lowindex = SHADER_MAX_VERTEXES, highindex = 0, offindex = 0;
 	UINT selectionsize = 0;
 	UINT hash = 0;
+	int ercd;
 
 	if (r_logFile->integer)
 		qdx_log_comment(__FUNCTION__, g_vattribs.active_vatts, (const void*)numindexes);
 
-	if (0 == (g_vattribs.active_vatts & VATT_VERTEX))
+	if (0 == (g_vattribs.active_vatts & VATT_VERTEX) /*|| 0 == (g_vattribs.active_vatts & (VATT_TEX0|VATT_TEX1))*/)
 	{
 		//see comment in RE_BeginRegistration for the call to RE_StretchPic
 		//the vertex buffer pointer gets set when RB_StageIteratorGeneric is called, which is triggered by that RE_StretchPic 
@@ -2738,10 +2914,21 @@ void qdx_vatt_assemble_and_draw(UINT numindexes, const qdxIndex_t *indexes, cons
 		return;
 	}
 
-	if (hint)
-	{
-		hash = fnv_32a_str((char*)hint, 0);
-	}
+	//if (hint)
+	//{
+	//	hash = fnv_32a_str(hint, hash);
+	//}
+
+	////hash = fnv_32a_buf(&numindexes, sizeof(numindexes), hash);
+
+	//if (g_vattribs.active_vatts & VATT_TEX0)
+	//{
+	//	hash = fnv_32a_buf(&g_vattribs.textureids[0], sizeof(INT), hash);
+	//}
+	//if (g_vattribs.active_vatts & VATT_TEX1)
+	//{
+	//	hash = fnv_32a_buf(&g_vattribs.textureids[1], sizeof(INT), hash);
+	//}
 
 	for (int i = 0; i < numindexes; i++)
 	{
@@ -2755,6 +2942,8 @@ void qdx_vatt_assemble_and_draw(UINT numindexes, const qdxIndex_t *indexes, cons
 			highindex = index;
 		}
 	}
+
+	selectionsize = 1 + highindex - lowindex;
 
 	UINT selectionbits = g_vattribs.active_vatts;
 	//if (g_vattribs.is2dprojection && (0 != (g_vattribs.bits & VATT_VERTEX)))
@@ -2800,68 +2989,131 @@ void qdx_vatt_assemble_and_draw(UINT numindexes, const qdxIndex_t *indexes, cons
 		qassert(FALSE);
 	}
 
-	LPDIRECT3DINDEXBUFFER9 i_buffer;
-	LPDIRECT3DVERTEXBUFFER9 v_buffer;
+	LPDIRECT3DINDEXBUFFER9 i_buffer = 0;
+	LPDIRECT3DVERTEXBUFFER9 v_buffer = 0;
 	struct vatt_buff_stats *bufstats;
 
-	qdx_get_buffers(&i_buffer, &v_buffer, selected_vatt, stride_vatt, hash, &bufstats);
-
-	offindex = lowindex;
-
-	qdxIndex_t *pInd;
-	ON_FAIL_RETURN(i_buffer->Lock(0, numindexes * sizeof(qdxIndex_t), (void**)&pInd, D3DLOCK_DISCARD));//always discard old contents
-	for (int i = 0; i < numindexes; i++)
+	ercd = qdx_get_buffers(&i_buffer, &v_buffer, selected_vatt, stride_vatt, hash, &bufstats);
+	if (ercd != 0)
 	{
-		pInd[i] = indexes[i] - offindex;
-	}
-	i_buffer->Unlock();
-
-	selectionsize = 1 + highindex - lowindex;
-
-	byte *pVert;
-	ON_FAIL_RETURN(v_buffer->Lock((lowindex - offindex) * stride_vatt, selectionsize * stride_vatt, (void**)&pVert, D3DLOCK_DISCARD));
-
-	int vpos = 0;
-
-	switch (selectionbits)
-	{
-	case (VATT_VERTEX): {
-		vpos = qdx_draw_process_vert(lowindex, highindex, pVert);
-		break; }
-	case (VATT_VERTEX | VATT_COLOR): {
-		vpos = qdx_draw_process_vertcol(lowindex, highindex, pVert);
-		break; }
-	case (VATT_VERTEX | VATT_NORMAL | VATT_COLOR): {
-		vpos = qdx_draw_process_vertnormcol(lowindex, highindex, pVert);
-		break; }
-	case (VATT_VERTEX | VATT_COLOR | VATT_TEX0): {
-		vpos = qdx_draw_process_vertcoltex(lowindex, highindex, pVert);
-		break; }
-	case (VATT_VERTEX | VATT_NORMAL | VATT_COLOR | VATT_TEX0): {
-		vpos = qdx_draw_process_vertnormcoltex(lowindex, highindex, pVert);
-		break; }
-	case (VATT_2DVERTEX | VATT_COLOR | VATT_TEX0): {
-		vpos = qdx_draw_process_2dvertcoltex(lowindex, highindex, pVert);
-		break; }
-	case (VATT_VERTEX | VATT_TEX0): {
-		vpos = qdx_draw_process_verttex(lowindex, highindex, pVert);
-		break; }
-	case (VATT_VERTEX | VATT_NORMAL | VATT_TEX0): {
-		vpos = qdx_draw_process_vertnormtex(lowindex, highindex, pVert);
-		break; }
-	case (VATT_VERTEX | VATT_COLOR | VATT_TEX0 | VATT_TEX1): {
-		vpos = qdx_draw_process_vertcoltex2(lowindex, highindex, pVert);
-		break; }
-	case (VATT_VERTEX | VATT_NORMAL | VATT_COLOR | VATT_TEX0 | VATT_TEX1): {
-		vpos = qdx_draw_process_vertnormcoltex2(lowindex, highindex, pVert);
-		break; }
-	default:
-		qassert(FALSE);
+		ri.Error(ERR_FATAL, "DrawPrimitives - not enough buffers\n");
 	}
 
-	qassert(vpos == selectionsize);
+	bool skip_upload = false;
+	uint32_t ihash = 0;
+	uint32_t vhash = 0;
 
-	v_buffer->Unlock();
+	//ihash =  fnv_32a_buf(indexes, numindexes * sizeof(qdxIndex_t), 0);
+
+	//if ((VATT_VERTEX & selectionbits) != 0)
+	//{
+	//	vhash = fnv_32a_buf(GVATT_VERTELEM(lowindex), selectionsize * g_vattribs.strideverts, vhash);
+	//}
+	//if ((VATT_2DVERTEX & selectionbits) != 0)
+	//{
+	//	vhash = fnv_32a_buf(GVATT_VERTELEM(lowindex), selectionsize * g_vattribs.strideverts, vhash);
+	//}
+	//if ((VATT_NORMAL & selectionbits) != 0)
+	//{
+	//	vhash = fnv_32a_buf(GVATT_NORMELEM(lowindex), selectionsize * g_vattribs.stridenorms, vhash);
+	//}
+	//if ((VATT_COLOR & selectionbits) != 0)
+	//{
+	//	vhash = fnv_32a_buf(GVATT_COLRELEM(lowindex), selectionsize * g_vattribs.stridecols, vhash);
+	//}
+	//if ((VATT_TEX0 & selectionbits) != 0)
+	//{
+	//	vhash = fnv_32a_buf(GVATT_TEX0ELEM(lowindex), selectionsize * g_vattribs.stridetexcoords[0], vhash);
+	//}
+	//if ((VATT_TEX1 & selectionbits) != 0)
+	//{
+	//	vhash = fnv_32a_buf(GVATT_TEX1ELEM(lowindex), selectionsize * g_vattribs.stridetexcoords[0], vhash);
+	//}
+
+	//if ((ihash == bufstats->checksum[0]) && (vhash == bufstats->checksum[1]))
+	//{
+	//	skip_upload = true;
+	//}
+
+	if (skip_upload)
+	{
+		if (r_logFile->integer)
+			DX9imp_LogComment(">>>>>>>>>> HASHES MATCH <<<<<<<<<<\n");
+	}
+	else
+	{
+
+		offindex = lowindex;
+
+		if (0 && ihash == bufstats->checksum[0])
+		{
+			qdx_log_dump_buffer("index", 0, 0, 16, hash, ihash);
+		}
+		else
+		{
+			qdxIndex_t* pInd;
+			ON_FAIL_RETURN(i_buffer->Lock(0, numindexes * sizeof(qdxIndex_t), (void**)&pInd, D3DLOCK_DISCARD));//always discard old contents
+			for (int i = 0; i < numindexes; i++)
+			{
+				pInd[i] = indexes[i] - offindex;
+			}
+			if (r_logFile->integer)
+				qdx_log_dump_buffer("index", pInd, numindexes, 16, hash, ihash);
+
+			i_buffer->Unlock();
+		}
+
+		bufstats->checksum[0] = ihash;
+		bufstats->checksum[1] = vhash;
+		bufstats->num_entries = selectionsize;
+
+		byte* pVert;
+		ON_FAIL_RETURN(v_buffer->Lock((lowindex - offindex) * stride_vatt, selectionsize * stride_vatt, (void**)&pVert, D3DLOCK_DISCARD));
+
+		int vpos = 0;
+
+		switch (selectionbits)
+		{
+		case (VATT_VERTEX): {
+			vpos = qdx_draw_process_vert(lowindex, highindex, pVert);
+			break; }
+		case (VATT_VERTEX | VATT_COLOR): {
+			vpos = qdx_draw_process_vertcol(lowindex, highindex, pVert);
+			break; }
+		case (VATT_VERTEX | VATT_NORMAL | VATT_COLOR): {
+			vpos = qdx_draw_process_vertnormcol(lowindex, highindex, pVert);
+			break; }
+		case (VATT_VERTEX | VATT_COLOR | VATT_TEX0): {
+			vpos = qdx_draw_process_vertcoltex(lowindex, highindex, pVert);
+			break; }
+		case (VATT_VERTEX | VATT_NORMAL | VATT_COLOR | VATT_TEX0): {
+			vpos = qdx_draw_process_vertnormcoltex(lowindex, highindex, pVert);
+			break; }
+		case (VATT_2DVERTEX | VATT_COLOR | VATT_TEX0): {
+			vpos = qdx_draw_process_2dvertcoltex(lowindex, highindex, pVert);
+			break; }
+		case (VATT_VERTEX | VATT_TEX0): {
+			vpos = qdx_draw_process_verttex(lowindex, highindex, pVert);
+			break; }
+		case (VATT_VERTEX | VATT_NORMAL | VATT_TEX0): {
+			vpos = qdx_draw_process_vertnormtex(lowindex, highindex, pVert);
+			break; }
+		case (VATT_VERTEX | VATT_COLOR | VATT_TEX0 | VATT_TEX1): {
+			vpos = qdx_draw_process_vertcoltex2(lowindex, highindex, pVert);
+			break; }
+		case (VATT_VERTEX | VATT_NORMAL | VATT_COLOR | VATT_TEX0 | VATT_TEX1): {
+			vpos = qdx_draw_process_vertnormcoltex2(lowindex, highindex, pVert);
+			break; }
+		default:
+			qassert(FALSE);
+		}
+
+		qassert(vpos == selectionsize);
+		if (r_logFile->integer)
+			qdx_log_dump_buffer("vertex", (const uint32_t*)pVert, selectionsize * stride_vatt / sizeof(uint32_t), stride_vatt / sizeof(uint32_t), hash, vhash);
+
+		v_buffer->Unlock();
+	}
 
 	//qdx.device->Clear(0, NULL, D3DCLEAR_TARGET, D3DCOLOR_XRGB(0x33, 0x4d, 0x4d), 1.0f, 0);
 	//qdx.device->Clear(0, NULL, D3DCLEAR_ZBUFFER, D3DCOLOR_XRGB(0, 0, 0), 1.0f, 0);
@@ -2888,7 +3140,444 @@ void qdx_vatt_assemble_and_draw(UINT numindexes, const qdxIndex_t *indexes, cons
 
 	qdx_matrix_apply();
 
-	qdx.device->DrawIndexedPrimitive(D3DPT_TRIANGLELIST, 0, 0, vpos, 0, numindexes / 3);
+	qdx.device->DrawIndexedPrimitive(D3DPT_TRIANGLELIST, 0, 0, selectionsize, 0, numindexes / 3);
+	qdx.device->EndScene();
+}
+
+static void qdx_draw_process(uint32_t selectionbits, int index, byte* buf);
+
+void qdx_vatt_assemble_and_draw0(UINT numindexes, const qdxIndex_t *indexes, const char *hint)
+{
+	DWORD selected_vatt = VATTID_VERTCOL;
+	UINT stride_vatt = sizeof(vatt_vertcol_t);
+	qdxIndex_t lowindex = SHADER_MAX_INDEXES, highindex = 0, offindex = 0;
+	UINT selectionsize = 0;
+	UINT hash = 0;
+
+	if (r_logFile->integer)
+		qdx_log_comment(__FUNCTION__, g_vattribs.active_vatts, (const void*)numindexes);
+
+	if (0 == (g_vattribs.active_vatts & VATT_VERTEX))
+	{
+		//see comment in RE_BeginRegistration for the call to RE_StretchPic
+		//the vertex buffer pointer gets set when RB_StageIteratorGeneric is called, which is triggered by that RE_StretchPic 
+		//todo: I guess this is something we can actually fix now, since we know why it happens
+		return;
+	}
+
+	if (hint)
+	{
+		hash = fnv_32a_str(hint, hash);
+	}
+	if (g_vattribs.active_vatts & VATT_TEX0)
+	{
+		hash = fnv_32a_buf(&g_vattribs.textureids[0], sizeof(INT), hash);
+	}
+	if (g_vattribs.active_vatts & VATT_TEX1)
+	{
+		hash = fnv_32a_buf(&g_vattribs.textureids[1], sizeof(INT), hash);
+	}
+
+	for (int i = 0; i < numindexes; i++)
+	{
+		UINT index = indexes[i];
+		if (index < lowindex)
+		{
+			lowindex = index;
+		}
+		if (index > highindex)
+		{
+			highindex = index;
+		}
+	}
+
+	selectionsize = 1 + highindex - lowindex;
+
+	UINT selectionbits = g_vattribs.active_vatts;
+	//if (g_vattribs.is2dprojection && (0 != (g_vattribs.bits & VATT_VERTEX)))
+	//{
+	//	selectionbits &= ~VATT_VERTEX;
+	//	selectionbits |= VATT_2DVERTEX;
+	//}
+
+	switch (selectionbits)
+	{
+	case (VATT_VERTEX):
+	case (VATT_VERTEX | VATT_COLOR):
+		selected_vatt = VATTID_VERTCOL;
+		stride_vatt = sizeof(vatt_vertcol_t);
+		break;
+	case (VATT_VERTEX | VATT_NORMAL | VATT_COLOR):
+		selected_vatt = VATTID_VERTNORMCOL;
+		stride_vatt = sizeof(vatt_vertnormcol_t);
+		break;
+	case (VATT_VERTEX | VATT_TEX0):
+	case (VATT_VERTEX | VATT_COLOR | VATT_TEX0):
+		selected_vatt = VATTID_VERTCOLTEX;
+		stride_vatt = sizeof(vatt_vertcoltex_t);
+		break;
+	case (VATT_VERTEX | VATT_NORMAL | VATT_TEX0):
+	case (VATT_VERTEX | VATT_NORMAL | VATT_COLOR | VATT_TEX0):
+		selected_vatt = VATTID_VERTNORMCOLTEX;
+		stride_vatt = sizeof(vatt_vertnormcoltex_t);
+		break;
+	case (VATT_2DVERTEX | VATT_COLOR | VATT_TEX0):
+		selected_vatt = VATTID_2DVERTCOLTEX;
+		stride_vatt = sizeof(vatt_2dvertcoltex_t);
+		break;
+	case (VATT_VERTEX | VATT_COLOR | VATT_TEX0 | VATT_TEX1):
+		selected_vatt = VATTID_VERTCOLTEX2;
+		stride_vatt = sizeof(vatt_vertcoltex2_t);
+		break;
+	case (VATT_VERTEX | VATT_NORMAL | VATT_COLOR | VATT_TEX0 | VATT_TEX1):
+		selected_vatt = VATTID_VERTNORMCOLTEX2;
+		stride_vatt = sizeof(vatt_vertnormcoltex2_t);
+		break;
+	default:
+		qassert(FALSE);
+	}
+
+	static void* drawbuf = 0;
+	if(drawbuf == 0)
+		drawbuf = malloc(SHADER_MAX_VERTEXES * sizeof(vatt_vertnormcoltex2_t));
+
+
+	qdx.device->BeginScene();
+
+	//qdx.device->Clear(0, NULL, D3DCLEAR_TARGET, D3DCOLOR_XRGB(0x33, 0x4d, 0x4d), 1.0f, 0);
+	//qdx.device->Clear(0, NULL, D3DCLEAR_ZBUFFER, D3DCOLOR_XRGB(0, 0, 0), 1.0f, 0);
+	//qdx.device->SetRenderState(D3DRS_LIGHTING, FALSE);
+	//qdx.device->SetRenderState(D3DRS_CULLMODE, D3DCULL_NONE);
+
+	qdx.device->SetFVF(selected_vatt);
+
+	if (g_vattribs.active_vatts & VATT_TEX0)
+	{
+		qdx_texobj_apply(g_vattribs.textureids[0], 0);
+	}
+	else qdx_texobj_apply(TEXID_NULL, 0);
+	if (g_vattribs.active_vatts & VATT_TEX1)
+	{
+		qdx_texobj_apply(g_vattribs.textureids[1], 1);
+	}
+	else qdx_texobj_apply(TEXID_NULL, 1);
+
+	qdx_matrix_apply();
+
+
+	byte* pVert = (byte*)drawbuf;
+	
+	int c_vertexes = 0;
+	int last[3] = { -1, -1, -1 };
+	qboolean even;
+
+#define element( X ) qdx_draw_process(selectionbits, (X), pVert); pVert += stride_vatt;
+
+	// prime the strip
+	element( indexes[0] );
+	element( indexes[1] );
+	element( indexes[2] );
+	c_vertexes += 3;
+
+	last[0] = indexes[0];
+	last[1] = indexes[1];
+	last[2] = indexes[2];
+
+	even = qfalse;
+
+	for(int i = 3; i < numindexes; i+=3)
+	{		// odd numbered triangle in potential strip
+		if ( !even ) {
+			// check previous triangle to see if we're continuing a strip
+			if ( ( indexes[i + 0] == last[2] ) && ( indexes[i + 1] == last[1] ) ) {
+				element( indexes[i + 2] );
+				c_vertexes++;
+				even = qtrue;
+			}
+			// otherwise we're done with this strip so finish it and start
+			// a new one
+			else
+			{
+				qdx.device->DrawPrimitiveUP(D3DPT_TRIANGLESTRIP, c_vertexes - 2, drawbuf, stride_vatt);
+				pVert = (byte*)drawbuf;
+				c_vertexes = 0;
+
+				element( indexes[i + 0] );
+				element( indexes[i + 1] );
+				element( indexes[i + 2] );
+
+				c_vertexes += 3;
+
+				even = qfalse;
+			}
+		} else
+		{
+			// check previous triangle to see if we're continuing a strip
+			if ( ( last[2] == indexes[i + 1] ) && ( last[0] == indexes[i + 0] ) ) {
+				element( indexes[i + 2] );
+				c_vertexes++;
+
+				even = qfalse;
+			}
+			// otherwise we're done with this strip so finish it and start
+			// a new one
+			else
+			{
+				qdx.device->DrawPrimitiveUP(D3DPT_TRIANGLESTRIP, c_vertexes - 2, drawbuf, stride_vatt);
+				pVert = (byte*)drawbuf;
+				c_vertexes = 0;
+
+				element( indexes[i + 0] );
+				element( indexes[i + 1] );
+				element( indexes[i + 2] );
+				c_vertexes += 3;
+
+				even = qfalse;
+			}
+		}
+
+		// cache the last three vertices
+		last[0] = indexes[i + 0];
+		last[1] = indexes[i + 1];
+		last[2] = indexes[i + 2];
+	}
+
+	if(c_vertexes > 2)
+		qdx.device->DrawPrimitiveUP(D3DPT_TRIANGLESTRIP, c_vertexes - 2, drawbuf, stride_vatt);
+
+	qdx.device->EndScene();
+}
+
+void qdx_vatt_assemble_and_draw0a(UINT numindexes, const qdxIndex_t *indexes, const char *hint)
+{
+	DWORD selected_vatt = VATTID_VERTCOL;
+	UINT stride_vatt = sizeof(vatt_vertcol_t);
+	qdxIndex_t lowindex = SHADER_MAX_INDEXES, highindex = 0, offindex = 0;
+	UINT selectionsize = 0;
+	UINT hash = 0;
+
+	if (r_logFile->integer)
+		qdx_log_comment(__FUNCTION__, g_vattribs.active_vatts, (const void*)numindexes);
+
+	if (0 == (g_vattribs.active_vatts & VATT_VERTEX))
+	{
+		//see comment in RE_BeginRegistration for the call to RE_StretchPic
+		//the vertex buffer pointer gets set when RB_StageIteratorGeneric is called, which is triggered by that RE_StretchPic 
+		//todo: I guess this is something we can actually fix now, since we know why it happens
+		return;
+	}
+
+	if (hint)
+	{
+		hash = fnv_32a_str(hint, hash);
+	}
+	if (g_vattribs.active_vatts & VATT_TEX0)
+	{
+		hash = fnv_32a_buf(&g_vattribs.textureids[0], sizeof(INT), hash);
+	}
+	if (g_vattribs.active_vatts & VATT_TEX1)
+	{
+		hash = fnv_32a_buf(&g_vattribs.textureids[1], sizeof(INT), hash);
+	}
+
+	for (int i = 0; i < numindexes; i++)
+	{
+		UINT index = indexes[i];
+		if (index < lowindex)
+		{
+			lowindex = index;
+		}
+		if (index > highindex)
+		{
+			highindex = index;
+		}
+	}
+
+	selectionsize = 1 + highindex - lowindex;
+
+	UINT selectionbits = g_vattribs.active_vatts;
+	//if (g_vattribs.is2dprojection && (0 != (g_vattribs.bits & VATT_VERTEX)))
+	//{
+	//	selectionbits &= ~VATT_VERTEX;
+	//	selectionbits |= VATT_2DVERTEX;
+	//}
+
+	switch (selectionbits)
+	{
+	case (VATT_VERTEX):
+	case (VATT_VERTEX | VATT_COLOR):
+		selected_vatt = VATTID_VERTCOL;
+		stride_vatt = sizeof(vatt_vertcol_t);
+		break;
+	case (VATT_VERTEX | VATT_NORMAL | VATT_COLOR):
+		selected_vatt = VATTID_VERTNORMCOL;
+		stride_vatt = sizeof(vatt_vertnormcol_t);
+		break;
+	case (VATT_VERTEX | VATT_TEX0):
+	case (VATT_VERTEX | VATT_COLOR | VATT_TEX0):
+		selected_vatt = VATTID_VERTCOLTEX;
+		stride_vatt = sizeof(vatt_vertcoltex_t);
+		break;
+	case (VATT_VERTEX | VATT_NORMAL | VATT_TEX0):
+	case (VATT_VERTEX | VATT_NORMAL | VATT_COLOR | VATT_TEX0):
+		selected_vatt = VATTID_VERTNORMCOLTEX;
+		stride_vatt = sizeof(vatt_vertnormcoltex_t);
+		break;
+	case (VATT_2DVERTEX | VATT_COLOR | VATT_TEX0):
+		selected_vatt = VATTID_2DVERTCOLTEX;
+		stride_vatt = sizeof(vatt_2dvertcoltex_t);
+		break;
+	case (VATT_VERTEX | VATT_COLOR | VATT_TEX0 | VATT_TEX1):
+		selected_vatt = VATTID_VERTCOLTEX2;
+		stride_vatt = sizeof(vatt_vertcoltex2_t);
+		break;
+	case (VATT_VERTEX | VATT_NORMAL | VATT_COLOR | VATT_TEX0 | VATT_TEX1):
+		selected_vatt = VATTID_VERTNORMCOLTEX2;
+		stride_vatt = sizeof(vatt_vertnormcoltex2_t);
+		break;
+	default:
+		qassert(FALSE);
+	}
+
+	static UINT* drawbuf = 0;
+	if (drawbuf == 0)
+	{
+		drawbuf = (UINT*)malloc(SHADER_MAX_VERTEXES * 2 * sizeof(UINT));
+	}
+	int drawbuf_idx = 0;
+
+	LPDIRECT3DVERTEXBUFFER9 v_buffer = 0;
+	struct vatt_buff_stats *bufstats;
+
+	int ercd = qdx_get_buffers(0, &v_buffer, selected_vatt, stride_vatt, 0, &bufstats);
+	if (ercd != 0)
+	{
+		ri.Error(ERR_FATAL, "DrawPrimitives - not enough buffers\n");
+	}
+
+	byte* pVert = 0;
+	ON_FAIL_RETURN(v_buffer->Lock(0, 0, (void**)&pVert, D3DLOCK_DISCARD));
+
+	int c_vertexes = 0;
+	int total_vertexes = 0;
+	int last[3] = { -1, -1, -1 };
+	qboolean even;
+
+#define element( X ) qdx_draw_process(selectionbits, (X), pVert); pVert += stride_vatt;
+
+	// prime the strip
+	element( indexes[0] );
+	element( indexes[1] );
+	element( indexes[2] );
+	c_vertexes += 3;
+
+	last[0] = indexes[0];
+	last[1] = indexes[1];
+	last[2] = indexes[2];
+
+	even = qfalse;
+
+	for(int i = 3; i < numindexes; i+=3)
+	{		// odd numbered triangle in potential strip
+		if ( !even ) {
+			// check previous triangle to see if we're continuing a strip
+			if ( ( indexes[i + 0] == last[2] ) && ( indexes[i + 1] == last[1] ) ) {
+				element( indexes[i + 2] );
+				c_vertexes++;
+				even = qtrue;
+			}
+			// otherwise we're done with this strip so finish it and start
+			// a new one
+			else
+			{
+				drawbuf[drawbuf_idx] = total_vertexes;
+				drawbuf[drawbuf_idx + 1] = c_vertexes - 2;
+				total_vertexes += c_vertexes;
+				drawbuf_idx += 2;
+				//qdx.device->DrawPrimitiveUP(D3DPT_TRIANGLESTRIP, c_vertexes - 2, drawbuf, stride_vatt);
+				//pVert = (byte*)drawbuf;
+				c_vertexes = 0;
+
+				element( indexes[i + 0] );
+				element( indexes[i + 1] );
+				element( indexes[i + 2] );
+
+				c_vertexes += 3;
+
+				even = qfalse;
+			}
+		} else
+		{
+			// check previous triangle to see if we're continuing a strip
+			if ( ( last[2] == indexes[i + 1] ) && ( last[0] == indexes[i + 0] ) ) {
+				element( indexes[i + 2] );
+				c_vertexes++;
+
+				even = qfalse;
+			}
+			// otherwise we're done with this strip so finish it and start
+			// a new one
+			else
+			{
+				drawbuf[drawbuf_idx] = total_vertexes;
+				drawbuf[drawbuf_idx + 1] = c_vertexes - 2;
+				total_vertexes += c_vertexes;
+				drawbuf_idx += 2;
+				//qdx.device->DrawPrimitiveUP(D3DPT_TRIANGLESTRIP, c_vertexes - 2, drawbuf, stride_vatt);
+				//pVert = (byte*)drawbuf;
+				c_vertexes = 0;
+
+				element( indexes[i + 0] );
+				element( indexes[i + 1] );
+				element( indexes[i + 2] );
+				c_vertexes += 3;
+
+				even = qfalse;
+			}
+		}
+
+		// cache the last three vertices
+		last[0] = indexes[i + 0];
+		last[1] = indexes[i + 1];
+		last[2] = indexes[i + 2];
+	}
+
+	if (c_vertexes > 2)
+	{
+		//qdx.device->DrawPrimitiveUP(D3DPT_TRIANGLESTRIP, c_vertexes - 2, drawbuf, stride_vatt);
+		drawbuf[drawbuf_idx] = total_vertexes;
+		drawbuf[drawbuf_idx + 1] = c_vertexes - 2;
+		total_vertexes += c_vertexes;
+		drawbuf_idx += 2;
+	}
+
+	v_buffer->Unlock();
+
+
+	qdx.device->BeginScene();
+
+	qdx.device->SetFVF(selected_vatt);
+
+	qdx.device->SetStreamSource(0, v_buffer, 0, stride_vatt);
+
+	if (g_vattribs.active_vatts & VATT_TEX0)
+	{
+		qdx_texobj_apply(g_vattribs.textureids[0], 0);
+	}
+	else qdx_texobj_apply(TEXID_NULL, 0);
+	if (g_vattribs.active_vatts & VATT_TEX1)
+	{
+		qdx_texobj_apply(g_vattribs.textureids[1], 1);
+	}
+	else qdx_texobj_apply(TEXID_NULL, 1);
+
+	qdx_matrix_apply();
+
+	for (int i = 0; i < drawbuf_idx; i+=2)
+	{
+		qdx.device->DrawPrimitive(D3DPT_TRIANGLESTRIP, drawbuf[i], drawbuf[i+1]);
+	}
+
 	qdx.device->EndScene();
 }
 
@@ -3313,6 +4002,284 @@ void qdx_assert_failed_str(const char* expression, const char* function, unsigne
 			ri.Error(ERR_FATAL, "assert failed: %s in %s:%d %s\n", expression, function, line, fn);
 #endif
 		}
+	}
+
+
+#define MAX_LIGHTS_REMIX 100
+#define MAX_LIGHTS_DX9 8
+typedef struct light_data
+{
+	uint64_t hash;
+	bool isRemix;
+	union
+	{
+		DWORD number;
+		remixapi_LightHandle handle;
+	};
+	float distance;
+} light_data_t;
+
+static int MAX_LIGHTS = 0;
+std::map<uint64_t, light_data_t> g_lights_dynamic;
+std::map<uint64_t, light_data_t> g_lights_flares;
+static int g_lights_number = 0;
+
+//no idea what to choose here
+#define LIGHT_RADIANCE_DYNAMIC 15000.0f
+#define LIGHT_RADIANCE_FLARES 50.0f
+#define LIGHT_RADIANCE_KILL_REDFLARES 0.3f
+
+static void qdx_ligt_color_to_radiance(remixapi_Float3D* rad, const vec3_t color, float scale, int light_type)
+{
+	float radiance = 1.0f;
+	if (light_type == LIGHT_DYNAMIC)
+	{
+		radiance = LIGHT_RADIANCE_DYNAMIC * scale;
+	}
+	else if (light_type == LIGHT_FLARE)
+	{
+		if ((color[0] == 1.0f) && (color[1] == 0.0f) && (color[2] == 0.0f))
+		{
+			radiance = LIGHT_RADIANCE_KILL_REDFLARES;
+		}
+		else
+		{
+			radiance = LIGHT_RADIANCE_FLARES;
+		}
+	}
+
+	rad->x = radiance * color[0];
+	rad->y = radiance * color[1];
+	rad->z = radiance * color[2];
+}
+
+static void qdx_lights_clear(unsigned int light_types)
+{
+	if (qdx.device)
+	{
+		if (light_types & LIGHT_DYNAMIC)
+		{
+			for (auto it = g_lights_dynamic.begin(); it != g_lights_dynamic.end(); it++)
+			{
+				if (remixOnline && it->second.isRemix)
+				{
+					remixInterface.DestroyLight(it->second.handle);
+				}
+				else
+				{
+					qdx.device->LightEnable(it->second.number, FALSE);
+				}
+			}
+			g_lights_dynamic.clear();
+		}
+		if (light_types & LIGHT_FLARE)
+		{
+			for (auto it = g_lights_flares.begin(); it != g_lights_flares.end(); it++)
+			{
+				if (remixOnline && it->second.isRemix)
+				{
+					remixInterface.DestroyLight(it->second.handle);
+				}
+				else
+				{
+					qdx.device->LightEnable(it->second.number, FALSE);
+				}
+			}
+			g_lights_flares.clear();
+		}
+	}
+}
+
+static void qdx_lights_draw()
+{
+	for (auto it = g_lights_dynamic.begin(); it != g_lights_dynamic.end(); it++)
+	{
+		if (remixOnline && it->second.isRemix)
+		{
+			remixInterface.DrawLightInstance(it->second.handle);
+		}
+		else
+		{
+			qdx.device->LightEnable(it->second.number, TRUE);
+		}
+	}
+	for (auto it = g_lights_flares.begin(); it != g_lights_flares.end(); it++)
+	{
+		remixInterface.DrawLightInstance(it->second.handle);
+	}
+}
+
+#define DYNAMIC_LIGHTS_USE_DX9 1
+
+void qdx_light_add(int light_type, int ord, float *position, float *transformed, float *color, float radius, float scale)
+{
+	remixapi_ErrorCode rercd;
+	uint64_t hash = 0;
+	uint64_t hashpos = 0;
+	uint64_t hashclr = 0;
+	uint64_t hashord = 0;
+	bool found = false;
+
+	if (0 != memcmp(position, transformed, sizeof(float)*3))
+	{
+		if (position == transformed)
+		{
+			ri.Printf(PRINT_WARNING, "light %d %d\n", light_type, ord);
+		}
+	}
+
+	//remixOnline = false;
+
+	hashpos = fnv_32a_buf(position, 3*sizeof(float), 0x55FF);
+	//hashclr = fnv_32a_buf(color, 3*sizeof(float), 0x55FF);
+	hashord = fnv_32a_buf(&ord, sizeof(ord), 0x55FF);
+
+	if (light_type == LIGHT_DYNAMIC)
+	{
+		hash = hashord;
+		//return;
+	}
+	if (light_type == LIGHT_FLARE)
+	{
+		hash = hashpos;
+		auto itm = g_lights_flares.find(hash);
+		if (itm != g_lights_flares.end())
+		{
+			//flare already exists, nothing to do
+			return;
+		}
+	}
+
+	if (ord == 0 && light_type == LIGHT_DYNAMIC)
+	{
+		qdx_lights_clear(LIGHT_DYNAMIC);
+	}
+
+	light_data_t light_store;
+	ZeroMemory(&light_store, sizeof(light_store));
+	light_store.hash = hash;
+	//light_store.distance = 0.0f;
+
+#if DYNAMIC_LIGHTS_USE_DX9
+	if (light_type == LIGHT_DYNAMIC)
+	{
+		D3DLIGHT9 light;
+		ZeroMemory(&light, sizeof(light));
+
+		light.Type = D3DLIGHT_POINT;
+		light.Diffuse.r = color[0];
+		light.Diffuse.g = color[1];
+		light.Diffuse.b = color[2];
+		light.Diffuse.a = 1.0f;
+		light.Specular.r = 1.0f;
+		light.Specular.g = 1.0f;
+		light.Specular.b = 1.0f;
+		light.Specular.a = 1.0f;
+		light.Ambient.r = 1.0f;
+		light.Ambient.g = 1.0f;
+		light.Ambient.b = 1.0f;
+		light.Ambient.a = 1.0f;
+		light.Position.x = position[0];
+		light.Position.y = position[1];
+		light.Position.z = position[2];
+
+		light.Range = 2 * radius;
+		light.Attenuation0 = 1.75f;
+		light.Attenuation1 = scale;
+		light.Attenuation2 = 0.0f;
+
+		qdx.device->SetLight(ord, &light);
+		qdx.device->LightEnable(ord, TRUE);
+
+		light_store.isRemix = false;
+		light_store.number = ord;
+		g_lights_dynamic[hash] = light_store;
+
+		return;
+	}
+#endif
+
+	if (remixOnline)
+	{
+		remixapi_LightInfoSphereEXT light_sphere;
+		ZeroMemory(&light_sphere, sizeof(light_sphere));
+
+		light_sphere.sType = REMIXAPI_STRUCT_TYPE_LIGHT_INFO_SPHERE_EXT;
+		light_sphere.position.x = position[0];
+		light_sphere.position.y = position[1];
+		light_sphere.position.z = position[2];
+		light_sphere.radius = /*(light_type == LIGHT_DYNAMIC) ? radius :*/ 6.0f;
+		light_sphere.shaping_hasvalue = 0;
+
+		remixapi_LightInfo lightinfo;
+		ZeroMemory(&lightinfo, sizeof(lightinfo));
+
+		lightinfo.sType = REMIXAPI_STRUCT_TYPE_LIGHT_INFO;
+		lightinfo.pNext = &light_sphere;
+		lightinfo.hash = hash;
+		qdx_ligt_color_to_radiance(&lightinfo.radiance, color, scale, light_type);
+
+		light_store.isRemix = true;
+		rercd = remixInterface.CreateLight(&lightinfo, &light_store.handle);
+		if (rercd != REMIXAPI_ERROR_CODE_SUCCESS)
+		{
+			ri.Printf(PRINT_ERROR, "RMX failed to create light %d\n", rercd);
+			return;
+		}
+		switch (light_type)
+		{
+		case LIGHT_DYNAMIC:
+			g_lights_dynamic[hash] = light_store;
+			break;
+		case LIGHT_FLARE:
+			g_lights_flares[hash] = light_store;
+			break;
+		default:
+			qassert(FALSE && "Unknown light type");
+		}
+	}
+	else
+	{
+		//D3DLIGHT9 light;
+		//ZeroMemory(&light, sizeof(light));
+
+		//light.Type = D3DLIGHT_POINT;
+		//light.Diffuse.r = color[0];
+		//light.Diffuse.g = color[1];
+		//light.Diffuse.b = color[2];
+		//light.Diffuse.a = 1.0f;
+		//light.Specular.r = 1.0f;
+		//light.Specular.g = 1.0f;
+		//light.Specular.b = 1.0f;
+		//light.Specular.a = 1.0f;
+		//light.Ambient.r = 1.0f;
+		//light.Ambient.g = 1.0f;
+		//light.Ambient.b = 1.0f;
+		//light.Ambient.a = 1.0f;
+		//light.Position.x = transformed[0];
+		//light.Position.y = transformed[1];
+		//light.Position.z = transformed[2];
+
+		//switch (light_type)
+		//{
+		//case LIGHT_DYNAMIC:
+		//	light.Range = 2 * radius;
+		//	light.Attenuation0 = 0.5f;
+		//	light.Attenuation1 = scale;
+		//	light.Attenuation2 = 0.01f;
+
+		//	break;
+		//case LIGHT_FLARE:
+		//	light.Range = 6;
+		//	light.Attenuation0 = 1.5f;
+		//	light.Attenuation1 = 0.5;
+		//	light.Attenuation2 = 0.0f;
+
+		//	break;
+		//}
+
+		//qdx.device->SetLight(light_num, &light);
+		//qdx.device->LightEnable(light_num, TRUE);
 	}
 }
 

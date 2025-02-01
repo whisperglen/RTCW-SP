@@ -514,6 +514,51 @@ void Cvar_Toggle_f( void ) {
 
 /*
 ============
+Cvar_Increment_f
+
+Increments a cvar for easy single key binding
+============
+*/
+void Cvar_Increment_f( void ) {
+	int v;
+
+	if ( Cmd_Argc() != 2 ) {
+		Com_Printf( "usage: increment <variable>\n" );
+		return;
+	}
+
+	v = Cvar_VariableValue( Cmd_Argv( 1 ) );
+	v = v++;
+
+	Cvar_Set2( Cmd_Argv( 1 ), va( "%i", v ), qfalse );
+}
+
+/*
+============
+Cvar_Decrement_f
+
+Decrements a cvar for easy single key binding
+============
+*/
+void Cvar_Decrement_f( void ) {
+	int v;
+
+	if ( Cmd_Argc() != 2 ) {
+		Com_Printf( "usage: toggle <variable>\n" );
+		return;
+	}
+
+	v = Cvar_VariableValue( Cmd_Argv( 1 ) );
+	if (v > 0)
+	{
+		v = v--;
+	}
+
+	Cvar_Set2( Cmd_Argv( 1 ), va( "%i", v ), qfalse );
+}
+
+/*
+============
 Cvar_Set_f
 
 Allows setting and defining of arbitrary cvars from console, even if they
@@ -898,6 +943,8 @@ void Cvar_Init( void ) {
 	cvar_cheats = Cvar_Get( "sv_cheats", "0", CVAR_SYSTEMINFO );
 
 	Cmd_AddCommand( "toggle", Cvar_Toggle_f );
+	Cmd_AddCommand( "increment", Cvar_Increment_f );
+	Cmd_AddCommand( "decrement", Cvar_Decrement_f );
 	Cmd_AddCommand( "set", Cvar_Set_f );
 	Cmd_AddCommand( "sets", Cvar_SetS_f );
 	Cmd_AddCommand( "setu", Cvar_SetU_f );

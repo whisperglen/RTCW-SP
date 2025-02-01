@@ -65,7 +65,7 @@
       <ProgramDataBaseFileName>.\Release/</ProgramDataBaseFileName>
       <WarningLevel>Level4</WarningLevel>
       <SuppressStartupBanner>true</SuppressStartupBanner>
-      <AdditionalIncludeDirectories>$(ProjectDir)dx9sdk\include;$(ProjectDir)fnvhash;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)dx9sdk\include;$(ProjectDir)fnvhash;$(ProjectDir)remix;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -96,7 +96,7 @@
       <WarningLevel>Level3</WarningLevel>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
-      <AdditionalIncludeDirectories>$(ProjectDir)dx9sdk\include;$(ProjectDir)fnvhash;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)dx9sdk\include;$(ProjectDir)fnvhash;$(ProjectDir)remix;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -303,6 +303,8 @@
     <ClInclude Include="fnvhash\fnv.h" />
     <ClInclude Include="qgl.h" />
     <ClInclude Include="qdx9.h" />
+    <ClInclude Include="remix\remix.h" />
+    <ClInclude Include="remix\remix_c.h" />
     <ClInclude Include="tr_local.h" />
     <ClInclude Include="tr_public.h" />
   </ItemGroup>

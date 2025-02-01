@@ -204,6 +204,14 @@ typedef LPDIRECT3DVERTEXBUFFER9 qdx_vbuffer_t;
 qdx_vbuffer_t qdx_vbuffer_upload(qdx_vbuffer_t buf, UINT fvfid, UINT size, void *data);
 void qdx_vbuffer_release(qdx_vbuffer_t buf);
 
+enum light_type
+{
+	LIGHT_DYNAMIC = 1,
+	LIGHT_FLARE = 2,
+};
+
+void qdx_light_add(int light_type, int ord, float *position, float *transformed, float *color, float radius, float scale);
+
 
 HRESULT qdx_compress_texture(int width, int height, const void *indata, void *outdata, int inbits, int outpitch);
 

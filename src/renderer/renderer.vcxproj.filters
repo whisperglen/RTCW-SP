@@ -34,6 +34,9 @@
     <Filter Include="Source Files\FNVHash">
       <UniqueIdentifier>{bedc2555-303c-4790-adc6-dec796ce35f8}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\remix">
+      <UniqueIdentifier>{a7924437-6840-49a1-b58a-19e8ffa7a730}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <None Include="ref_trin.def">
@@ -600,6 +603,12 @@
     </ClInclude>
     <ClInclude Include="fnvhash\fnv.h">
       <Filter>Source Files\FNVHash</Filter>
+    </ClInclude>
+    <ClInclude Include="remix\remix.h">
+      <Filter>Source Files\remix</Filter>
+    </ClInclude>
+    <ClInclude Include="remix\remix_c.h">
+      <Filter>Source Files\remix</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

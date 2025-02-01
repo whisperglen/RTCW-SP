@@ -1008,6 +1008,7 @@ void RB_RenderDrawSurfList( drawSurf_t *drawSurfs, int numDrawSurfs ) {
 	int i;
 	drawSurf_t      *drawSurf;
 	int oldSort;
+	surfaceType_t oldSurfType;
 	float originalTime;
 	int oldNumVerts, oldNumIndex;
 //GR - tessellation flag
@@ -1036,6 +1037,7 @@ void RB_RenderDrawSurfList( drawSurf_t *drawSurfs, int numDrawSurfs ) {
 	oldDepthRange = qfalse;
 	oldDlighted = qfalse;
 	oldSort = -1;
+	oldSurfType = SS_BAD;
 	depthRange = qfalse;
 // GR - tessellation also forces to draw everything
 	oldAtiTess = -1;
@@ -1043,7 +1045,7 @@ void RB_RenderDrawSurfList( drawSurf_t *drawSurfs, int numDrawSurfs ) {
 	backEnd.pc.c_surfaces += numDrawSurfs;
 
 	for ( i = 0, drawSurf = drawSurfs ; i < numDrawSurfs ; i++, drawSurf++ ) {
-		if ( drawSurf->sort == oldSort ) {
+		if ( drawSurf->sort == oldSort /*&& *drawSurf->surface == oldSurfType*/ ) {
 			// fast path, same as previous sort
 			oldNumVerts = tess.numVertexes;
 			oldNumIndex = tess.numIndexes;
@@ -1071,7 +1073,8 @@ void RB_RenderDrawSurfList( drawSurf_t *drawSurfs, int numDrawSurfs ) {
 		if ( shader != oldShader || fogNum != oldFogNum || dlighted != oldDlighted
 // GR - force draw on tessellation flag change
 			 || ( atiTess != oldAtiTess )
-			 || ( entityNum != oldEntityNum && !shader->entityMergable ) ) {
+			 || ( entityNum != oldEntityNum && !shader->entityMergable
+			 /*|| (*drawSurf->surface != oldSurfType)*/)) {
 			if ( oldShader != NULL ) {
 #ifdef __MACOS__    // crutch up the mac's limited buffer queue size
 				int t;
@@ -1095,6 +1098,7 @@ void RB_RenderDrawSurfList( drawSurf_t *drawSurfs, int numDrawSurfs ) {
 // GR - update old tessellation flag
 			oldAtiTess = atiTess;
 		}
+		oldSurfType = *drawSurf->surface;
 
 		//
 		// change the modelview matrix if needed
@@ -1644,6 +1648,7 @@ const void  *RB_DrawBuffer( const void *data ) {
 	cmd = (const drawBufferCommand_t *)data;
 
 	//qglDrawBuffer( cmd->buffer );
+	//WG nothing to do for glDrawBuffer (GL_FRONT, GL_BACK)
 
 	// clear screen for debugging
 	if ( r_clear->integer ) {

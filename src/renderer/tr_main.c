@@ -34,6 +34,7 @@ If you have questions concerning this license or the applicable additional terms
 */
 
 #include "tr_local.h"
+#include <search.h>
 
 trGlobals_t tr;
 
@@ -1420,7 +1421,44 @@ static void shortsort(drawSurf_t *lo, drawSurf_t *hi) {
 	}
 }
 
+static int qsort_compare( const void *arg1, const void *arg2 )
+{
+	int ret = 0;
+	drawSurf_t* s1 = (drawSurf_t*)arg1;
+	drawSurf_t* s2 = (drawSurf_t*)arg2;
+	if (s1->sort > s2->sort)
+	{
+		ret = 1;
+	}
+	else if (s1->sort < s2->sort)
+	{
+		ret = -1;
+	}
+	else
+	{
+		if (s1->surface > s2->surface)
+		{
+			ret = 1;
+		}
+		else
+		{
+			ret = -1;
+		}
+	}
 
+	return ret;
+}
+
+#if 1
+void qsortFast(
+	void* base,
+	unsigned num,
+	unsigned width
+)
+{
+	qsort(base, num, width, qsort_compare);
+}
+#else
 /* sort the array between lo and hi (inclusive)
 FIXME: this was lifted and modified from the microsoft lib source...
  */
@@ -1580,6 +1618,7 @@ recurse:
 		return;                 /* all subarrays done */
 	}
 }
+#endif
 
 
 //==========================================================================================
