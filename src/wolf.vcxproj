@@ -61,7 +61,7 @@
     </Midl>
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>_DEBUG;_WINDOWS;__USEA3D;__A3D_GEOM;WIN32;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>USE_STACK_WALKER;_DEBUG;_WINDOWS;__USEA3D;__A3D_GEOM;WIN32;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <BrowseInformation>true</BrowseInformation>
       <WarningLevel>Level3</WarningLevel>
@@ -180,7 +180,10 @@
     <ClCompile Include="server\sv_net_chan.c" />
     <ClCompile Include="server\sv_snapshot.c" />
     <ClCompile Include="server\sv_world.c" />
-    <ClCompile Include="win32\StackWalker\Main\StackWalker\StackWalker.cpp" />
+    <ClCompile Include="win32\StackWalker\Main\StackWalker\StackWalker.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
+    </ClCompile>
     <ClCompile Include="win32\win_crash.cpp" />
     <ClCompile Include="win32\win_input.c" />
     <ClCompile Include="win32\win_main.c" />
@@ -262,6 +265,21 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="..\README.md" />
+    <CopyFileToFolders Include="resources\autoexec.cfg">
+      <FileType>Document</FileType>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="resources\bridge.conf">
+      <FileType>Document</FileType>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="win32\package.bat">
+      <FileType>Document</FileType>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="resources\CopyCrashDumpHere.bat">
+      <FileType>Document</FileType>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="resources\CrashConfig.reg">
+      <FileType>Document</FileType>
+    </CopyFileToFolders>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

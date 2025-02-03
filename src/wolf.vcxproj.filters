@@ -290,6 +290,21 @@
     <CopyFileToFolders Include="win32\copy.bat">
       <Filter>Resource Files</Filter>
     </CopyFileToFolders>
+    <CopyFileToFolders Include="resources\bridge.conf">
+      <Filter>Resource Files</Filter>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="resources\autoexec.cfg">
+      <Filter>Resource Files</Filter>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="win32\package.bat">
+      <Filter>Resource Files</Filter>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="resources\CopyCrashDumpHere.bat">
+      <Filter>Resource Files</Filter>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="resources\CrashConfig.reg">
+      <Filter>Resource Files</Filter>
+    </CopyFileToFolders>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\README.md">

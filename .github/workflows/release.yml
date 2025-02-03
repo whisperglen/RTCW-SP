@@ -45,7 +45,7 @@ jobs:
       run: msbuild /m /p:Configuration=${{env.BUILD_CONFIGURATION}} ${{env.SOLUTION_FILE_PATH}}
 
     - name: Create artifact
-      run: 7z a -tzip wolf_dx9_game_binaries.zip .\src\Release\cgamex86.dll .\src\Release\qagamex86.dll .\src\Release\uix86.dll .\src\Release\WolfSP.exe .\src\Release\WolfSP.pdb
+      run: .\src\Release\package.bat
 
     - name: Create Release
       id: create_release

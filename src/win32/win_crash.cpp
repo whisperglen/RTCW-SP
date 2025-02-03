@@ -1,6 +1,12 @@
 
 #include <stdio.h>
+#include <windows.h>
+
+//#define USE_STACK_WALKER
+
+#ifdef USE_STACK_WALKER
 #include "StackWalker/Main/StackWalker/StackWalker.h"
+#include "StackWalker/Main/StackWalker/StackWalker.cpp"
 
 class MyStackWalker : public StackWalker
 {
@@ -38,5 +44,12 @@ extern "C" LONG WINAPI ExpFilter(EXCEPTION_POINTERS* pExp, DWORD dwExpCode)
 	MyStackWalker sw;
 	sw.ShowCallstack(GetCurrentThread(), pExp->ContextRecord);
 	return EXCEPTION_EXECUTE_HANDLER;
-	//return EXCEPTION_CONTINUE_SEARCH;
 }
+
+#else
+
+extern "C" LONG WINAPI ExpFilter(EXCEPTION_POINTERS* pExp, DWORD dwExpCode)
+{
+	return EXCEPTION_CONTINUE_SEARCH;
+}
+#endif
