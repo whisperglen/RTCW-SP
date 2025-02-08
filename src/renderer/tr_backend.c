@@ -479,8 +479,8 @@ static void SetViewportAndScissor( void ) {
 	IDirect3DDevice9_SetViewport(qdx.device, &qdx.viewport);
 	RECT scissor = { newX,//backEnd.viewParms.viewportX,
 					newY,//backEnd.viewParms.viewportY,
-					newW,//backEnd.viewParms.viewportWidth,
-					newH,//backEnd.viewParms.viewportHeight
+					newX + newW,//backEnd.viewParms.viewportWidth,
+					newY + newH,//backEnd.viewParms.viewportHeight
 	};
 	IDirect3DDevice9_SetScissorRect(qdx.device, &scissor);
 

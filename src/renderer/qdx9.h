@@ -120,7 +120,9 @@ void qdx_vatt_attach_texture(int texid, int samplernum);
 void qdx_set_global_color(DWORD color);
 void qdx_vatt_set2d(BOOL state);
 void qdx_vatt_assemble_and_draw(UINT numindexes, const qdxIndex_t *indexes, const char *hint);
+
 void qdx_objects_reset();
+void qdx_begin_loading_map(const char* mapname);
 
 #define VERT2D_ZVAL (0.5f)
 #define VERT2D_RHVVAL (1.0f)

@@ -305,6 +305,9 @@
     <CopyFileToFolders Include="resources\CrashConfig.reg">
       <Filter>Resource Files</Filter>
     </CopyFileToFolders>
+    <CopyFileToFolders Include="resources\wolf_customise.ini">
+      <Filter>Resource Files</Filter>
+    </CopyFileToFolders>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\README.md">

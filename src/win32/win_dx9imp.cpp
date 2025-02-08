@@ -4283,6 +4283,57 @@ void qdx_light_add(int light_type, int ord, float *position, float *transformed,
 	}
 }
 
+#define MINI_CASE_SENSITIVE
+#include "ini.h"
+
+mINI::INIFile g_inifile("wolf_customise.ini");
+mINI::INIStructure g_iniconf;
+
+void qdx_begin_loading_map(const char* mapname)
+{
+	static char section[256];
+	if (g_inifile.read(g_iniconf) && remixOnline)
+	{
+		const char *name = strrchr(mapname, '/');
+		if (name == NULL) return;
+		name++;
+
+		const char* ext = strrchr(mapname, '.');
+		int namelen = 0;
+		if(ext)
+		{
+			namelen = ext - name;
+		}
+		else
+		{
+			namelen = strlen(name);
+		}
+
+		mINI::INIMap<std::string> opts;
+
+		snprintf(section, sizeof(section), "rtxconf.%.*s", namelen, name);
+		if (g_iniconf.has(section))
+		{
+			opts = g_iniconf.get(section);
+		}
+		else
+		{
+			opts = g_iniconf.get("rtxconf.default");
+		}
+
+		for (auto it = opts.begin(); it != opts.end(); it++)
+		{
+			const char* key = it->first.c_str();
+			const char* value = it->second.c_str();
+			remixapi_ErrorCode rercd = remixInterface.SetConfigVariable(key, value);
+			if (REMIXAPI_ERROR_CODE_SUCCESS != rercd)
+			{
+				ri.Printf(PRINT_ERROR, "RMX failed to set config var %d\n", rercd);
+			}
+		}
+	}
+}
+
 /**
 * This will load dxgi and dx11 and dx12 headers and contaminate the namespace with all that new directx info;
 *  implement the bare minimum here, or move it to another cpp file.

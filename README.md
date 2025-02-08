@@ -15,7 +15,8 @@ Will it work? Who knows, let's find out!
 ### Notable engine cvars:
 - r_flares (default "1"): set to "4" to convert flares into remix sphere lights
 - cg_coronas (default "1"): set to "2" to send all coronas to renderer -since coronas are converted into remix lights, this avoids the pop-in effect
-- r_nocull (default "0"): set to "1" so that geometry in player proximity, which is not in camera-view, is still drawn -this prevents building shadows dissapearing
+- r_dynamiclight (default "1"): keep on 1 to send dynamic light sources (torches, fireplaces, muzzle flashes) to remix as light sources (idtech3 renders them in software)
+- r_nocull (default "0"): set to "1" so that geometry in player proximity, which is not in camera-view, is still drawn -this prevents shadows from buildings to dissapear
 - r_novis (default "0"): set to "1" so that all map surfaces(triangles) are drawn -this helps to stabilize the geometry hashes in remix
 - r_wolffog (default "1"): set to "0" to disable ingame fog (there may still be geometry with fog texture applied, those will not be disabled)
 - r_nomipmaps (default "0"): set to "1" to disable mipmap creation for all textures
@@ -27,9 +28,10 @@ Will it work? Who knows, let's find out!
 New console commands: increment/decrement can be used for integer cvars
 
 ### Included in this project:
-- The StackWalker [https://github.com/JochenKalmbach/StackWalker] project to print crash info
-- part of Microsoft DirectXTex [https://github.com/microsoft/DirectXTex] for DXT5 texture compression
-- FNV hash [http://isthe.com/chongo/tech/comp/fnv/]
+- The StackWalker [https://github.com/JochenKalmbach/StackWalker] project to print crash info (BSD-2-Clause license)
+- part of Microsoft DirectXTex [https://github.com/microsoft/DirectXTex] for DXT5 texture compression (MIT license)
+- FNV hash [http://isthe.com/chongo/tech/comp/fnv/] (CC0 1.0 Public Domain license)
+- mINI library [https://github.com/metayeti/mINI] (MIT license)
 
 ### *Original README text follows:*
 

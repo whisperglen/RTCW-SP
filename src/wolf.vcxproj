@@ -90,6 +90,9 @@
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <OutputFile>Debug/wolf.bsc</OutputFile>
     </Bscmake>
+    <PostBuildEvent>
+      <Command>cd $(OutDir) &amp;&amp; copy.bat</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <Midl>
@@ -131,6 +134,9 @@
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <OutputFile>.\Release/wolf.bsc</OutputFile>
     </Bscmake>
+    <PostBuildEvent>
+      <Command>cd $(OutDir) &amp;&amp; copy.bat</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="client\cl_cgame.c" />
@@ -278,6 +284,9 @@
       <FileType>Document</FileType>
     </CopyFileToFolders>
     <CopyFileToFolders Include="resources\CrashConfig.reg">
+      <FileType>Document</FileType>
+    </CopyFileToFolders>
+    <CopyFileToFolders Include="resources\wolf_customise.ini">
       <FileType>Document</FileType>
     </CopyFileToFolders>
   </ItemGroup>

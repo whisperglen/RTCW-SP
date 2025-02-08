@@ -1421,7 +1421,7 @@ void CG_RegisterWeapon( int weaponNum ) {
 		break;
 
 	case WP_FLAMETHROWER:
-		MAKERGB( weaponInfo->flashDlightColor, 1.0, 0.7, 0.4 );
+		//MAKERGB( weaponInfo->flashDlightColor, 1.0, 0.7, 0.4 );
 		break;
 
 	case WP_TESLA:
