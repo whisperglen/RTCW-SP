@@ -35,7 +35,8 @@ If you have questions concerning this license or the applicable additional terms
 //
 
 // surface geometry should not exceed these limits
-#define SHADER_MAX_VERTEXES 1000000
+//#define SHADER_MAX_VERTEXES 4000
+#define SHADER_MAX_VERTEXES 50000 //WG: about 28000 is enough for all maps with novis on
 #define SHADER_MAX_INDEXES  ( 6 * SHADER_MAX_VERTEXES )
 
 

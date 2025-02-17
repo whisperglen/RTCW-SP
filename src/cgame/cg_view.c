@@ -237,7 +237,7 @@ static void CG_CalcVrect( void ) {
 	lbheight = ysize * 0.85;
 	lbdiff = ysize - lbheight;
 
-	if ( cg_letterbox.integer ) {
+	if ( 0 && cg_letterbox.integer ) {
 		ysize = lbheight;
 //		if(letterbox_frac != 0) {
 //			letterbox_frac -= 0.01f;	// (SA) TODO: make non fps dependant

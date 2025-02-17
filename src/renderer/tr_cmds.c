@@ -468,6 +468,11 @@ void RE_BeginFrame( stereoFrame_t stereoFrame ) {
 		}
 	}
 
+	if (r_flares->modified)
+	{
+		r_flares->modified = qfalse;
+		qdx_lights_clear(LIGHT_FLARE);
+	}
 
 	//
 	// gamma stuff

@@ -158,6 +158,7 @@ cvar_t  *r_intensity;
 cvar_t  *r_lockpvs;
 cvar_t  *r_noportals;
 cvar_t  *r_portalOnly;
+cvar_t  *r_maxvertexes;
 
 cvar_t  *r_subdivisions;
 cvar_t  *r_lodCurveError;
@@ -1021,6 +1022,7 @@ void R_Register( void ) {
 	r_smp = ri.Cvar_Get( "r_smp", "0", CVAR_ARCHIVE | CVAR_LATCH | CVAR_ROM );
 	r_ignoreFastPath = ri.Cvar_Get( "r_ignoreFastPath", "1", CVAR_ARCHIVE | CVAR_LATCH );
 	r_nomipmaps = ri.Cvar_Get("r_nomipmaps", "0", CVAR_ARCHIVE | CVAR_LATCH);
+	r_maxvertexes = ri.Cvar_Get("r_maxvertexes", "0", CVAR_TEMP | CVAR_NORESTART);
 
 	//
 	// temporary latched variables that can only change over a restart

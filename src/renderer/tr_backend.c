@@ -1008,7 +1008,7 @@ void RB_RenderDrawSurfList( drawSurf_t *drawSurfs, int numDrawSurfs ) {
 	int i;
 	drawSurf_t      *drawSurf;
 	int oldSort;
-	surfaceType_t oldSurfType;
+	surfaceType_t *oldSurfType;
 	float originalTime;
 	int oldNumVerts, oldNumIndex;
 //GR - tessellation flag
@@ -1045,7 +1045,7 @@ void RB_RenderDrawSurfList( drawSurf_t *drawSurfs, int numDrawSurfs ) {
 	backEnd.pc.c_surfaces += numDrawSurfs;
 
 	for ( i = 0, drawSurf = drawSurfs ; i < numDrawSurfs ; i++, drawSurf++ ) {
-		if ( drawSurf->sort == oldSort /*&& *drawSurf->surface == oldSurfType*/ ) {
+		if ( drawSurf->sort == oldSort /*&& drawSurf->surface == oldSurfType*/ ) {
 			// fast path, same as previous sort
 			oldNumVerts = tess.numVertexes;
 			oldNumIndex = tess.numIndexes;
@@ -1073,8 +1073,8 @@ void RB_RenderDrawSurfList( drawSurf_t *drawSurfs, int numDrawSurfs ) {
 		if ( shader != oldShader || fogNum != oldFogNum || dlighted != oldDlighted
 // GR - force draw on tessellation flag change
 			 || ( atiTess != oldAtiTess )
-			 || ( entityNum != oldEntityNum && !shader->entityMergable
-			 /*|| (*drawSurf->surface != oldSurfType)*/)) {
+			 || ( entityNum != oldEntityNum && !shader->entityMergable)
+			 /*|| (drawSurf->surface != oldSurfType)*/) {
 			if ( oldShader != NULL ) {
 #ifdef __MACOS__    // crutch up the mac's limited buffer queue size
 				int t;
@@ -1098,7 +1098,7 @@ void RB_RenderDrawSurfList( drawSurf_t *drawSurfs, int numDrawSurfs ) {
 // GR - update old tessellation flag
 			oldAtiTess = atiTess;
 		}
-		oldSurfType = *drawSurf->surface;
+		oldSurfType = drawSurf->surface;
 
 		//
 		// change the modelview matrix if needed

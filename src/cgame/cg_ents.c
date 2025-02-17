@@ -416,7 +416,7 @@ void CG_AddLightstyle( centity_t *cent ) {
 	stringlength = strlen( cent->dl_stylestring );
 
 	// it's been a long time since you were updated, lets assume a reset
-	if ( otime > 2 * LS_FRAMETIME ) {
+	if ( otime > 2 * cg_lightstyle_ms.integer/*LS_FRAMETIME*/ ) {
 		otime = 0;
 		cent->dl_frame = cent->dl_oldframe = 0;
 		cent->dl_backlerp = 0;
@@ -424,7 +424,7 @@ void CG_AddLightstyle( centity_t *cent ) {
 
 	cent->dl_time = cg.time;
 
-	offset = ( (float)otime ) / LS_FRAMETIME;
+	offset = ( (float)otime ) / cg_lightstyle_ms.integer/*LS_FRAMETIME*/;
 	offsetwhole = (int)offset;
 
 	cent->dl_backlerp += offset;

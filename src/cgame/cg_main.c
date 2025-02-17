@@ -207,6 +207,7 @@ vmCvar_t cg_emptyswitch;
 vmCvar_t cg_particleDist;
 vmCvar_t cg_particleLOD;
 vmCvar_t cg_blinktime;      //----(SA)	added
+vmCvar_t cg_lightstyle_ms;
 
 vmCvar_t cg_smoothClients;
 vmCvar_t pmove_fixed;
@@ -359,6 +360,8 @@ cvarTable_t cvarTable[] = {
 	{ &cg_particleLOD, "cg_particleLOD", "0", CVAR_ARCHIVE },
 	{ &cg_useSuggestedWeapons, "cg_useSuggestedWeapons", "1", CVAR_ARCHIVE }, //----(SA)	added
 //----(SA)	end
+
+	{ &cg_lightstyle_ms, "cg_lightstyle_ms", "100", CVAR_ARCHIVE }, //----(SA)	added
 
 	// Ridah, more fluid rotations
 	{ &cg_swingSpeed, "cg_swingSpeed", "0.1", CVAR_CHEAT },   // was 0.3 for Q3

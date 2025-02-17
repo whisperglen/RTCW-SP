@@ -86,7 +86,6 @@ static void qdx_before_frame_end();
 static void qdx_frame_ended();
 static void qdx_clear_buffers();
 static void qdx_texobj_delete_all();
-static void qdx_lights_clear(unsigned int light_types);
 static void qdx_lights_draw();
 
 typedef enum {
@@ -1180,10 +1179,11 @@ static rserr_t GLW_SetMode(const char *drivername,
 		}
 	}
 
+	D3DPRESENT_PARAMETERS d3dpp;
+	fill_in_d3dpresentparams(d3dpp);
+
 	if (qdx.device == 0)
 	{
-		D3DPRESENT_PARAMETERS d3dpp;
-		fill_in_d3dpresentparams(d3dpp);
 
 		HRESULT hr = qdx.d3d->CreateDevice(D3DADAPTER_DEFAULT,
 			D3DDEVTYPE_HAL,
@@ -1206,6 +1206,34 @@ static rserr_t GLW_SetMode(const char *drivername,
 		//		ri.Printf(PRINT_ERROR, "RMX failed to register device %d\n", rercd);
 		//	}
 		//}
+	}
+	else
+	{
+		HRESULT hr = D3D_OK;
+
+		for (int tries = 20; tries > 0; tries--) //2sec..
+		{
+			// get the current status of the device
+			hr = qdx.device->TestCooperativeLevel();
+
+			switch (hr)
+			{
+			case D3DERR_DEVICENOTRESET:
+			case D3D_OK:
+				hr = qdx.device->Reset(&d3dpp);
+				if (SUCCEEDED(hr))
+				{
+					//finished
+					break;
+				}
+				//fallthrough
+			default:
+			case D3DERR_DEVICELOST:
+				// device is lost, wait some time
+				Sleep(100);
+				break;
+			}
+		}
 	}
 
 	//
@@ -1556,10 +1584,37 @@ void DX9imp_EndFrame(void) {
 		r_swapInterval->modified = qfalse;
 
 		if (!glConfig.stereoEnabled) {    // why?
-			if (qwglSwapIntervalEXT) {
-				qwglSwapIntervalEXT(r_swapInterval->integer);
-			}
+			//if (qwglSwapIntervalEXT) {
+			//	qwglSwapIntervalEXT(r_swapInterval->integer);
+			//}
 		}
+	}
+
+	if (qdx.devicelost)
+	{
+		// here we get the current status of the device
+		HRESULT hr = qdx.device->TestCooperativeLevel();
+
+		switch (hr)
+		{
+		case D3D_OK:
+			//qdx.devicelost = qfalse;
+			break;
+
+		case D3DERR_DEVICELOST:
+			// device is still lost
+			break;
+
+		case D3DERR_DEVICENOTRESET:
+			// device is ready to be reset
+			break;
+
+		default:
+			break;
+		}
+
+		Sleep( 10 );
+		return;
 	}
 
 	qdx_before_frame_end();
@@ -1748,13 +1803,20 @@ void DX9imp_Shutdown(void) {
 		{
 			//there seems to be a problem with releasing and recreating the device if fullscreen edit: or windowed
 			//todo: am I doing something wrong with the objects? not releasing everything?
-			//dx9imp_state.cdsFullscreen = qfalse;
+			dx9imp_state.cdsFullscreen = qfalse;
 			D3DPRESENT_PARAMETERS d3dpp;
 			fill_in_d3dpresentparams(d3dpp);
 			HRESULT hr = qdx.device->Reset(&d3dpp);
 			if (FAILED(hr))
 			{
-				ri.Printf(PRINT_ERROR, "failed to reset device: %d\n", HRESULT_CODE(hr));
+				ri.Printf(PRINT_ERROR, "Shutdown: failed to reset device: %d\n", HRESULT_CODE(hr));
+			}
+			hr = qdx.device->TestCooperativeLevel();
+			if (hr == D3DERR_DEVICELOST) {
+				ri.Printf(PRINT_ERROR, "Shutdown: D3DERR_DEVICELOST\n");
+				qdx.devicelost = qtrue;
+			} else if(hr != D3D_OK) {
+				ri.Printf(PRINT_ERROR, "Shutdown: tcl code  %d\n", hr);
 			}
 		}
 #endif
@@ -2375,14 +2437,14 @@ void qdx_texobj_apply(int id, int sampler)
 
 	if (qdx.device)
 	{
-		qdx.device->SetTexture(sampler, opt.obj);
-		qdx.device->SetSamplerState(sampler, D3DSAMP_MINFILTER, opt.flt_min);
-		qdx.device->SetSamplerState(sampler, D3DSAMP_MIPFILTER, opt.flt_mip);
-		qdx.device->SetSamplerState(sampler, D3DSAMP_MAGFILTER, opt.flt_mag);
-		qdx.device->SetSamplerState(sampler, D3DSAMP_MAXANISOTROPY, opt.anisotropy);
-		qdx.device->SetSamplerState(sampler, D3DSAMP_ADDRESSU, opt.wrap_u);
-		qdx.device->SetSamplerState(sampler, D3DSAMP_ADDRESSV, opt.wrap_v);
-		qdx.device->SetSamplerState(sampler, D3DSAMP_BORDERCOLOR, opt.border);
+		qdx.device->SetTexture(sampler_id, opt.obj);
+		qdx.device->SetSamplerState(sampler_id, D3DSAMP_MINFILTER, opt.flt_min);
+		qdx.device->SetSamplerState(sampler_id, D3DSAMP_MIPFILTER, opt.flt_mip);
+		qdx.device->SetSamplerState(sampler_id, D3DSAMP_MAGFILTER, opt.flt_mag);
+		qdx.device->SetSamplerState(sampler_id, D3DSAMP_MAXANISOTROPY, opt.anisotropy);
+		qdx.device->SetSamplerState(sampler_id, D3DSAMP_ADDRESSU, opt.wrap_u);
+		qdx.device->SetSamplerState(sampler_id, D3DSAMP_ADDRESSV, opt.wrap_v);
+		qdx.device->SetSamplerState(sampler_id, D3DSAMP_BORDERCOLOR, opt.border);
 	}
 }
 
@@ -3560,16 +3622,7 @@ void qdx_vatt_assemble_and_draw0a(UINT numindexes, const qdxIndex_t *indexes, co
 
 	qdx.device->SetStreamSource(0, v_buffer, 0, stride_vatt);
 
-	if (g_vattribs.active_vatts & VATT_TEX0)
-	{
-		qdx_texobj_apply(g_vattribs.textureids[0], 0);
-	}
-	else qdx_texobj_apply(TEXID_NULL, 0);
-	if (g_vattribs.active_vatts & VATT_TEX1)
-	{
-		qdx_texobj_apply(g_vattribs.textureids[1], 1);
-	}
-	else qdx_texobj_apply(TEXID_NULL, 1);
+	qdx_texture_apply();
 
 	qdx_matrix_apply();
 
@@ -3579,6 +3632,43 @@ void qdx_vatt_assemble_and_draw0a(UINT numindexes, const qdxIndex_t *indexes, co
 	}
 
 	qdx.device->EndScene();
+}
+
+BOOL qdx_vbuffer_steps(qdx_vbuffer_t *buf, UINT vattid, UINT size, void **outmem)
+{
+	LPDIRECT3DVERTEXBUFFER9 v_buffer = *buf;
+
+	if (v_buffer == NULL)
+	{
+		if (FAILED(
+			qdx.device->CreateVertexBuffer(size,
+				0,
+				vattid,
+				D3DPOOL_MANAGED,
+				&v_buffer,
+				NULL)))
+		{
+			return FALSE;
+		}
+		*buf = v_buffer;
+	}
+
+	if (v_buffer != NULL)
+	{
+		if (outmem)
+		{
+			if (FAILED(v_buffer->Lock(0, 0, outmem, D3DLOCK_DISCARD)))
+			{
+				return FALSE;
+			}
+		}
+		else
+		{
+			v_buffer->Unlock();
+		}
+	}
+
+	return TRUE;
 }
 
 qdx_vbuffer_t qdx_vbuffer_upload(qdx_vbuffer_t buf, UINT vattid, UINT size, void *data)
@@ -3600,7 +3690,7 @@ qdx_vbuffer_t qdx_vbuffer_upload(qdx_vbuffer_t buf, UINT vattid, UINT size, void
 	{
 		VOID* pVoid;
 
-		ON_FAIL_RET_NULL(v_buffer->Lock(0, 0, (void**)&pVoid, 0));
+		ON_FAIL_RET_NULL(v_buffer->Lock(0, 0, (void**)&pVoid, D3DLOCK_DISCARD));
 		memcpy(pVoid, data, size);
 		v_buffer->Unlock();
 	}
@@ -3846,6 +3936,20 @@ static int qdx_draw_process_vertnormcoltex2(int lowindex, int highindex, byte *p
 	return vpos;
 }
 
+void qdx_texture_apply()
+{
+	if (g_vattribs.active_vatts & VATT_TEX0)
+	{
+		qdx_texobj_apply(g_vattribs.textureids[0], 0);
+	}
+	else qdx_texobj_apply(TEXID_NULL, 0);
+	if (g_vattribs.active_vatts & VATT_TEX1)
+	{
+		qdx_texobj_apply(g_vattribs.textureids[1], 1);
+	}
+	else qdx_texobj_apply(TEXID_NULL, 1);
+}
+
 #include <stack>
 
 std::stack<D3DXMATRIX> g_matview_stack;
@@ -4053,7 +4157,7 @@ static void qdx_ligt_color_to_radiance(remixapi_Float3D* rad, const vec3_t color
 	rad->z = radiance * color[2];
 }
 
-static void qdx_lights_clear(unsigned int light_types)
+void qdx_lights_clear(unsigned int light_types)
 {
 	if (qdx.device)
 	{

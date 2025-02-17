@@ -822,7 +822,7 @@ void SetWolfSpawnWeapons( gclient_t *client ) {
 	client->ps.teamNum = pc;
 
 // JPW NERVE -- zero out all ammo counts
-	memset( client->ps.ammo,MAX_WEAPONS,sizeof( int ) );
+	memset( client->ps.ammo, 0, sizeof( client->ps.ammo ) );
 
 	// All players start with a knife (not OR-ing so that it clears previous weapons)
 	client->ps.weapons[0] = 0;
@@ -1210,7 +1210,7 @@ G_ParseAnimationFiles
 =============
 */
 qboolean G_ParseAnimationFiles( char *modelname, gclient_t *cl ) {
-	char text[100000];
+	static char text[100000];
 	char filename[MAX_QPATH];
 	fileHandle_t f;
 	int len;

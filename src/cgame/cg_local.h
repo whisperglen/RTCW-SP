@@ -1722,6 +1722,7 @@ extern vmCvar_t cg_particleLOD;
 extern vmCvar_t cg_smoothClients;
 extern vmCvar_t pmove_fixed;
 extern vmCvar_t pmove_msec;
+extern vmCvar_t cg_lightstyle_ms;
 
 extern vmCvar_t cg_cameraOrbit;
 extern vmCvar_t cg_cameraOrbitDelay;

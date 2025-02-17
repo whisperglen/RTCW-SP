@@ -95,6 +95,7 @@ void qdx_texobj_delete(int id);
 void qdx_texobj_map(int id, textureptr_t tex);
 D3DFORMAT qdx_texture_format(UINT in);
 D3DTEXTUREADDRESS qdx_texture_wrapmode(int gl_mode);
+void qdx_texture_apply();
 
 typedef enum vatt_param
 {
@@ -204,6 +205,7 @@ typedef struct vatt_vertnormcoltex2
 typedef LPDIRECT3DVERTEXBUFFER9 qdx_vbuffer_t;
 
 qdx_vbuffer_t qdx_vbuffer_upload(qdx_vbuffer_t buf, UINT fvfid, UINT size, void *data);
+BOOL qdx_vbuffer_steps(qdx_vbuffer_t* buf, UINT vattid, UINT size, void** outmem);
 void qdx_vbuffer_release(qdx_vbuffer_t buf);
 
 enum light_type
@@ -213,6 +215,7 @@ enum light_type
 };
 
 void qdx_light_add(int light_type, int ord, float *position, float *transformed, float *color, float radius, float scale);
+void qdx_lights_clear(unsigned int light_types);
 
 
 HRESULT qdx_compress_texture(int width, int height, const void *indata, void *outdata, int inbits, int outpitch);

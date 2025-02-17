@@ -15,6 +15,7 @@ Will it work? Who knows, let's find out!
 ### Notable engine cvars:
 - r_flares (default "1"): set to "4" to convert flares into remix sphere lights
 - cg_coronas (default "1"): set to "2" to send all coronas to renderer -since coronas are converted into remix lights, this avoids the pop-in effect
+- cg_lightstyle_ms (default "100"): strobing light frametime (100ms is 10fps); I have set this to 200 (5fps) since I find the flashing effect annoying
 - r_dynamiclight (default "1"): keep on 1 to send dynamic light sources (torches, fireplaces, muzzle flashes) to remix as light sources (idtech3 renders them in software)
 - r_nocull (default "0"): set to "1" so that geometry in player proximity, which is not in camera-view, is still drawn -this prevents shadows from buildings to dissapear
 - r_novis (default "0"): set to "1" so that all map surfaces(triangles) are drawn -this helps to stabilize the geometry hashes in remix

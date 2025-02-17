@@ -23,7 +23,7 @@ assault
 -------------
 Mission 4:
 
-smf
+sfm
 factory
 trainyards
 swf

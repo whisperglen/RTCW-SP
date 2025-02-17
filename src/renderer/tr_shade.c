@@ -1722,6 +1722,11 @@ void RB_EndSurface( void ) {
 		ri.Error( ERR_DROP, "RB_EndSurface() - SHADER_MAX_VERTEXES hit" );
 	}
 
+	if (tess.numVertexes > r_maxvertexes->integer)
+	{
+		Cvar_Set("r_maxvertexes", va("%d", tess.numVertexes));
+	}
+
 	if ( tess.shader == tr.shadowShader ) {
 		RB_ShadowTessEnd();
 		return;

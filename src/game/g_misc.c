@@ -1220,31 +1220,6 @@ void SP_corona( gentity_t *ent ) {
 // (SA) dlights and dlightstyles
 
 char* predef_lightstyles[] = {
-	"mmnnmmnonmmnonmmnoonmmnonoqonmmnoo",//"mmnmmommommnonmmonqnmmo",
-	"abcdefghijklmnopqrstuvwxyzyxwvutsrqponmlkjihgfedcba",
-	"mmmmmaaaaammmmmaaaaaabcdefgabcdefg",
-	"ma",
-	"jklmnopqrstuvwxyzyxwvutsrqponmlkj",
-	"nnmmnoonoqonnmnonmmnnmnonmnonmnoonnoo",//"nmonqnmomnmomomono",
-	"mmmaaaabcdefgmmmmaaaammmaamm",
-	"aaaaaaaazzzzzzzz",
-	"mmamammmmammamamaaamammma",
-	"abcdefghijklmnopqrrqponmlkjihgfedcba",
-	"mmnommomhkmmomnonmmonqnmmo",
-	"kmamaamakmmmaakmamakmakmmmma",
-	"kmmmakakmmaaamammamkmamakmmmma",
-	"mmnnoonnmmmmmmmmmnmmmmnonmmmmmmm",
-	"mmmmnonmmmmnmmmmmnonmmmmmnmmmmmmm",
-	"zzzzzzzzaaaaaaaa",
-	"zzzzzzzzaaaaaaaaaaaaaaaa",
-	"aaaaaaaazzzzzzzzaaaaaaaa",
-	"aaaaaaaaaaaaaaaazzzzzzzz",
-	"nnmnoonnoonnmnonmmnnmnonmnonmnoonnoo",//"nmononmomnmomomono"
-	"hhijklmmmmmmmmmlkjihh",
-	"omnmlnmononmomnmomomono",
-};
-
-char* predef_lightstyles_orig[] = {
 	"mmnmmommommnonmmonqnmmo",
 	"abcdefghijklmnopqrstuvwxyzyxwvutsrqponmlkjihgfedcba",
 	"mmmmmaaaaammmmmaaaaaabcdefgabcdefg",
@@ -1263,10 +1238,7 @@ char* predef_lightstyles_orig[] = {
 	"zzzzzzzzaaaaaaaa",
 	"zzzzzzzzaaaaaaaaaaaaaaaa",
 	"aaaaaaaazzzzzzzzaaaaaaaa",
-	"aaaaaaaaaaaaaaaazzzzzzzz",
-	"nmononmomnmomomono",
-	//"hhijklmmmmmmmmmlkjihh",
-	//"omnmlnmononmomnmomomono",
+	"aaaaaaaaaaaaaaaazzzzzzzz"
 };
 
 
@@ -1383,14 +1355,6 @@ void SP_dlight( gentity_t *ent ) {
 	}
 
 	if ( ent->dl_stylestring && strlen( ent->dl_stylestring ) ) {    // if they're specified in a string, use em
-		for (int i = 0; i < sizeof(predef_lightstyles_orig) / sizeof(predef_lightstyles_orig[0]); i++)
-		{
-			if (0 == strcmp(ent->dl_stylestring, predef_lightstyles_orig[i]))
-			{
-				ent->dl_stylestring = predef_lightstyles[i];
-				break;
-			}
-		}
 	} else if ( style )       {
 		style = max( 1, style );                                  // clamp to predefined range
 		style = min( 19, style );

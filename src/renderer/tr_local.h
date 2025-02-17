@@ -1171,6 +1171,7 @@ extern cvar_t  *r_swapInterval;
 extern cvar_t  *r_textureMode;
 extern cvar_t  *r_offsetFactor;
 extern cvar_t  *r_offsetUnits;
+extern cvar_t  *r_maxvertexes;
 
 extern cvar_t  *r_fullbright;                   // avoid lightmap pass
 extern cvar_t  *r_lightmap;                     // render lightmaps only

@@ -109,10 +109,18 @@ void R_Fog(glfog_t *curfog) {
 
 //	if(curfog->mode != setfog.mode || !setfog.registered) {
 	//qglFogi(GL_FOG_MODE, curfog->mode);
-	//eye radial is supported by vertexfog only
-	IDirect3DDevice9_SetRenderState(qdx.device, D3DRS_FOGVERTEXMODE, fogmode);
-	//pixel fox should be able to do eye radial too; todo: check how to enable
-	//IDirect3DDevice9_SetRenderState(qdx.device, D3DRS_FOGTABLEMODE, fogmode);
+	if (r_wolffog->integer == 1)
+	{
+		//eye radial is supported by vertexfog only
+		IDirect3DDevice9_SetRenderState(qdx.device, D3DRS_FOGVERTEXMODE, fogmode);
+		IDirect3DDevice9_SetRenderState(qdx.device, D3DRS_FOGTABLEMODE, D3DFOG_NONE);
+	}
+	else
+	{
+		//pixel fox should be able to do eye radial too; todo: check how to enable
+		IDirect3DDevice9_SetRenderState(qdx.device, D3DRS_FOGTABLEMODE, fogmode);
+		IDirect3DDevice9_SetRenderState(qdx.device, D3DRS_FOGVERTEXMODE, D3DFOG_NONE);
+	}
 	//		setfog.mode = curfog->mode;
 	//	}
 	//	if(curfog->color[0] != setfog.color[0] || curfog->color[1] != setfog.color[1] || curfog->color[2] != setfog.color[2] || !setfog.registered) {
@@ -166,9 +174,13 @@ void R_Fog(glfog_t *curfog) {
 
 	//----(SA)	added
 		// NV fog mode
-	if (glConfig.NVFogAvailable) {
+	if ((r_wolffog->integer == 1) && glConfig.NVFogAvailable && (glConfig.NVFogMode == (int)GL_EYE_RADIAL_NV)) {
 		//qglFogi( GL_FOG_DISTANCE_MODE_NV, glConfig.NVFogMode );
 		IDirect3DDevice9_SetRenderState(qdx.device, D3DRS_RANGEFOGENABLE, TRUE);
+	}
+	else
+	{
+		IDirect3DDevice9_SetRenderState(qdx.device, D3DRS_RANGEFOGENABLE, FALSE);
 	}
 	//----(SA)	end
 
@@ -1434,15 +1446,18 @@ static int qsort_compare( const void *arg1, const void *arg2 )
 	{
 		ret = -1;
 	}
-	else
+	else //equals
 	{
 		if (s1->surface > s2->surface)
 		{
 			ret = 1;
 		}
-		else
+		else if (s1->surface < s2->surface)
 		{
 			ret = -1;
+		}
+		else //equals
+		{
 		}
 	}
 
@@ -1849,27 +1864,77 @@ R_DebugPolygon
 void R_DebugPolygon(int color, int numPoints, float *points) {
 	int i;
 
+	if (numPoints <= 2)
+	{
+		qassert(FALSE && "too few points in R_DebugPolygon");
+		return;
+	}
+
 	GL_State(GLS_DEPTHMASK_TRUE | GLS_SRCBLEND_ONE | GLS_DSTBLEND_ONE);
 
 	// draw solid shade
+	vatt_vertcol_t *data = 0;
+	qdx_vbuffer_t qbuf = 0;
+	qdx_vbuffer_steps(&qbuf, VATTID_VERTCOL, sizeof(vatt_vertcol_t) * numPoints, &data);
 
-	qglColor3f(color & 1, (color >> 1) & 1, (color >> 2) & 1);
-	qglBegin(GL_POLYGON);
+	//qglColor3f(color & 1, (color >> 1) & 1, (color >> 2) & 1);
+	D3DCOLOR dxcol = D3DCOLOR_XRGB(color & 1, (color >> 1) & 1, (color >> 2) & 1);
+	//qglBegin(GL_POLYGON);
 	for (i = 0; i < numPoints; i++) {
-		qglVertex3fv(points + i * 3);
+		//qglVertex3fv(points + i * 3);
+		memcpy(data->XYZ, points + i * 3, sizeof(data->XYZ));
+		data->COLOR = dxcol;
+		data++;
 	}
-	qglEnd();
+	//qglEnd();
+	//finished adding data
+	qdx_vbuffer_steps(&qbuf, VATTID_VERTCOL, sizeof(vatt_vertcol_t) * numPoints, NULL);
+
+	DX9_BEGIN_SCENE();
+
+	IDirect3DDevice9_SetFVF(qdx.device, VATTID_VERTCOL);
+
+	IDirect3DDevice9_SetStreamSource(qdx.device, 0, qbuf, 0, sizeof(vatt_vertcol_t));
+	qdx_texture_apply();
+	qdx_matrix_apply();
+
+	IDirect3DDevice9_DrawPrimitive(qdx.device, D3DPT_TRIANGLEFAN, 0, numPoints - 2);
+
+	DX9_END_SCENE();
 
 	// draw wireframe outline
 	GL_State(GLS_POLYMODE_LINE | GLS_DEPTHMASK_TRUE | GLS_SRCBLEND_ONE | GLS_DSTBLEND_ONE);
-	qglDepthRange(0, 0);
-	qglColor3f(1, 1, 1);
-	qglBegin(GL_POLYGON);
+	//qglDepthRange(0, 0);
+	qdx_depthrange(0, 0);
+	//qglColor3f(1, 1, 1);
+	dxcol = D3DCOLOR_XRGB(255, 255, 255);
+	//qglBegin(GL_POLYGON);
+	qdx_vbuffer_steps(&qbuf, VATTID_VERTCOL, sizeof(vatt_vertcol_t) * numPoints, &data);
 	for (i = 0; i < numPoints; i++) {
-		qglVertex3fv(points + i * 3);
+		//qglVertex3fv(points + i * 3);
+		memcpy(data->XYZ, points + i * 3, sizeof(data->XYZ));
+		data->COLOR = dxcol;
+		data++;
 	}
-	qglEnd();
-	qglDepthRange(0, 1);
+	//qglEnd();
+	//finished adding data
+	qdx_vbuffer_steps(&qbuf, VATTID_VERTCOL, sizeof(vatt_vertcol_t) * numPoints, NULL);
+
+	DX9_BEGIN_SCENE();
+
+	IDirect3DDevice9_SetFVF(qdx.device, VATTID_VERTCOL);
+
+	IDirect3DDevice9_SetStreamSource(qdx.device, 0, qbuf, 0, sizeof(vatt_vertcol_t));
+	//qdx_texture_apply();
+	//qdx_matrix_apply();
+
+	IDirect3DDevice9_DrawPrimitive(qdx.device, D3DPT_TRIANGLEFAN, 0, numPoints - 2);
+
+	DX9_END_SCENE();
+	qdx_vbuffer_release(qbuf);
+
+	//qglDepthRange(0, 1);
+	qdx_depthrange(0, 1);
 }
 
 /*
