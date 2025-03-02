@@ -435,10 +435,12 @@ static void SetViewportAndScissor( void ) {
 	//qglLoadMatrixf( backEnd.viewParms.projectionMatrix );
 	D3DMATRIX mat;
 	memcpy(&mat.m[0][0], backEnd.viewParms.projectionMatrix, sizeof(mat.m));
+	float znear = r_znear->value;
+	float zfar = backEnd.viewParms.zFar;
 	// m[2][2] = zf /( zn - zf )
 	// m[3][2] = zn * zf /( zn - zf )
-	mat.m[2][2] = qdx.zfar / (qdx.znear - qdx.zfar);
-	mat.m[3][2] = qdx.znear * qdx.zfar / (qdx.znear - qdx.zfar);
+	mat.m[2][2] = zfar / (znear - zfar);
+	mat.m[3][2] = znear * zfar / (znear - zfar);
 	qdx_matrix_set(D3DTS_PROJECTION, &mat.m[0][0]);
 	//qglMatrixMode( GL_MODELVIEW );
 
@@ -460,14 +462,19 @@ static void SetViewportAndScissor( void ) {
 		tY = newY;
 		newY = 0;
 	}
-	//if (newW > glConfig.vidWidth)
-	//{
-	//	newW = glConfig.vidWidth;
-	//}
-	//if (newH > glConfig.vidHeight)
-	//{
-	//	newH = glConfig.vidHeight;
-	//}
+
+	if ( need_transf )
+	{
+		D3DMATRIX mat0;
+		float w = 2.0f * znear / mat.m[0][0];
+		float h = 2.0f * znear / mat.m[1][1];
+		float cX = (-tX / newW - 0.5f) * w;
+		float cY = (tY / newH - 0.5f) * h;
+		//float x0 = 2.0f * (-tX) / newW;
+		//float x1 = 2.0f * (tY) / newH;
+		D3DXMatrixPerspectiveOffCenterRH(&mat0, cX, cX + w, cY, cY + h, znear, zfar);
+		qdx_matrix_set(D3DTS_PROJECTION, &mat0.m[0][0]);
+	}
 
 	qdx_assign_viewport(&qdx.viewport,
 					newX,//backEnd.viewParms.viewportX,
@@ -891,7 +898,7 @@ void RB_ZombieFXDecompose( int oldNumVerts, int numSurfVerts, float deltaTimeSca
 	norm = tess.normal[oldNumVerts];
 
 	for ( i = 0; i < numSurfVerts; i++, vertColors += 4, xyz += 4, norm += 4 ) {
-		alpha = 255.0 * ( (float)( 1 + i % 3 ) / 3.0 ) * deltaTimeScale * 2;
+		alpha = 255.0f * ( (float)( 1 + i % 3 ) / 3.0f ) * deltaTimeScale * 2.0f;
 		if ( alpha > 255.0 ) {
 			alpha = 255.0;
 		}
@@ -1007,7 +1014,7 @@ void RB_RenderDrawSurfList( drawSurf_t *drawSurfs, int numDrawSurfs ) {
 	qboolean depthRange, oldDepthRange;
 	int i;
 	drawSurf_t      *drawSurf;
-	int oldSort;
+	unsigned int oldSort;
 	surfaceType_t *oldSurfType;
 	float originalTime;
 	int oldNumVerts, oldNumIndex;

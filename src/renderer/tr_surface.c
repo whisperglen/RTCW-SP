@@ -144,8 +144,8 @@ void RB_AddQuadStampFadingCornersExt( vec3_t origin, vec3_t left, vec3_t up, byt
 	tess.texCoords[ndx + 3][0][0] = tess.texCoords[ndx + 3][1][0] = s1;
 	tess.texCoords[ndx + 3][0][1] = tess.texCoords[ndx + 3][1][1] = t2;
 
-	tess.texCoords[ndx + 4][0][0] = tess.texCoords[ndx + 4][1][0] = ( s1 + s2 ) / 2.0;
-	tess.texCoords[ndx + 4][0][1] = tess.texCoords[ndx + 4][1][1] = ( t1 + t2 ) / 2.0;
+	tess.texCoords[ndx + 4][0][0] = tess.texCoords[ndx + 4][1][0] = ( s1 + s2 ) / 2.0f;
+	tess.texCoords[ndx + 4][0][1] = tess.texCoords[ndx + 4][1][1] = ( t1 + t2 ) / 2.0f;
 
 	// center uses full alpha
 	*( unsigned int * ) &tess.vertexColors[ndx + 4] =
@@ -1161,7 +1161,7 @@ static float    LodErrorForVolume( vec3_t local, float radius ) {
 
 	// never let it go negative
 	if ( r_lodCurveError->value < 0 ) {
-		return 0;
+		return 0.0f;
 	}
 
 	world[0] = local[0] * backEnd.or.axis[0][0] + local[1] * backEnd.or.axis[1][0] +

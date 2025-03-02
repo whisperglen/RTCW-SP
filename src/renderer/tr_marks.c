@@ -191,7 +191,7 @@ void R_BoxSurfaces_r( mnode_t *node, vec3_t mins, vec3_t maxs, surfaceType_t **l
 			s = BoxOnPlaneSide( mins, maxs, &( ( srfSurfaceFace_t * ) surf->data )->plane );
 			if ( s == 1 || s == 2 ) {
 				surf->viewCount = tr.viewCount;
-			} else if ( DotProduct( ( ( srfSurfaceFace_t * ) surf->data )->plane.normal, dir ) < -0.5 )         {
+			} else if ( DotProduct( ( ( srfSurfaceFace_t * ) surf->data )->plane.normal, dir ) < -0.5f )         {
 				// don't add faces that make sharp angles with the projection direction
 				surf->viewCount = tr.viewCount;
 			}
@@ -387,7 +387,7 @@ int R_OldMarkFragments( int numPoints, const vec3_t *points, const vec3_t projec
 					VectorSubtract( clipPoints[0][2], clipPoints[0][1], v2 );
 					CrossProduct( v1, v2, normal );
 					VectorNormalizeFast( normal );
-					if ( DotProduct( normal, projectionDir ) < -0.1 ) {
+					if ( DotProduct( normal, projectionDir ) < -0.1f ) {
 						// add the fragments of this triangle
 						R_AddMarkFragments( numClipPoints, clipPoints,
 											numPlanes, normals, dists,
@@ -411,7 +411,7 @@ int R_OldMarkFragments( int numPoints, const vec3_t *points, const vec3_t projec
 					VectorSubtract( clipPoints[0][2], clipPoints[0][1], v2 );
 					CrossProduct( v1, v2, normal );
 					VectorNormalizeFast( normal );
-					if ( DotProduct( normal, projectionDir ) < -0.05 ) {
+					if ( DotProduct( normal, projectionDir ) < -0.05f ) {
 						// add the fragments of this triangle
 						R_AddMarkFragments( numClipPoints, clipPoints,
 											numPlanes, normals, dists,
@@ -429,7 +429,7 @@ int R_OldMarkFragments( int numPoints, const vec3_t *points, const vec3_t projec
 
 			surf = ( srfSurfaceFace_t * ) surfaces[i];
 			// check the normal of this face
-			if ( DotProduct( surf->plane.normal, projectionDir ) > -0.5 ) {
+			if ( DotProduct( surf->plane.normal, projectionDir ) > -0.5f ) {
 				continue;
 			}
 
@@ -478,7 +478,7 @@ int R_MarkFragments( int orientation, const vec3_t *points, const vec3_t project
 					 int maxPoints, vec3_t pointBuffer, int maxFragments, markFragment_t *fragmentBuffer ) {
 	int numsurfaces, numPlanes;
 	int i, j, k, m, n;
-	surfaceType_t   *surfaces[4096];
+	static surfaceType_t   *surfaces[4096];
 	vec3_t mins, maxs;
 	int returnedFragments;
 	int returnedPoints;
@@ -637,7 +637,7 @@ Com_Printf("bestnormal: %1.1f %1.1f %1.1f \n", bestnormal[0], bestnormal[1], bes
 					VectorSubtract( clipPoints[0][2], clipPoints[0][1], v2 );
 					CrossProduct( v1, v2, normal );
 					VectorNormalize( normal );
-					if ( DotProduct( normal, projectionDir ) < -0.1 ) {
+					if ( DotProduct( normal, projectionDir ) < -0.1f ) {
 						// add the fragments of this triangle
 						R_AddMarkFragments( numClipPoints, clipPoints,
 											numPlanes, normals, dists,
@@ -661,7 +661,7 @@ Com_Printf("bestnormal: %1.1f %1.1f %1.1f \n", bestnormal[0], bestnormal[1], bes
 					VectorSubtract( clipPoints[0][2], clipPoints[0][1], v2 );
 					CrossProduct( v1, v2, normal );
 					VectorNormalize( normal );
-					if ( DotProduct( normal, projectionDir ) < -0.05 ) {
+					if ( DotProduct( normal, projectionDir ) < -0.05f ) {
 						// add the fragments of this triangle
 						R_AddMarkFragments( numClipPoints, clipPoints,
 											numPlanes, normals, dists,
@@ -701,7 +701,7 @@ Com_Printf("bestnormal: %1.1f %1.1f %1.1f \n", bestnormal[0], bestnormal[1], bes
 				dot = DotProduct( center, surf->plane.normal );
 				dot -= surf->plane.dist;
 				// check the normal of this face
-				if ( dot < -epsilon && DotProduct( surf->plane.normal, projectionDir ) >= 0.01 ) {
+				if ( dot < -epsilon && DotProduct( surf->plane.normal, projectionDir ) >= 0.01f ) {
 					continue;
 				} else if ( fabs( dot ) > radius ) {
 					continue;
@@ -772,8 +772,8 @@ Com_Printf("bestnormal: %1.1f %1.1f %1.1f \n", bestnormal[0], bestnormal[1], bes
 						// Ridah, calculate ST's
 						for ( j = 0 ; j < ( returnedPoints - oldNumPoints ) ; j++ ) {
 							VectorSubtract( (float *)pointBuffer + 5 * ( oldNumPoints + j ), newCenter, delta );
-							*( (float *)pointBuffer + 5 * ( oldNumPoints + j ) + 3 ) = 0.5 + DotProduct( delta, axis[1] ) * texCoordScale;
-							*( (float *)pointBuffer + 5 * ( oldNumPoints + j ) + 4 ) = 0.5 + DotProduct( delta, axis[2] ) * texCoordScale;
+							*( (float *)pointBuffer + 5 * ( oldNumPoints + j ) + 3 ) = 0.5f + DotProduct( delta, axis[1] ) * texCoordScale;
+							*( (float *)pointBuffer + 5 * ( oldNumPoints + j ) + 4 ) = 0.5f + DotProduct( delta, axis[2] ) * texCoordScale;
 						}
 					}
 

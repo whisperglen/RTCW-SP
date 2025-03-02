@@ -27,7 +27,6 @@ struct qdx9_state
 	D3DCOLOR clearColor;
 	D3DCULL cull_mode;
 	float depth_clear;
-	float znear, zfar;
 	D3DVIEWPORT9 viewport;
 	D3DMATRIX camera;
 	D3DMATRIX world;

@@ -1598,10 +1598,11 @@ void RB_StageIteratorLightmappedMultitexture( void ) {
 #ifdef __MACOS__    //DAJ ATI
 		qglPNTrianglesiATI( GL_PN_TRIANGLES_ATI, 1 );
 #else
-		qglEnable( GL_PN_TRIANGLES_ATI ); // ATI PN-Triangles extension
+		//qglEnable( GL_PN_TRIANGLES_ATI ); // ATI PN-Triangles extension
 #endif
-		qglNormalPointer( GL_FLOAT, 16, input->normal );
+		//qglNormalPointer( GL_FLOAT, 16, input->normal );
 	}
+	qdx_vatt_set_buffer(VATT_NORMAL, input->normal, 0, 4);
 
 #ifdef REPLACE_MODE
 	qglDisableClientState( GL_COLOR_ARRAY );

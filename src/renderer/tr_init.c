@@ -84,6 +84,7 @@ cvar_t  *r_lodscale;
 cvar_t  *r_norefresh;
 cvar_t  *r_drawentities;
 cvar_t  *r_drawworld;
+cvar_t  *r_drawpolys;
 cvar_t  *r_speeds;
 cvar_t  *r_fullbright;
 cvar_t  *r_novis;
@@ -830,8 +831,6 @@ void GL_SetDefaultState( void ) {
 		//qglTexParameterf( GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, glConfig.maxAnisotropy);
 	}
 
-	qdx.znear = r_znear->value;
-
 //----(SA)	end
 }
 
@@ -1110,6 +1109,7 @@ void R_Register( void ) {
 
 	r_nocurves = ri.Cvar_Get( "r_nocurves", "0", CVAR_CHEAT );
 	r_drawworld = ri.Cvar_Get( "r_drawworld", "1", CVAR_CHEAT );
+	r_drawpolys = ri.Cvar_Get( "r_drawpolys", "1", CVAR_CHEAT );
 	r_lightmap = ri.Cvar_Get( "r_lightmap", "0", CVAR_CHEAT );
 	r_portalOnly = ri.Cvar_Get( "r_portalOnly", "0", CVAR_CHEAT );
 

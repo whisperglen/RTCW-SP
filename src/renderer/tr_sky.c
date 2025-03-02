@@ -387,17 +387,18 @@ static void DrawSkySide( struct image_s *image, const int mins[2], const int max
 		for ( s = mins[0] + HALF_SKY_SUBDIVISIONS; s <= maxs[0] + HALF_SKY_SUBDIVISIONS; s++ )
 		{
 			memcpy(p->XYZ, s_skyPoints[t][s], 3 * sizeof(float));
+			p->COLOR = qdx.crt_color;
 			memcpy(p->UV, s_skyTexCoords[t][s], 2 * sizeof(float));
 			p++;
 			//qglTexCoord2fv( s_skyTexCoords[t][s] );
 			//qglVertex3fv( s_skyPoints[t][s] );
 
-			p->COLOR = qdx.crt_color;
 
 			//qglTexCoord2fv( s_skyTexCoords[t + 1][s] );
 			//qglVertex3fv( s_skyPoints[t + 1][s] );
-			memcpy(p->XYZ, s_skyTexCoords[t + 1][s], 3 * sizeof(float));
-			memcpy(p->UV, s_skyPoints[t + 1][s], 2 * sizeof(float));
+			memcpy(p->XYZ, s_skyPoints[t + 1][s], 3 * sizeof(float));
+			p->COLOR = qdx.crt_color;
+			memcpy(p->UV, s_skyTexCoords[t + 1][s], 2 * sizeof(float));
 			p++;
 			
 			primitives += 2;
@@ -441,17 +442,17 @@ static void DrawSkySideInner( struct image_s *image, const int mins[2], const in
 		for (s = mins[0] + HALF_SKY_SUBDIVISIONS; s <= maxs[0] + HALF_SKY_SUBDIVISIONS; s++)
 		{
 			memcpy(p->XYZ, s_skyPoints[t][s], 3 * sizeof(float));
+			p->COLOR = qdx.crt_color;
 			memcpy(p->UV, s_skyTexCoords[t][s], 2 * sizeof(float));
 			p++;
 			//qglTexCoord2fv( s_skyTexCoords[t][s] );
 			//qglVertex3fv( s_skyPoints[t][s] );
 
-			p->COLOR = qdx.crt_color;
-
 			//qglTexCoord2fv( s_skyTexCoords[t + 1][s] );
 			//qglVertex3fv( s_skyPoints[t + 1][s] );
-			memcpy(p->XYZ, s_skyTexCoords[t + 1][s], 3 * sizeof(float));
-			memcpy(p->UV, s_skyPoints[t + 1][s], 2 * sizeof(float));
+			memcpy(p->XYZ, s_skyPoints[t + 1][s], 3 * sizeof(float));
+			p->COLOR = qdx.crt_color;
+			memcpy(p->UV, s_skyTexCoords[t + 1][s], 2 * sizeof(float));
 			p++;
 
 			primitives += 2;
@@ -825,13 +826,13 @@ void R_InitSkyTexCoords( float heightCloud ) {
 
 				// compute parametric value 'p' that intersects with cloud layer
 				p = ( 1.0f / ( 2 * DotProduct( skyVec, skyVec ) ) ) *
-					( -2 * skyVec[2] * radiusWorld +
-					  2 * sqrt( SQR( skyVec[2] ) * SQR( radiusWorld ) +
-								2 * SQR( skyVec[0] ) * radiusWorld * heightCloud +
+					( -2.0f * skyVec[2] * radiusWorld +
+					  2.0f * sqrt( SQR( skyVec[2] ) * SQR( radiusWorld ) +
+								2.0f * SQR( skyVec[0] ) * radiusWorld * heightCloud +
 								SQR( skyVec[0] ) * SQR( heightCloud ) +
-								2 * SQR( skyVec[1] ) * radiusWorld * heightCloud +
+								2.0f * SQR( skyVec[1] ) * radiusWorld * heightCloud +
 								SQR( skyVec[1] ) * SQR( heightCloud ) +
-								2 * SQR( skyVec[2] ) * radiusWorld * heightCloud +
+								2.0f * SQR( skyVec[2] ) * radiusWorld * heightCloud +
 								SQR( skyVec[2] ) * SQR( heightCloud ) ) );
 
 				s_cloudTexP[i][t][s] = p;

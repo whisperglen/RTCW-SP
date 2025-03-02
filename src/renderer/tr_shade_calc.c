@@ -666,7 +666,7 @@ void RB_CalcColorFromEntity( unsigned char *dstColors ) {
 void RB_CalcColorFromOneMinusEntity( unsigned char *dstColors ) {
 	int i;
 	int *pColors = ( int * ) dstColors;
-	unsigned char invModulate[3];
+	unsigned char invModulate[4];
 	int c;
 
 	if ( !backEnd.currentEntity ) {
@@ -778,7 +778,7 @@ void RB_CalcWaveAlpha( const waveForm_t *wf, unsigned char *dstColors ) {
 */
 void RB_CalcModulateColorsByFog( unsigned char *colors ) {
 	int i;
-	float texCoords[SHADER_MAX_VERTEXES][2];
+	static float texCoords[SHADER_MAX_VERTEXES][2];
 
 	// calculate texcoords so we can derive density
 	// this is not wasted, because it would only have
@@ -798,7 +798,7 @@ void RB_CalcModulateColorsByFog( unsigned char *colors ) {
 */
 void RB_CalcModulateAlphasByFog( unsigned char *colors ) {
 	int i;
-	float texCoords[SHADER_MAX_VERTEXES][2];
+	static float texCoords[SHADER_MAX_VERTEXES][2];
 
 	// calculate texcoords so we can derive density
 	// this is not wasted, because it would only have
@@ -816,7 +816,7 @@ void RB_CalcModulateAlphasByFog( unsigned char *colors ) {
 */
 void RB_CalcModulateRGBAsByFog( unsigned char *colors ) {
 	int i;
-	float texCoords[SHADER_MAX_VERTEXES][2];
+	static float texCoords[SHADER_MAX_VERTEXES][2];
 
 	// calculate texcoords so we can derive density
 	// this is not wasted, because it would only have
@@ -888,6 +888,7 @@ void RB_CalcFogTexCoords( float *st ) {
 		eyeT = DotProduct( backEnd.or.viewOrigin, fogDepthVector ) + fogDepthVector[3];
 	} else {
 		eyeT = 1;   // non-surface fog always has eye inside
+		fogDepthVector[0] = fogDepthVector[1] = fogDepthVector[2] = fogDepthVector[3] = 0.0f;
 	}
 
 	// see if the viewpoint is outside
@@ -909,16 +910,16 @@ void RB_CalcFogTexCoords( float *st ) {
 
 		// partially clipped fogs use the T axis
 		if ( eyeOutside ) {
-			if ( t < 1.0 ) {
-				t = 1.0 / 32; // point is outside, so no fogging
+			if ( t < 1.0f ) {
+				t = 1.0f / 32; // point is outside, so no fogging
 			} else {
-				t = 1.0 / 32 + 30.0 / 32 * t / ( t - eyeT );    // cut the distance at the fog plane
+				t = 1.0f / 32 + 30.0f / 32 * t / ( t - eyeT );    // cut the distance at the fog plane
 			}
 		} else {
 			if ( t < 0 ) {
-				t = 1.0 / 32; // point is outside, so no fogging
+				t = 1.0f / 32; // point is outside, so no fogging
 			} else {
-				t = 31.0 / 32;
+				t = 31.0f / 32;
 			}
 		}
 
@@ -1017,8 +1018,8 @@ void RB_CalcTurbulentTexCoords( const waveForm_t *wf, float *st ) {
 		float s = st[0];
 		float t = st[1];
 
-		st[0] = s + tr.sinTable[ ( ( int ) ( ( ( tess.xyz[i][0] + tess.xyz[i][2] ) * 1.0 / 128 * 0.125 + now ) * FUNCTABLE_SIZE ) ) & ( FUNCTABLE_MASK ) ] * wf->amplitude;
-		st[1] = t + tr.sinTable[ ( ( int ) ( ( tess.xyz[i][1] * 1.0 / 128 * 0.125 + now ) * FUNCTABLE_SIZE ) ) & ( FUNCTABLE_MASK ) ] * wf->amplitude;
+		st[0] = s + tr.sinTable[ ( ( int ) ( ( ( tess.xyz[i][0] + tess.xyz[i][2] ) * 1.0f / 128 * 0.125f + now ) * FUNCTABLE_SIZE ) ) & ( FUNCTABLE_MASK ) ] * wf->amplitude;
+		st[1] = t + tr.sinTable[ ( ( int ) ( ( tess.xyz[i][1] * 1.0f / 128 * 0.125f + now ) * FUNCTABLE_SIZE ) ) & ( FUNCTABLE_MASK ) ] * wf->amplitude;
 	}
 }
 

@@ -998,14 +998,14 @@ char    * QDECL va( char *format, ... ) {
 	static char string[MAX_VA_STRING];      // in case va is called by nested functions
 	static int index = 0;
 	char    *buf;
-	int len;
+	int len, wb;
 
 
 	va_start( argptr, format );
-	vsprintf( temp_buffer, format,argptr );
+	wb = vsnprintf( temp_buffer, sizeof(temp_buffer), format,argptr );
 	va_end( argptr );
 
-	if ( ( len = strlen( temp_buffer ) ) >= MAX_VA_STRING ) {
+	if ( ( len = strlen( temp_buffer ) ) >= MAX_VA_STRING || wb >= MAX_VA_STRING ) {
 		Com_Error( ERR_DROP, "Attempted to overrun string in call to va()\n" );
 	}
 

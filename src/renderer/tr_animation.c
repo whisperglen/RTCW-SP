@@ -1254,7 +1254,7 @@ void RB_SurfaceAnim( mdsSurface_t *surface ) {
 	if ( render_count == surface->numVerts ) {
 		glIndex_t* dest = pIndexes;
 		int* src = triangles;
-		for (int i = 0; i < indexes; i++, dest++, src++)
+		for ( i = 0; i < indexes; i++, dest++, src++ )
 		{
 			*dest = *src;
 		}

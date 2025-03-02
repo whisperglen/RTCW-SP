@@ -402,7 +402,7 @@ void RB_RenderFlare( flare_t *f ) {
 	iColor[1] = color[1] * 255;
 	iColor[2] = color[2] * 255;
 
-	size = backEnd.viewParms.viewportWidth * ( ( r_flareSize->value * f->scale ) / 640.0 + 8 / -f->eyeZ );
+	size = (float)backEnd.viewParms.viewportWidth * ( ( r_flareSize->value * f->scale ) / 640.0f + 8.0f / -f->eyeZ );
 
 	if ( f->flags & 2 ) {  // spotlight flare
 		RB_BeginSurface( tr.spotFlareShader, f->fogNum );

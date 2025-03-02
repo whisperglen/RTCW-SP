@@ -116,6 +116,10 @@ void R_AddPolygonSurfaces( void ) {
 	shader_t    *sh;
 	srfPoly_t   *poly;
 
+	if ( !r_drawpolys->integer ) {
+		return;
+	}
+
 	tr.currentEntityNum = ENTITYNUM_WORLD;
 	tr.shiftedEntityNum = tr.currentEntityNum << QSORT_ENTITYNUM_SHIFT;
 

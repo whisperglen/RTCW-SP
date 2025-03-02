@@ -868,13 +868,11 @@ void R_SetupProjection(void) {
 	// set up projection matrix
 	//
 	zNear = r_znear->value;
-	qdx.znear = zNear;
 	if (r_zfar->value) {
 		zFar = r_zfar->value;   // (SA) allow override for helping level designers test fog distances
 	} else {
 		zFar = tr.viewParms.zFar;
 	}
-	qdx.zfar = zFar;
 
 	ymax = zNear * tan(tr.refdef.fov_y * M_PI / 360.0f);
 	ymin = -ymax;
