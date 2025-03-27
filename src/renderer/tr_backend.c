@@ -556,6 +556,7 @@ void RB_BeginDrawingView( void ) {
 		plane2[2] = DotProduct( backEnd.viewParms.or.axis[2], plane );
 		plane2[3] = DotProduct( plane, backEnd.viewParms.or.origin ) - plane[3];
 
+		matrix_print_s(s_flipMatrix, "RB_BeginDrawingView flipmatrix");
 		qglLoadMatrixf( s_flipMatrix );
 		qglClipPlane( GL_CLIP_PLANE0, plane2 );
 		qglEnable( GL_CLIP_PLANE0 );
@@ -1020,6 +1021,7 @@ void RB_RenderDrawSurfList( drawSurf_t *drawSurfs, int numDrawSurfs ) {
 				R_TransformDlights( backEnd.refdef.num_dlights, backEnd.refdef.dlights, &backEnd.or );
 			}
 
+			matrix_print_s(backEnd.or.modelMatrix, "RB_RenderDrawSurfList backEnd.or.modelMatrix");
 			qglLoadMatrixf( backEnd.or.modelMatrix );
 
 			//
@@ -1068,6 +1070,7 @@ void RB_RenderDrawSurfList( drawSurf_t *drawSurfs, int numDrawSurfs ) {
 	backEnd.or = backEnd.viewParms.world;
 	R_TransformDlights( backEnd.refdef.num_dlights, backEnd.refdef.dlights, &backEnd.or );
 
+	matrix_print_s(backEnd.viewParms.world.modelMatrix, "RB_RenderDrawSurfList backEnd.viewParms.world.modelMatrix");
 	qglLoadMatrixf( backEnd.viewParms.world.modelMatrix );
 	if ( depthRange ) {
 		qglDepthRange( 0, 1 );
