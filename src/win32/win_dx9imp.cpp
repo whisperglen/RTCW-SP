@@ -52,8 +52,9 @@ extern "C"
 #include <stdint.h>
 #include "fnv.h"
 
-#define REMIX_ALLOW_X86
-#include "remix_c.h"
+#include "remix/bridge_remix_api.h"
+
+#include <string>
 
 typedef struct
 {
@@ -125,6 +126,7 @@ static rserr_t  GLW_SetMode(const char *drivername,
 	int mode,
 	int colorbits,
 	qboolean cdsFullscreen);
+static qboolean DXGetModeInfo( int* width, int* height, float* windowAspect, int mode );
 
 static qboolean s_classRegistered = qfalse;
 
@@ -158,8 +160,8 @@ static qboolean GLW_StartDriverAndSetMode(const char *drivername,
 	qboolean cdsFullscreen) {
 	rserr_t err;
 
-	const int minwidth = 800;
-	const int minheight = 600;
+	const int minwidth = 640;
+	const int minheight = 480;
 
 	if (dx9imp_state.instDX9 == NULL)
 	{
@@ -227,10 +229,37 @@ static qboolean GLW_StartDriverAndSetMode(const char *drivername,
 	{
 		D3DDISPLAYMODE dispMode;
 		qdx.d3d->EnumAdapterModes(qdx.adapter_num, qdx.desktop.Format, amode, &dispMode);
-		if (dispMode.Width < minwidth || dispMode.Height < minheight)
+		if (dispMode.Width < minwidth || dispMode.Height < minheight || dispMode.RefreshRate != qdx.desktop.RefreshRate)
 			continue;
 		memcpy(m, &dispMode, sizeof(dispMode));
+		qdx.modes_count++;
 		m++;
+	}
+	if( qdx.modes_count )
+	{
+		char local[64];
+		std::string modes_enum;
+		modes_enum.assign( "{" );
+		m = qdx.modes;
+		for ( int i = 0; i < qdx.modes_count; i++, m++ )
+		{
+			snprintf( local, sizeof( local ), " \"%d*%d%s\" %d", m->Width, m->Height, ((float)m->Width / m->Height > 1.4f ? " (WS)" : ""), i );
+			modes_enum.append( local );
+		}
+		int cwidth = 0, cheight = 0;
+		float caspect = 0;
+		if ( DXGetModeInfo( &cwidth, &cheight, &caspect, -1 ) && cwidth && cheight && (caspect > 0.0f) )
+		{
+			snprintf( local, sizeof( local ), " \"%d*%d%s\" %d", cwidth, cheight, " (Custom)", -1 );
+			modes_enum.append( local );
+		}
+		if ( DXGetModeInfo( &cwidth, &cheight, &caspect, -2 ) && cwidth && cheight && (caspect > 0.0f) )
+		{
+			snprintf( local, sizeof( local ), " \"%d*%d%s\" %d", cwidth, cheight, " (Desktop)", -2 );
+			modes_enum.append( local );
+		}
+		modes_enum.append( " }" );
+		ri.Cvar_Set( "r_menu_modes", modes_enum.c_str() );
 	}
 
 	err = GLW_SetMode(drivername, mode, colorbits, cdsFullscreen);
@@ -496,6 +525,8 @@ static int format_get_depthbits(D3DFORMAT fmt)
 	switch (fmt)
 	{
 	case D3DFMT_D32:
+	case D3DFMT_D32_LOCKABLE:
+	case D3DFMT_D32F_LOCKABLE:
 		bits = 32;
 		break;
 	case D3DFMT_D24S8:
@@ -504,7 +535,11 @@ static int format_get_depthbits(D3DFORMAT fmt)
 		bits = 24;
 		break;
 	case D3DFMT_D16:
+	case D3DFMT_D16_LOCKABLE:
 		bits = 16;
+		break;
+	case D3DFMT_S8_LOCKABLE:
+		bits = 8;
 	};
 
 	return bits;
@@ -542,6 +577,10 @@ static int DX9_ChooseFormat(PIXELFORMATDESCRIPTOR *pPFD, int colorbits, int dept
 	};
 	const D3DFORMAT fmt_ds[] =
 	{
+		//D3DFMT_D32_LOCKABLE,
+		//D3DFMT_D32F_LOCKABLE,
+		//D3DFMT_D16_LOCKABLE,
+		//D3DFMT_S8_LOCKABLE,
 		//D3DFMT_D32,
 		D3DFMT_D24S8,
 		D3DFMT_D24X4S4,
@@ -988,6 +1027,37 @@ static void fill_in_d3dpresentparams(D3DPRESENT_PARAMETERS &d3dpp)
 	}
 }
 
+static qboolean DXGetModeInfo( int *width, int *height, float *windowAspect, int mode )
+{
+	if ( mode < -2 )
+	{
+		return qfalse;
+	}
+	if ( mode >= qdx.modes_count )
+	{
+		return qfalse;
+	}
+
+	if ( mode == -1 )
+	{
+		return R_GetModeInfo(width, height, windowAspect, mode);
+	}
+	else if ( mode == -2 )
+	{
+		*width = qdx.desktop.Width;
+		*height = qdx.desktop.Height;
+		*windowAspect = (float)qdx.desktop.Width / qdx.desktop.Height;
+		return qtrue;
+	}
+
+	D3DDISPLAYMODE* dxmode = qdx.modes + mode;
+	*width = dxmode->Width;
+	*height = dxmode->Height;
+	*windowAspect = (float)dxmode->Width / dxmode->Height;
+
+	return qtrue;
+}
+
 /*
 ** GLW_SetMode
 */
@@ -1012,7 +1082,7 @@ static rserr_t GLW_SetMode(const char *drivername,
 	// print out informational messages
 	//
 	ri.Printf(PRINT_ALL, "...setting mode %d:", mode);
-	if (!R_GetModeInfo(&glConfig.vidWidth, &glConfig.vidHeight, &glConfig.windowAspect, mode)) {
+	if (!DXGetModeInfo(&glConfig.vidWidth, &glConfig.vidHeight, &glConfig.windowAspect, mode)) {
 		ri.Printf(PRINT_ALL, " invalid mode\n");
 		return RSERR_INVALID_MODE;
 	}
@@ -1548,12 +1618,12 @@ static qboolean GLW_LoadOpenGL(const char *drivername) {
 		// create the window and set up the context
 		if (!GLW_StartDriverAndSetMode(drivername, r_mode->integer, r_colorbits->integer, cdsFullscreen)) {
 			// if we're on a 24/32-bit desktop and we're going fullscreen on an ICD,
-			// try it again but with a 16-bit desktop
+			// try it again with desktop resolution
 			if (glConfig.driverType == GLDRV_ICD) {
 				if (r_colorbits->integer != 32 ||
 					cdsFullscreen != qtrue ||
-					r_mode->integer != 4) {
-					if (!GLW_StartDriverAndSetMode(drivername, 4, 32, qtrue)) {
+					r_mode->integer != -2) {
+					if (!GLW_StartDriverAndSetMode(drivername, -2, 32, qtrue)) {
 						goto fail;
 					}
 				}
@@ -1828,6 +1898,12 @@ void DX9imp_Shutdown(void) {
 		qdx.d3d->Release();
 		qdx.d3d = 0;
 	}
+	if ( qdx.modes )
+	{
+		free( qdx.modes );
+		qdx.modes = 0;
+		qdx.modes_count = 0;
+	}
 
 	// release DC
 	if (dx9imp_state.hDC) {
@@ -1874,125 +1950,177 @@ void DX9imp_Shutdown(void) {
 //	}
 //}
 
-static D3DGAMMARAMP s_oldHardwareGamma;
-static bool gammaCalibrate = false;
-void DX9imp_CheckHardwareGamma(void) {
+#define FILEOP_RETRIES 10
+static unsigned short s_oldHardwareGamma[3][256];
+
+/*
+** DX9imp_CheckHardwareGamma
+**
+** Determines if the underlying hardware supports the Win32 gamma correction API.
+*/
+void DX9imp_CheckHardwareGamma( void ) {
+	HDC hDC;
+
+	glConfig.deviceSupportsGamma = qfalse;
 
 	// non-3Dfx standalone drivers don't support gamma changes, period
-	if (glConfig.driverType == GLDRV_STANDALONE) {
+	if ( glConfig.driverType == GLDRV_STANDALONE ) {
 		return;
 	}
 
-	if (!r_ignorehwgamma->integer)
-	{
-		if (!dx9imp_state.cdsFullscreen)
-		{
-			ri.Printf(PRINT_ALL, "...hw gamma not supported in windowed mode\n");
-			return;
-		}
-		if (0 != (qdx.caps.Caps2 & D3DCAPS2_FULLSCREENGAMMA))
-		{
-			glConfig.deviceSupportsGamma = qtrue;
-			if (0 != (qdx.caps.Caps2 & D3DCAPS2_CANCALIBRATEGAMMA))
-			{
-				gammaCalibrate = true;
+	if ( !r_ignorehwgamma->integer ) {
+		hDC = GetDC( GetDesktopWindow() );
+		glConfig.deviceSupportsGamma = (qboolean)GetDeviceGammaRamp( hDC, s_oldHardwareGamma );
+		ReleaseDC( GetDesktopWindow(), hDC );
+
+		if ( glConfig.deviceSupportsGamma ) {
+			//
+			// do a sanity check on the gamma values
+			//
+			if ( ( HIBYTE( s_oldHardwareGamma[0][255] ) <= HIBYTE( s_oldHardwareGamma[0][0] ) ) ||
+				( HIBYTE( s_oldHardwareGamma[1][255] ) <= HIBYTE( s_oldHardwareGamma[1][0] ) ) ||
+				( HIBYTE( s_oldHardwareGamma[2][255] ) <= HIBYTE( s_oldHardwareGamma[2][0] ) ) ) {
+				glConfig.deviceSupportsGamma = qfalse;
+				ri.Printf( PRINT_WARNING, "WARNING: device has broken gamma support, generated gamma.dat\n" );
 			}
 
-			qdx.device->GetGammaRamp(0, &s_oldHardwareGamma);
+			cvar_t  *basedir;
+			char filename[1024];
+			void* filedata = 0;
 
-			if (glConfig.deviceSupportsGamma) {
-				////
-				//// do a sanity check on the gamma values
-				////
-				//if ((HIBYTE(s_oldHardwareGamma.red[255]) <= HIBYTE(s_oldHardwareGamma.red[0])) ||
-				//	(HIBYTE(s_oldHardwareGamma.green[255]) <= HIBYTE(s_oldHardwareGamma.green[0])) ||
-				//	(HIBYTE(s_oldHardwareGamma.blue[255]) <= HIBYTE(s_oldHardwareGamma.blue[0]))) {
-				//	glConfig.deviceSupportsGamma = qfalse;
-				//	ri.Printf(PRINT_WARNING, "WARNING: device has broken gamma support, generated gamma.dat\n");
-				//}
+			basedir = ri.Cvar_Get( "fs_basepath", "", 0 );
+			Com_sprintf( filename, sizeof( filename ), "%s/oldHardwareGamma.bin", basedir->string );
+			bool filepresent = false;
+			bool samedata = false;
+			FILE* fp;
+			fp = fopen(filename, "rb");
+			if (fp)
+			{
+				filepresent = true;
+				filedata = malloc(sizeof(s_oldHardwareGamma));
+				if (filedata)
+				{
+					int retries = FILEOP_RETRIES;
+					do { retries--; } while(1 != fread(filedata, sizeof(s_oldHardwareGamma), 1, fp) && retries > 0);
+					if (retries > 0)
+					{
+						samedata = (0 == memcmp(filedata, s_oldHardwareGamma, sizeof(s_oldHardwareGamma)));
+					}
+				}
+				fclose(fp);
+			}
 
-				////
-				//// make sure that we didn't have a prior crash in the game, and if so we need to
-				//// restore the gamma values to at least a linear value
-				////
-				//if ((HIBYTE(s_oldHardwareGamma.red[181]) == 255)) {
-				//	int g;
+			if (!filepresent)
+			{
+				fp = fopen(filename, "wb");
+				int remain = sizeof(s_oldHardwareGamma);
+				int retries = FILEOP_RETRIES;
+				do
+				{
+					size_t written = fwrite(s_oldHardwareGamma, 1, sizeof(s_oldHardwareGamma), fp);
+					retries--;
+					remain -= int(written);
+				} while (remain > 0 && retries > 0);
+				fclose(fp);
+			}
 
-				//	ri.Printf(PRINT_WARNING, "WARNING: suspicious gamma tables, using linear ramp for restoration\n");
+			//
+			// make sure that we didn't have a prior crash in the game, and if so we need to
+			// restore the gamma values to at least a linear value
+			//
+			if (filepresent && !samedata && filedata)
+			{
+				memcpy(s_oldHardwareGamma, filedata, sizeof(s_oldHardwareGamma));
+				ri.Printf( PRINT_WARNING, "WARNING: restoring gamma tables from backup file\n" );
+			}
+			//if ( ( HIBYTE( s_oldHardwareGamma[0][181] ) == 255 ) ) {
+			//	int g;
 
-				//	for (g = 0; g < 255; g++)
-				//	{
-				//		s_oldHardwareGamma.red[g] = g << 8;
-				//		s_oldHardwareGamma.green[g] = g << 8;
-				//		s_oldHardwareGamma.blue[g] = g << 8;
-				//	}
-				//}
+			//	ri.Printf( PRINT_WARNING, "WARNING: suspicious gamma tables, using linear ramp for restoration\n" );
+
+			//	for ( g = 0; g < 255; g++ )
+			//	{
+			//		s_oldHardwareGamma[0][g] = g << 8;
+			//		s_oldHardwareGamma[1][g] = g << 8;
+			//		s_oldHardwareGamma[2][g] = g << 8;
+			//	}
+			//}
+			if (filedata)
+			{
+				free(filedata);
 			}
 		}
 	}
 }
 
-void DX9imp_SetGamma(unsigned char red[256], unsigned char green[256], unsigned char blue[256]) {
-	D3DGAMMARAMP table;
-	int i;
+/*
+** DX9imp_SetGamma
+**
+** This routine should only be called if glConfig.deviceSupportsGamma is TRUE
+*/
+void DX9imp_SetGamma( unsigned char red[256], unsigned char green[256], unsigned char blue[256] ) {
+	unsigned short table[3][256];
+	int i, j;
+	int ret;
+	OSVERSIONINFO vinfo;
 
-	if (!glConfig.deviceSupportsGamma || r_ignorehwgamma->integer) {
+	if ( !glConfig.deviceSupportsGamma || r_ignorehwgamma->integer || !dx9imp_state.hDC ) {
 		return;
 	}
 
 	//mapGammaMax();
 
-	for (i = 0; i < 256; i++) {
-		table.red[i] = (((unsigned short)red[i]) << 8) | red[i];
-		table.green[i] = (((unsigned short)green[i]) << 8) | green[i];
-		table.blue[i] = (((unsigned short)blue[i]) << 8) | blue[i];
+	for ( i = 0; i < 256; i++ ) {
+		table[0][i] = ( ( ( unsigned short ) red[i] ) << 8 ) | red[i];
+		table[1][i] = ( ( ( unsigned short ) green[i] ) << 8 ) | green[i];
+		table[2][i] = ( ( ( unsigned short ) blue[i] ) << 8 ) | blue[i];
 	}
 
-#if 0
 	// Win2K puts this odd restriction on gamma ramps...
-	OSVERSIONINFO vinfo;
-	vinfo.dwOSVersionInfoSize = sizeof(vinfo);
-	GetVersionEx(&vinfo);
-	if (vinfo.dwMajorVersion == 5 && vinfo.dwPlatformId == VER_PLATFORM_WIN32_NT) {
-		Com_DPrintf("performing W2K gamma clamp.\n");
-		for (j = 0; j < 3; j++) {
-			for (i = 0; i < 128; i++) {
-				if (table[j][i] > ((128 + i) << 8)) {
-					table[j][i] = (128 + i) << 8;
+	vinfo.dwOSVersionInfoSize = sizeof( vinfo );
+	GetVersionEx( &vinfo );
+	if ( vinfo.dwMajorVersion == 5 && vinfo.dwPlatformId == VER_PLATFORM_WIN32_NT ) {
+		Com_DPrintf( "performing W2K gamma clamp.\n" );
+		for ( j = 0 ; j < 3 ; j++ ) {
+			for ( i = 0 ; i < 128 ; i++ ) {
+				if ( table[j][i] > ( ( 128 + i ) << 8 ) ) {
+					table[j][i] = ( 128 + i ) << 8;
 				}
 			}
-			if (table[j][127] > 254 << 8) {
+			if ( table[j][127] > 254 << 8 ) {
 				table[j][127] = 254 << 8;
 			}
 		}
+	} else {
+		Com_DPrintf( "skipping W2K gamma clamp.\n" );
 	}
-	else {
-		Com_DPrintf("skipping W2K gamma clamp.\n");
-	}
-#endif
 
 	// enforce constantly increasing
-	for (i = 1; i < 256; i++) {
-		if (table.red[i] < table.red[i - 1]) {
-			table.red[i] = table.red[i - 1];
-		}
-		if (table.green[i] < table.green[i - 1]) {
-			table.green[i] = table.green[i - 1];
-		}
-		if (table.blue[i] < table.blue[i - 1]) {
-			table.blue[i] = table.blue[i - 1];
+	for ( j = 0 ; j < 3 ; j++ ) {
+		for ( i = 1 ; i < 256 ; i++ ) {
+			if ( table[j][i] < table[j][i - 1] ) {
+				table[j][i] = table[j][i - 1];
+			}
 		}
 	}
 
-	qdx.device->SetGammaRamp(0, gammaCalibrate ? D3DSGR_CALIBRATE : D3DSGR_NO_CALIBRATION, &table);
+	ret = SetDeviceGammaRamp( dx9imp_state.hDC, table );
+	if ( !ret ) {
+		Com_Printf( "SetDeviceGammaRamp failed.\n" );
+	}
 }
 
-void DX9imp_RestoreGamma(void) {
-	if (glConfig.deviceSupportsGamma) {
-		if (qdx.device)
-		{
-			qdx.device->SetGammaRamp(0, gammaCalibrate ? D3DSGR_CALIBRATE : D3DSGR_NO_CALIBRATION, &s_oldHardwareGamma);
-		}
+/*
+** DX9imp_RestoreGamma
+*/
+void DX9imp_RestoreGamma( void ) {
+	if ( glConfig.deviceSupportsGamma )
+	{
+		HDC hDC;
+
+		hDC = GetDC( GetDesktopWindow() );
+		SetDeviceGammaRamp( hDC, s_oldHardwareGamma );
+		ReleaseDC( GetDesktopWindow(), hDC );
 	}
 }
 
@@ -2968,7 +3096,7 @@ void qdx_vatt_assemble_and_draw(UINT numindexes, const qdxIndex_t *indexes, cons
 	if (r_logFile->integer)
 		qdx_log_comment(__FUNCTION__, g_vattribs.active_vatts, (const void*)numindexes);
 
-	if (0 == (g_vattribs.active_vatts & VATT_VERTEX) /*|| 0 == (g_vattribs.active_vatts & (VATT_TEX0|VATT_TEX1))*/)
+	if (0 == numindexes || 0 == (g_vattribs.active_vatts & VATT_VERTEX) /*|| 0 == (g_vattribs.active_vatts & (VATT_TEX0|VATT_TEX1))*/)
 	{
 		//see comment in RE_BeginRegistration for the call to RE_StretchPic
 		//the vertex buffer pointer gets set when RB_StageIteratorGeneric is called, which is triggered by that RE_StretchPic 
@@ -4029,7 +4157,7 @@ void qdx_matrix_apply(void)
 	qdx.device->SetTransform(D3DTS_VIEW, &qdx_mats.view);
 	qdx.device->SetTransform(D3DTS_PROJECTION, &qdx_mats.proj);
 
-	if (r_logFile->integer)
+	if (0 && r_logFile->integer)
 	{
 		qdx_log_matrix("world", (float*)qdx_mats.world.m);
 		qdx_log_matrix("view", (float*)qdx_mats.view.m);
@@ -4063,50 +4191,49 @@ void qdx_depthrange(float znear, float zfar)
 }
 
 #include <map>
-#include <string>
 
 static std::map<std::string, int> asserted_fns;
 #define ASSERT_MAX_PRINTS 5
 
 void qdx_assert_failed_str(const char* expression, const char* function, unsigned line, const char* file)
+{
+	const char* fn = strrchr(file, '\\');
+	if (!fn) fn = strrchr(file, '/');
+	if (!fn) fn = "fnf";
+
+	bool will_print = false;
+	bool supressed_msg = false;
+
+	std::string mykey = std::string(function);
+	auto searched = asserted_fns.find(mykey);
+	if (asserted_fns.end() != searched)
 	{
-		const char* fn = strrchr(file, '\\');
-		if (!fn) fn = strrchr(file, '/');
-		if (!fn) fn = "fnf";
-
-		bool will_print = false;
-		bool supressed_msg = false;
-
-		std::string mykey = std::string(function);
-		auto searched = asserted_fns.find(mykey);
-		if (asserted_fns.end() != searched)
+		int nums = searched->second;
+		if (nums <= ASSERT_MAX_PRINTS)
 		{
-			int nums = searched->second;
-			if (nums <= ASSERT_MAX_PRINTS)
-			{
-				will_print = true;
-				supressed_msg = (nums == ASSERT_MAX_PRINTS);
-			}
-			searched->second = nums + 1;
-		}
-		else
-		{
-			asserted_fns[mykey] = 1;
 			will_print = true;
+			supressed_msg = (nums == ASSERT_MAX_PRINTS);
 		}
-
-		if (will_print)
-		{
-#ifdef NDEBUG
-			if(supressed_msg)
-				ri.Printf(PRINT_ERROR, "assert failed and supressing: %s in %s:%d %s\n", expression, function, line, fn);
-			else
-				ri.Printf(PRINT_ERROR, "assert failed: %s in %s:%d %s\n", expression, function, line, fn);
-#else
-			ri.Error(ERR_FATAL, "assert failed: %s in %s:%d %s\n", expression, function, line, fn);
-#endif
-		}
+		searched->second = nums + 1;
 	}
+	else
+	{
+		asserted_fns[mykey] = 1;
+		will_print = true;
+	}
+
+	if (will_print)
+	{
+#ifdef NDEBUG
+		if(supressed_msg)
+			ri.Printf(PRINT_ERROR, "assert failed and supressing: %s in %s:%d %s\n", expression, function, line, fn);
+		else
+			ri.Printf(PRINT_ERROR, "assert failed: %s in %s:%d %s\n", expression, function, line, fn);
+#else
+		ri.Error(ERR_FATAL, "assert failed: %s in %s:%d %s\n", expression, function, line, fn);
+#endif
+	}
+}
 
 
 #define MAX_LIGHTS_REMIX 100
@@ -4435,6 +4562,138 @@ void qdx_begin_loading_map(const char* mapname)
 				ri.Printf(PRINT_ERROR, "RMX failed to set config var %d\n", rercd);
 			}
 		}
+	}
+}
+
+std::map<UINT32, std::vector<const void*>> g_surfaces;
+
+void qdx_surface_clear()
+{
+	g_surfaces.clear();
+}
+
+void qdx_surface_add( const void* surf, surfpartition_t id )
+{
+	auto grp = g_surfaces.find( id.combined );
+	if ( grp != g_surfaces.end() )
+	{
+		grp->second.push_back( surf );
+	}
+	else
+	{
+		g_surfaces[id.combined].push_back( surf );
+	}
+}
+
+void qdx_surface_get_members( surfpartition_t id, const void** surfs, int* count )
+{
+	auto grp = g_surfaces.find( id.combined );
+	if ( grp != g_surfaces.end() )
+	{
+		*surfs = *grp->second.data();
+		*count = grp->second.size();
+	}
+	else
+	{
+		*surfs = 0;
+		*count = 0;
+	}
+}
+
+#define QDX_SURFACE_GRID_VAL 500.0f
+
+surfpartition_t qdx_surface_get_partition( const void* data )
+{
+	surfpartition_t sid = { 0 };
+	float* vert;
+	srfSurfaceFace_t* face;
+	srfGridMesh_t* grid;
+	srfTriangles_t* tris;
+	switch ( *(surfaceType_t*)data )
+	{
+	case SF_FACE:
+		face = (srfSurfaceFace_t*)data;
+		vert = face->points[0];
+		break;
+	case SF_GRID:
+		grid = (srfGridMesh_t*)data;
+		vert = grid->verts[0].xyz;
+		break;
+	case SF_TRIANGLES:
+		tris = (srfTriangles_t*)data;
+		vert = tris->verts->xyz;
+		break;
+	default:
+		vert = 0;
+	}
+	if ( vert )
+	{
+		sid.p.x = (INT32)(vert[0] / QDX_SURFACE_GRID_VAL);
+		sid.p.y = (INT32)(vert[1] / QDX_SURFACE_GRID_VAL);
+		sid.p.z = (INT32)(vert[2] / QDX_SURFACE_GRID_VAL);
+	}
+	return sid;
+}
+
+void qdx_screen_getxyz( float *xyz )
+{
+	xyz[0] = 0.0f; xyz[1] = 0.0f; xyz[2] = 0.0f;
+
+	IDirect3DSurface9* ssrc;
+	if ( qdx.device )
+	{
+		HRESULT hr = 0;
+
+		hr = qdx.device->GetDepthStencilSurface( &ssrc );
+
+		D3DSURFACE_DESC sdesc;
+		hr = ssrc->GetDesc( &sdesc );
+
+
+		IDirect3DSurface9* sdest = 0;
+		hr = qdx.device->CreateOffscreenPlainSurface(
+			sdesc.Width,
+			sdesc.Height,
+			sdesc.Format,
+			D3DPOOL_SCRATCH, //D3DPOOL_DEFAULT
+			&sdest,
+			NULL );
+		if ( FAILED( hr ) || !sdest )
+		{
+			ri.Printf( PRINT_WARNING, "Unable to create surf: %d\n", HRESULT_CODE( hr ) );
+			return;
+		}
+
+		hr = qdx.device->GetRenderTargetData( ssrc, sdest );
+		if ( FAILED( hr ) )
+		{
+			ri.Printf( PRINT_WARNING, "Unable to copy surf: %d\n", HRESULT_CODE(hr) );
+			return;
+		}
+
+		D3DLOCKED_RECT lr;
+		RECT re;
+		re.left = sdesc.Width / 2 -1;
+		re.right = sdesc.Width / 2 + 1;
+		re.top = sdesc.Height / 2 - 1;
+		re.bottom = sdesc.Height / 2 + 1;
+		hr = sdest->LockRect( &lr, &re, 0 );
+		if ( FAILED( hr ) )
+		{
+			ri.Printf( PRINT_WARNING, "Unable to lock surf: %d\n", HRESULT_CODE(hr) );
+			return;
+		}
+
+		int center = sdesc.Height / 2 * lr.Pitch + sdesc.Width * 4 / 2;
+		for ( int i = center - 10; i < center +10; i++ )
+		{
+			//ri.Printf( PRINT_ALL, " %x\n", *(UINT32*)((BYTE*)lr.pBits + i) );
+		}
+
+		sdest->UnlockRect();
+
+		ssrc->Release();
+		sdest->Release();
 	}
 }
 

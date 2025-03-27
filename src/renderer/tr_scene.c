@@ -325,6 +325,11 @@ void RE_AddLightToScene( const vec3_t org, float intensity, float r, float g, fl
 	if ( !tr.registered ) {
 		return;
 	}
+	if ( overdraw == 50 )
+	{
+		//WG: flashlight
+		return;
+	}
 	if ( r_numdlights >= MAX_DLIGHTS ) {
 		return;
 	}

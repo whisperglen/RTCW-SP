@@ -881,6 +881,7 @@ void UI_DrawPlayer( float x, float y, float w, float h, playerInfo_t *pi, int ti
 		UI_PositionEntityOnTag( &gun, &torso, pi->torsoModel, "tag_weapon" );
 		gun.renderfx = renderfx;
 		trap_R_AddRefEntityToScene( &gun );
+		trap_R_AddLightToScene( gun.origin, 1.0, 1.0, 1.0, 1.0, 50 );
 	}
 
 	//

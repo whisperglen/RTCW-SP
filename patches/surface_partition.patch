@@ -1,0 +1,81 @@
+diff --git a/src/renderer/tr_bsp.c b/src/renderer/tr_bsp.c
+index d919b71..080d814 100644
+--- a/src/renderer/tr_bsp.c
++++ b/src/renderer/tr_bsp.c
+@@ -2248,6 +2248,27 @@ void RE_LoadWorldMap( const char *name ) {
+ 	// only set tr.world now that we know the entire level has loaded properly
+ 	tr.world = &s_worldData;
+ 
++	surfpartition_t sid;
++	msurface_t** surface = s_worldData.marksurfaces;
++	int mx = 0, my = 0, mz = 0;
++	//ri.Printf( PRINT_ALL, "RE_LoadWorldMap: s_worldData.surfaces dump:\n" );
++	for (int i = 0; i < s_worldData.nummarksurfaces; i++)
++	{
++		surfpartition_t sid = qdx_surface_get_partition(surface[i]->data);
++		if ( sid.combined )
++		{
++			qdx_surface_add( surface[i], sid );
++		}
++		//ri.Printf( PRINT_ALL, " %p - %p %d %d %d\n", surface[i], surface[i]->data, sid.p.x, sid.p.y, sid.p.z );
++		if ( abs( sid.p.x ) > mx )
++			mx = abs(sid.p.x);
++		if ( abs( sid.p.y ) > my )
++			my = abs(sid.p.y);
++		if ( abs( sid.p.z ) > mz )
++			mz = abs(sid.p.z);
++	}
++	//ri.Printf( PRINT_ALL, " stats %d %d %d\n", mx, my, mz );
++
+ 	// reset fog to world fog (if present)
+ //	R_SetFog(FOG_CMD_SWITCHFOG, FOG_MAP,20,0,0,0,0);
+ 
+diff --git a/src/renderer/tr_world.c b/src/renderer/tr_world.c
+index 9398939..16ff455 100644
+--- a/src/renderer/tr_world.c
++++ b/src/renderer/tr_world.c
+@@ -283,6 +283,19 @@ R_AddWorldSurface
+ */
+ static void R_AddWorldSurface( msurface_t *surf, int dlightBits ) {
+ 	if ( surf->viewCount == tr.viewCount ) {
++		//// already in this view, but lets make sure all the dlight bits are set
++		//if ( *surf->data == SF_FACE )
++		//{
++		//	((srfSurfaceFace_t *)surf->data)->dlightBits[ tr.smpFrame ] |= dlightBits;
++		//}
++		//else if ( *surf->data == SF_GRID )
++		//{
++		//	((srfGridMesh_t *)surf->data)->dlightBits[ tr.smpFrame ] |= dlightBits;
++		//}
++		//else if ( *surf->data == SF_TRIANGLES )
++		//{
++		//	((srfTriangles_t *)surf->data)->dlightBits[ tr.smpFrame ] |= dlightBits;
++		//}
+ 		return;     // already in this view
+ 	}
+ 
+@@ -300,8 +313,24 @@ static void R_AddWorldSurface( msurface_t *surf, int dlightBits ) {
+ 		dlightBits = ( dlightBits != 0 );
+ 	}
+ 
++	surfpartition_t sid = qdx_surface_get_partition( surf->data );
++	msurface_t* sadd = 0;
++	int scount = 0;
++	//qdx_surface_get_members( sid, &sadd, &scount );
++
+ // GR - not tessellated
++	//R_AddDrawSurf( surf->data, surf->shader, surf->fogIndex, 0, ATI_TESS_NONE );
+ 	R_AddDrawSurf( surf->data, surf->shader, surf->fogIndex, dlightBits, ATI_TESS_NONE );
++
++	for ( int i = 0; i < scount; i++, sadd++ )
++	{
++		if ( sadd->viewCount != tr.viewCount )
++		{
++			sadd->viewCount = tr.viewCount;
++			//dlightBits = R_DlightSurface( sadd, MAX_DLIGHTS - 1 );
++			R_AddDrawSurf( sadd->data, sadd->shader, sadd->fogIndex, 0, ATI_TESS_NONE );
++		}
++	}
+ }
+ 
+ /*

@@ -1,0 +1,37 @@
+cg_cameraOrbit
+cg_thirdPerson
+cg_gun_frame
+cg_drawGamemodels
+cg_ignore
+cg_norender
+CG_DrawActiveFrame
+r_skipBackEnd
+r_portalOnly
+isPortal
+r_debuglight
+r_directedScale
+r_ambientScale
+r_waterFogColor
+r_fullbright
+cl_debugMove
+cg_draw2D
+cg_drawGun
+cg_drawFPGun
+r_ignoreFastPath
+r_lowMemTextureSize
+r_lowMemTextureThreshold
+r_nocurves
+cg_particleDist
+cg_particleLOD
+r_lodCurveError "-1"
+r_lodbias "0"
+r_lodscale "20"
+
+textures/snow/s_grass_ml03a_s
+models/mapobjects/toolshed/generator
+models\mapobjects\furniture\hibackchair_a
+
+
+R_AddWorldSurfaces
+
+textures/snow/s_cathedrale_c06

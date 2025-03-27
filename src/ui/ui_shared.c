@@ -5649,6 +5649,82 @@ void Item_SetupKeywordHash( void ) {
 
 /*
 ===============
+Item_PostProcess
+
+Modify menu scripts
+===============
+*/
+static void Item_PostProcess( itemDef_t *item ) {
+
+	// Add video modes to system menu
+	if ( item->type == ITEM_TYPE_MULTI && item->cvar && !Q_stricmp( item->cvar, "r_mode" ) )
+	{
+		multiDef_t *multiPtr = (multiDef_t*)item->typeData;
+		char mode_enum[2048];
+		mode_enum[0] = 0;
+
+		DC->getCVarString( "r_menu_modes", mode_enum, sizeof(mode_enum));
+
+		if ( strnlen( mode_enum, sizeof( mode_enum )) > 0 )
+		{
+			// { "640x480" 3 "800x600" 4 }
+
+			qboolean parsed_successful = qfalse;
+			int parsed_modes = 0;
+			static const char *cvarList[MAX_MULTI_CVARS];
+			static float cvarValue[MAX_MULTI_CVARS];
+
+			char* token = mode_enum;
+			char* local;
+			for ( ; token != 0 && parsed_modes < MAX_MULTI_CVARS; )
+			{
+				if ( !String_Parse( &token, &local ) )
+				{
+					break;
+				}
+				if ( *local == '}' )
+				{
+					parsed_successful = qtrue;
+					break;
+				}
+				if ( *local == '{' )
+				{
+					continue;
+				}
+
+				if ( *local != ' ' )
+				{
+					cvarList[parsed_modes] = local;
+					if ( !Float_Parse( &token, &cvarValue[parsed_modes] ) )
+					{
+						break;
+					}
+					parsed_modes++;
+				}
+			}
+
+			if ( parsed_successful )
+			{
+				for ( int i = 0; i < parsed_modes; i++ )
+				{
+					multiPtr->cvarList[i] = cvarList[i];
+					multiPtr->cvarValue[i] = cvarValue[i];
+				}
+				multiPtr->count = parsed_modes;
+
+				DC->Print( "Replaced modelist with %d total modes\n", multiPtr->count );
+			}
+			else
+			{
+				DC->Print( "Unable to replace modelist\n" );
+				DC->Print( "%s\n", mode_enum );
+			}
+		}
+	}
+}
+
+/*
+===============
 Item_Parse
 ===============
 */
@@ -5665,11 +5741,12 @@ qboolean Item_Parse( int handle, itemDef_t *item ) {
 	}
 	while ( 1 ) {
 		if ( !trap_PC_ReadToken( handle, &token ) ) {
-			PC_SourceError( handle, "end of file inside menu item\n" );
+			PC_SourceError( handle, "end of file inside menu item" );
 			return qfalse;
 		}
 
 		if ( *token.string == '}' ) {
+			Item_PostProcess( item );
 			return qtrue;
 		}
 
@@ -5683,6 +5760,7 @@ qboolean Item_Parse( int handle, itemDef_t *item ) {
 			return qfalse;
 		}
 	}
+	return qfalse;
 }
 
 

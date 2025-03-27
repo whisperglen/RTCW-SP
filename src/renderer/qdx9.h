@@ -34,6 +34,7 @@ struct qdx9_state
 	WINDOWPLACEMENT wplacement;
 	D3DDISPLAYMODE desktop;
 	D3DDISPLAYMODE *modes;
+	INT modes_count;
 	D3DFORMAT fmt_backbuffer;
 	D3DFORMAT fmt_depthstencil;
 	UINT adapter_count;
@@ -216,6 +217,22 @@ enum light_type
 void qdx_light_add(int light_type, int ord, float *position, float *transformed, float *color, float radius, float scale);
 void qdx_lights_clear(unsigned int light_types);
 
+typedef union surfpartition_u
+{
+	UINT32 combined;
+	struct surfaceid_s
+	{
+		INT32 x : 10;
+		INT32 y : 10;
+		INT32 z : 10;
+	} p;
+} surfpartition_t;
+
+surfpartition_t qdx_surface_get_partition( const void* data );
+void qdx_surface_add( const void* surf, surfpartition_t id );
+void qdx_surface_get_members( surfpartition_t id, const void** surfs, int* count );
+
+void qdx_screen_getxyz( float *xyz );
 
 HRESULT qdx_compress_texture(int width, int height, const void *indata, void *outdata, int inbits, int outpitch);
 

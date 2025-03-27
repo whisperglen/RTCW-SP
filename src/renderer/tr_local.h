@@ -1127,6 +1127,7 @@ extern cvar_t  *r_nocurves;
 extern cvar_t  *r_showcluster;
 
 extern cvar_t   *r_mode;                // video mode
+extern cvar_t   *r_menu_modes;
 extern cvar_t   *r_fullscreen;
 extern cvar_t   *r_gamma;
 extern cvar_t   *r_displayRefresh;      // optional display refresh option
@@ -1230,6 +1231,9 @@ extern cvar_t   *r_wolffog;
 // done
 
 extern cvar_t  *r_highQualityVideo;
+
+extern cvar_t  *r_generichelper;
+extern cvar_t  *r_getcenterxyz;
 //====================================================================
 
 float R_NoiseGet4f( float x, float y, float z, float t );

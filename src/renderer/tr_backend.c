@@ -1810,6 +1810,14 @@ const void  *RB_SwapBuffers( const void *data ) {
 	backEnd.projection2D = qfalse;
 	qdx_vatt_set2d(FALSE);
 
+
+	if ( r_getcenterxyz->integer )
+	{
+		ri.Cvar_Set( "r_getcenterxyz", "0" );
+		vec3_t val;
+		qdx_screen_getxyz( val );
+	}
+
 	return (const void *)( cmd + 1 );
 }
 

@@ -136,6 +136,7 @@ cvar_t  *r_shadows;
 cvar_t  *r_portalsky;   //----(SA)	added
 cvar_t  *r_flares;
 cvar_t  *r_mode;
+cvar_t  *r_menu_modes;
 cvar_t  *r_nobind;
 cvar_t  *r_singleShader;
 cvar_t  *r_roundImagesDown;
@@ -210,6 +211,9 @@ cvar_t  *r_maxpolys;
 int max_polys;
 cvar_t  *r_maxpolyverts;
 int max_polyverts;
+
+cvar_t  *r_generichelper;
+cvar_t  *r_getcenterxyz;
 
 void ( APIENTRY * qglMultiTexCoord2fARB )( GLenum texture, GLfloat s, GLfloat t );
 void ( APIENTRY * qglActiveTextureARB )( GLenum texture );
@@ -1010,6 +1014,7 @@ void R_Register( void ) {
 	r_overBrightBits = ri.Cvar_Get( "r_overBrightBits", "1", CVAR_ARCHIVE | CVAR_LATCH );
 	r_ignorehwgamma = ri.Cvar_Get( "r_ignorehwgamma", "1", CVAR_ARCHIVE | CVAR_LATCH );    //----(SA) changed this to default to '1' for Drew
 	r_mode = ri.Cvar_Get( "r_mode", "4", CVAR_ARCHIVE | CVAR_LATCH );
+	r_menu_modes = ri.Cvar_Get( "r_menu_modes", "", CVAR_TEMP | CVAR_NORESTART );
 	r_fullscreen = ri.Cvar_Get( "r_fullscreen", "1", CVAR_ARCHIVE | CVAR_LATCH );
 	r_customwidth = ri.Cvar_Get( "r_customwidth", "1600", CVAR_ARCHIVE | CVAR_LATCH );
 	r_customheight = ri.Cvar_Get( "r_customheight", "1024", CVAR_ARCHIVE | CVAR_LATCH );
@@ -1148,6 +1153,10 @@ void R_Register( void ) {
 	r_maxpolyverts = ri.Cvar_Get( "r_maxpolyverts", va( "%d", MAX_POLYVERTS ), 0 );
 
 	r_highQualityVideo = ri.Cvar_Get( "r_highQualityVideo", "1", CVAR_ARCHIVE );
+
+	r_generichelper = ri.Cvar_Get( "r_generichelper", "0", CVAR_TEMP );
+	r_getcenterxyz = ri.Cvar_Get( "r_getcenterxyz", "0", CVAR_TEMP );
+
 	// make sure all the commands added here are also
 	// removed in R_Shutdown
 	ri.Cmd_AddCommand( "imagelist", R_ImageList_f );

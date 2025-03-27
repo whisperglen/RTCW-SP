@@ -1,0 +1,90 @@
+diff --git a/src/renderer/tr_main.c b/src/renderer/tr_main.c
+index f7f2a9f..bbb942d 100644
+--- a/src/renderer/tr_main.c
++++ b/src/renderer/tr_main.c
+@@ -1436,26 +1436,39 @@ static int qsort_compare( const void *arg1, const void *arg2 )
+ 	int ret = 0;
+ 	drawSurf_t* s1 = (drawSurf_t*)arg1;
+ 	drawSurf_t* s2 = (drawSurf_t*)arg2;
+-	if (s1->sort > s2->sort)
++	//surfpartition_t sid1 = qdx_surface_get_partition( s1->surface );
++	//surfpartition_t sid2 = qdx_surface_get_partition( s2->surface );
++	//if ( sid1.combined > sid2.combined )
++	//{
++	//	ret = 1;
++	//}
++	//else if ( sid1.combined < sid2.combined )
++	//{
++	//	ret = -1;
++	//}
++	//else
+ 	{
+-		ret = 1;
+-	}
+-	else if (s1->sort < s2->sort)
+-	{
+-		ret = -1;
+-	}
+-	else //equals
+-	{
+-		if (s1->surface > s2->surface)
++		if ( s1->sort > s2->sort )
+ 		{
+ 			ret = 1;
+ 		}
+-		else if (s1->surface < s2->surface)
++		else if (s1->sort < s2->sort)
+ 		{
+ 			ret = -1;
+ 		}
+ 		else //equals
+ 		{
++			if (s1->surface > s2->surface)
++			{
++				ret = 1;
++			}
++			else if (s1->surface < s2->surface)
++			{
++				ret = -1;
++			}
++			else //equals
++			{
++			}
+ 		}
+ 	}
+ 
+@@ -1469,7 +1482,34 @@ void qsortFast(
+ 	unsigned width
+ )
+ {
++	if ( r_generichelper->integer )
++	{
++		ri.Printf( PRINT_ALL, "qsortFast surfaces dump:\n" );
++	}
+ 	qsort(base, num, width, qsort_compare);
++
++	//drawSurf_t* s = base;
++	//unsigned int oldsid = ~0;
++	//unsigned bits = 0;
++	//for ( int i = 0; i < num; i++, s++ )
++	//{
++	//	surfpartition_t sid = qdx_surface_get_partition( s->surface );
++	//	if ( sid.combined != oldsid )
++	//	{
++	//		oldsid = sid.combined;
++	//		bits++;
++	//		if ( bits > 3 ) bits = 0;
++	//	}
++	//	unsigned int sort = s->sort;
++	//	if( sid.combined )
++	//		s->sort = (sort & ~3) | bits;
++	//	if ( r_generichelper->integer )
++	//		ri.Printf( PRINT_ALL, " %p %x %x %x %d\n", s, sort, s->sort, sid.combined, bits );
++	//}
++	if ( r_generichelper->integer )
++	{
++		ri.Cvar_Set( "r_generichelper", va("%d", r_generichelper->integer - 1));
++	}
+ }
+ #else
+ /* sort the array between lo and hi (inclusive)
