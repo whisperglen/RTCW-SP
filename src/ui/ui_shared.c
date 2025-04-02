@@ -147,6 +147,82 @@ translateString_t translateStrings[] = {
 	{"or"}                       //
 };
 
+vmCvar_t ui_fixedAspect;
+vmCvar_t ui_fixedAspectFOV;
+
+static screenPlacement_e ui_horizontalPlacement = PLACE_CENTER;
+static screenPlacement_e ui_verticalPlacement = PLACE_CENTER;
+static screenPlacement_e ui_lastHorizontalPlacement = PLACE_CENTER;
+static screenPlacement_e ui_lastVerticalPlacement = PLACE_CENTER;
+
+/*
+================
+UI_SetScreenPlacement
+================
+*/
+void UI_SetScreenPlacement(screenPlacement_e hpos, screenPlacement_e vpos)
+{
+	ui_lastHorizontalPlacement = ui_horizontalPlacement;
+	ui_lastVerticalPlacement = ui_verticalPlacement;
+
+	ui_horizontalPlacement = hpos;
+	ui_verticalPlacement = vpos;
+}
+
+/*
+================
+UI_AdjustFrom640
+
+Adjusted for resolution and screen aspect ratio
+================
+*/
+void UI_AdjustFrom640( float *x, float *y, float *w, float *h ) {
+	// expect valid pointers
+#if 0
+	*x = *x * DC->scale + DC->bias;
+	*y *= DC->scale;
+	*w *= DC->scale;
+	*h *= DC->scale;
+#endif
+	if ( ui_fixedAspect.integer ) {
+		if (ui_horizontalPlacement == PLACE_STRETCH) {
+			// scale for screen sizes (not aspect correct in wide screen)
+			*w *= DC->xscaleStretch;
+			*x *= DC->xscaleStretch;
+		} else {
+			// scale for screen sizes
+			*w *= DC->xscale;
+			*x *= DC->xscale;
+	
+			if (ui_horizontalPlacement == PLACE_CENTER) {
+				*x += DC->xBias;
+			} else if (ui_horizontalPlacement == PLACE_RIGHT) {
+				*x += DC->xBias*2;
+			}
+		}
+
+		if (ui_verticalPlacement == PLACE_STRETCH) {
+			*h *= DC->yscaleStretch;
+			*y *= DC->yscaleStretch;
+		} else {
+			*h *= DC->yscale;
+			*y *= DC->yscale;
+	
+			if (ui_verticalPlacement == PLACE_CENTER) {
+				*y += DC->yBias;
+			} else if (ui_verticalPlacement == PLACE_BOTTOM) {
+				*y += DC->yBias*2;
+			}
+		}
+	} else {
+		*x *= DC->xscale;
+		*y *= DC->yscale;
+		*w *= DC->xscale;
+		*h *= DC->yscale;
+	}
+}
+
+
 //----(SA)	added
 /*
 ==============
@@ -279,6 +355,9 @@ const char *String_Alloc( const char *p ) {
 		}
 
 		str  = UI_Alloc( sizeof( stringDef_t ) );
+		if ( !str ) {
+			return NULL;
+		}
 		str->next = NULL;
 		str->str = &strPool[ph];
 		if ( last ) {
@@ -642,7 +721,7 @@ qboolean PC_Script_Parse( int handle, const char **out ) {
 		}
 		Q_strcat( script, 1024, " " );
 	}
-	//return qfalse;
+	return qfalse;
 }
 
 // display, window, menu, item code
@@ -708,21 +787,25 @@ void Fade( int *flags, float *f, float clamp, int *nextTime, int offsetTime, qbo
 	}
 }
 
-
-
 void Window_Paint( Window *w, float fadeAmount, float fadeClamp, float fadeCycle ) {
 	//float bordersize = 0;
-	vec4_t color;
-	rectDef_t fillRect = w->rect;
+	vec4_t color = {0};
+	rectDef_t fillRect;
+
+	if ( w == NULL ) {
+		return;
+	}
 
 	if ( debugMode ) {
 		color[0] = color[1] = color[2] = color[3] = 1;
 		DC->drawRect( w->rect.x, w->rect.y, w->rect.w, w->rect.h, 1, color );
 	}
 
-	if ( w == NULL || ( w->style == 0 && w->border == 0 ) ) {
+	if ( w->style == 0 && w->border == 0 ) {
 		return;
 	}
+
+	fillRect = w->rect;
 
 	if ( w->border != 0 ) {
 		fillRect.x += w->borderSize;
@@ -731,13 +814,53 @@ void Window_Paint( Window *w, float fadeAmount, float fadeClamp, float fadeCycle
 		fillRect.h -= w->borderSize + 1;
 	}
 
+	// Make menus letterboxed if aspect is < 4:3
+	if ( ui_fixedAspect.integer ) {
+		if ( DC->glconfig.vidWidth * 480.0 < DC->glconfig.vidHeight * 640.0 ) {
+			vec4_t col = {0, 0, 0, 1};
+			float lb = 0.5 * ( ( DC->glconfig.vidHeight - ( DC->yscale * 480.0 ) ) / DC->yscale );
+
+			UI_SetScreenPlacement(PLACE_LEFT, PLACE_BOTTOM);
+			DC->fillRect( 0, 480 - lb, 640, lb + 1, col );
+			UI_SetScreenPlacement(PLACE_LEFT, PLACE_TOP);
+			DC->fillRect( 0, 0, 640, lb + 1, col );
+			UI_SetScreenPlacement(PLACE_CENTER, PLACE_CENTER);
+		}
+	}
+
+	// Make menus pillarboxed if using 4:3 UI
+	if ( ui_fixedAspect.integer == 1 ) {
+		if ( DC->glconfig.vidWidth * 480.0 > DC->glconfig.vidHeight * 640.0 ) {
+			vec4_t col = {0, 0, 0, 1};
+			float pillar = 0.5 * ( ( DC->glconfig.vidWidth - ( DC->xscale * 640.0 ) ) / DC->xscale );
+
+			UI_SetScreenPlacement(PLACE_LEFT, PLACE_CENTER);
+			DC->fillRect( 0, 0, pillar + 1, 480, col );
+			UI_SetScreenPlacement(PLACE_RIGHT, PLACE_CENTER);
+			DC->fillRect( 640 - pillar, 0, pillar + 1, 480, col );
+			UI_SetScreenPlacement(PLACE_CENTER, PLACE_CENTER);
+		}
+	}
+
 	if ( w->style == WINDOW_STYLE_FILLED ) {
 		// box, but possible a shader that needs filled
 		if ( w->background ) {
 			Fade( &w->flags, &w->backColor[3], fadeClamp, &w->nextTime, fadeCycle, qtrue, fadeAmount );
 			DC->setColor( w->backColor );
-			DC->drawHandlePic( fillRect.x, fillRect.y, fillRect.w, fillRect.h, w->background );
-			DC->setColor( NULL );
+			if ( ui_fixedAspect.integer == 2 ) {
+				if ( DC->glconfig.vidWidth * 480 > DC->glconfig.vidHeight * 640 ) {
+					// HACK ... stretch fadebox when using widescreen
+					if ( !Q_stricmpn( w->name, "fadebox", 7 ) ) {
+						UI_SetScreenPlacement(PLACE_STRETCH, PLACE_STRETCH);
+						DC->drawHandlePic( fillRect.x, fillRect.y, fillRect.w, fillRect.h, w->background );
+						DC->setColor( NULL );
+					}
+				}
+				UI_SetScreenPlacement(PLACE_CENTER, PLACE_CENTER);
+			} else {
+				DC->drawHandlePic( fillRect.x, fillRect.y, fillRect.w, fillRect.h, w->background );
+				DC->setColor( NULL );
+			}
 		} else {
 			DC->fillRect( fillRect.x, fillRect.y, fillRect.w, fillRect.h, w->backColor );
 		}
@@ -748,8 +871,32 @@ void Window_Paint( Window *w, float fadeAmount, float fadeClamp, float fadeCycle
 		if ( w->flags & WINDOW_FORECOLORSET ) {
 			DC->setColor( w->foreColor );
 		}
-		DC->drawHandlePic( fillRect.x, fillRect.y, fillRect.w, fillRect.h, w->background );
-		DC->setColor( NULL );
+		if ( ui_fixedAspect.integer == 2 ) {
+			if ( DC->glconfig.vidWidth * 480 > DC->glconfig.vidHeight * 640 ) {
+				// HACK ... widen menu without stretching items and models
+				if ( !Q_stricmpn( w->name, "BLACKGRAD", 9 ) ) {
+					UI_SetScreenPlacement(PLACE_STRETCH, PLACE_STRETCH);
+					DC->drawHandlePic( fillRect.x, fillRect.y, fillRect.w, fillRect.h, w->background );
+					DC->setColor( NULL );
+				} else if ( !Q_stricmpn( w->name, "gold_line", 9 ) ) {
+					UI_SetScreenPlacement(PLACE_STRETCH, PLACE_STRETCH);
+					DC->drawHandlePic( fillRect.x, fillRect.y, fillRect.w, fillRect.h, w->background );
+					DC->setColor( NULL );
+				} else {
+					UI_SetScreenPlacement(PLACE_CENTER, PLACE_CENTER);
+					DC->drawHandlePic( fillRect.x, fillRect.y, fillRect.w, fillRect.h, w->background );
+					DC->setColor( NULL );
+				}
+			} else {
+				UI_SetScreenPlacement(PLACE_CENTER, PLACE_CENTER);
+				DC->drawHandlePic( fillRect.x, fillRect.y, fillRect.w, fillRect.h, w->background );
+				DC->setColor( NULL );
+			}
+			UI_SetScreenPlacement(PLACE_CENTER, PLACE_CENTER);
+		} else {
+			DC->drawHandlePic( fillRect.x, fillRect.y, fillRect.w, fillRect.h, w->background );
+			DC->setColor( NULL );
+		}
 	} else if ( w->style == WINDOW_STYLE_TEAMCOLOR ) {
 		if ( DC->getTeamColor ) {
 			DC->getTeamColor( &color );
@@ -1299,7 +1446,7 @@ void Script_NotebookShowpage( itemDef_t *item, char **args ) {
 						continue;
 					}
 
-					if ( pages & ( 1 << ( newpage - 1 ) ) ) {
+					if ( pages & ( 1 << ( abs( newpage - 1 ) ) ) ) {
 						dec++;
 //						if(dec == inc)
 //							break;
@@ -1317,7 +1464,7 @@ void Script_NotebookShowpage( itemDef_t *item, char **args ) {
 						newpage = newpage + NOTEBOOK_MAX_PAGES;
 					}
 
-					if ( pages & ( 1 << ( newpage - 1 ) ) ) {
+					if ( pages & ( 1 << ( abs( newpage - 1 ) ) ) ) {
 						break;
 					}
 				}
@@ -1362,10 +1509,10 @@ void Menu_TransitionItemByName( menuDef_t *menu, const char *p, rectDef_t rectFr
 			item->window.offsetTime = time;
 			memcpy( &item->window.rectClient, &rectFrom, sizeof( rectDef_t ) );
 			memcpy( &item->window.rectEffects, &rectTo, sizeof( rectDef_t ) );
-			item->window.rectEffects2.x = abs( rectTo.x - rectFrom.x ) / amt;
-			item->window.rectEffects2.y = abs( rectTo.y - rectFrom.y ) / amt;
-			item->window.rectEffects2.w = abs( rectTo.w - rectFrom.w ) / amt;
-			item->window.rectEffects2.h = abs( rectTo.h - rectFrom.h ) / amt;
+			item->window.rectEffects2.x = fabs( rectTo.x - rectFrom.x ) / amt;
+			item->window.rectEffects2.y = fabs( rectTo.y - rectFrom.y ) / amt;
+			item->window.rectEffects2.w = fabs( rectTo.w - rectFrom.w ) / amt;
+			item->window.rectEffects2.h = fabs( rectTo.h - rectFrom.h ) / amt;
 			Item_UpdatePosition( item );
 		}
 	}
@@ -1748,7 +1895,7 @@ float Item_Slider_ThumbPosition( itemDef_t *item ) {
 		x = item->window.rect.x;
 	}
 
-	if ( editDef == NULL && item->cvar ) {
+	if ( editDef == NULL || item->cvar == NULL ) {
 		return x;
 	}
 
@@ -3877,14 +4024,19 @@ qboolean Item_Bind_HandleKey( itemDef_t *item, int key, qboolean down ) {
 	return qtrue;
 }
 
-
-
 void AdjustFrom640( float *x, float *y, float *w, float *h ) {
 	//*x = *x * DC->scale + DC->bias;
-	*x *= DC->xscale;
-	*y *= DC->yscale;
-	*w *= DC->xscale;
-	*h *= DC->yscale;
+	if ( ui_fixedAspect.integer ) {
+		*w *= DC->xscale;
+		*x = *x * DC->xscale + DC->xBias;
+		*h *= DC->yscale;
+		*y = *y * DC->yscale + DC->yBias;
+	} else {
+		*x *= DC->xscale;
+		*y *= DC->yscale;
+		*w *= DC->xscale;
+		*h *= DC->yscale;
+	}
 }
 
 void Item_Model_Paint( itemDef_t *item ) {
@@ -4532,6 +4684,10 @@ menuDef_t *Menus_ActivateByName( const char *p ) {
 
 
 void Item_Init( itemDef_t *item ) {
+	if (item == NULL) {
+		return;
+	}
+
 	memset( item, 0, sizeof( itemDef_t ) );
 	item->textscale = 0.55f;
 	Window_Init( &item->window );
@@ -4601,7 +4757,7 @@ void Menu_HandleMouseMove( menuDef_t *menu, float x, float y ) {
 						}
 					}
 				}
-			} else if ( menu->items[i]->window.flags & WINDOW_MOUSEOVER ) {
+			} else if ( menu->items[i] && menu->items[i]->window.flags & WINDOW_MOUSEOVER ) {
 				Item_MouseLeave( menu->items[i] );
 				Item_SetMouseOver( menu->items[i], qfalse );
 			}
@@ -5433,7 +5589,7 @@ qboolean ItemParse_cvarStrList( itemDef_t *item, int handle ) {
 
 	}
 
-	//return qfalse;
+	return qfalse;
 }
 
 qboolean ItemParse_cvarFloatList( itemDef_t *item, int handle ) {
@@ -5481,7 +5637,7 @@ qboolean ItemParse_cvarFloatList( itemDef_t *item, int handle ) {
 
 	}
 
-	//return qfalse;
+	return qfalse;
 }
 
 
@@ -6079,6 +6235,9 @@ qboolean MenuParse_itemDef( itemDef_t *item, int handle ) {
 	menuDef_t *menu = (menuDef_t*)item;
 	if ( menu->itemCount < MAX_MENUITEMS ) {
 		menu->items[menu->itemCount] = UI_Alloc( sizeof( itemDef_t ) );
+		if ( !menu->items[menu->itemCount] ) {
+			return qfalse;
+		}
 		Item_Init( menu->items[menu->itemCount] );
 		if ( !Item_Parse( handle, menu->items[menu->itemCount] ) ) {
 			return qfalse;
@@ -6210,6 +6369,7 @@ qboolean Menu_Parse( int handle, menuDef_t *menu ) {
 			return qfalse;
 		}
 	}
+	return qfalse;
 }
 
 /*

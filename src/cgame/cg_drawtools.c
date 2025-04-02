@@ -29,6 +29,25 @@ If you have questions concerning this license or the applicable additional terms
 // cg_drawtools.c -- helper functions called by cg_draw, cg_scoreboard, cg_info, etc
 #include "cg_local.h"
 
+static screenPlacement_e cg_horizontalPlacement = PLACE_CENTER;
+static screenPlacement_e cg_verticalPlacement = PLACE_CENTER;
+static screenPlacement_e cg_lastHorizontalPlacement = PLACE_CENTER;
+static screenPlacement_e cg_lastVerticalPlacement = PLACE_CENTER;
+
+/*
+================
+CG_SetScreenPlacement
+================
+*/
+void CG_SetScreenPlacement(screenPlacement_e hpos, screenPlacement_e vpos)
+{
+	cg_lastHorizontalPlacement = cg_horizontalPlacement;
+	cg_lastVerticalPlacement = cg_verticalPlacement;
+
+	cg_horizontalPlacement = hpos;
+	cg_verticalPlacement = vpos;
+}
+
 /*
 ================
 CG_AdjustFrom640
@@ -44,23 +63,43 @@ void CG_AdjustFrom640( float *x, float *y, float *w, float *h ) {
 	}
 #endif
 
-	// NERVE - SMF - hack to make images display properly in small view / limbo mode
-	if ( cg.limboMenu && cg.refdef.width ) {
-		float xscale = ( ( cg.refdef.width / cgs.screenXScale ) / 640.f );
-		float yscale = ( ( cg.refdef.height / cgs.screenYScale ) / 480.f );
+	if ( cg_fixedAspect.integer ) {
+		if (cg_horizontalPlacement == PLACE_STRETCH) {
+			// scale for screen sizes (not aspect correct in wide screen)
+			*w *= cgs.screenXScaleStretch;
+			*x *= cgs.screenXScaleStretch;
+		} else {
+			// scale for screen sizes
+			*w *= cgs.screenXScale;
+			*x *= cgs.screenXScale;
+	
+			if (cg_horizontalPlacement == PLACE_CENTER) {
+				*x += cgs.screenXBias;
+			} else if (cg_horizontalPlacement == PLACE_RIGHT) {
+				*x += cgs.screenXBias*2;
+			}
+		}
 
-		( *x ) = ( *x ) * xscale + ( cg.refdef.x / cgs.screenXScale );
-		( *y ) = ( *y ) * yscale + ( cg.refdef.y / cgs.screenYScale );
-		( *w ) *= xscale;
-		( *h ) *= yscale;
+		if (cg_verticalPlacement == PLACE_STRETCH) {
+			*h *= cgs.screenYScaleStretch;
+			*y *= cgs.screenYScaleStretch;
+		} else {
+			*h *= cgs.screenYScale;
+			*y *= cgs.screenYScale;
+	
+			if (cg_verticalPlacement == PLACE_CENTER) {
+				*y += cgs.screenYBias;
+			} else if (cg_verticalPlacement == PLACE_BOTTOM) {
+				*y += cgs.screenYBias*2;
+			}
+		}
+	} else {
+		// scale for screen sizes
+		*x *= cgs.screenXScale;
+		*y *= cgs.screenYScale;
+		*w *= cgs.screenXScale;
+		*h *= cgs.screenYScale;
 	}
-	// -NERVE - SMF
-
-	// scale for screen sizes
-	*x *= cgs.screenXScale;
-	*y *= cgs.screenYScale;
-	*w *= cgs.screenXScale;
-	*h *= cgs.screenYScale;
 }
 
 /*
@@ -262,7 +301,7 @@ void CG_DrawRect( float x, float y, float width, float height, float size, const
 	trap_R_SetColor( hudAlphaColor );
 
 	CG_DrawTopBottom( x, y, width, height, size );
-	CG_DrawSides( x, y, width, height, size );
+	CG_DrawSides( x, y + size, width, height - size * 2, size );
 
 	trap_R_SetColor( NULL );
 }
@@ -1067,7 +1106,11 @@ static void UI_DrawBannerString2( int x, int y, const char* str, vec4_t color ) 
 	trap_R_SetColor( color );
 
 	ax = x * cgs.screenXScale + cgs.screenXBias;
-	ay = y * cgs.screenXScale;
+	if ( cg_fixedAspect.integer ) {
+		ay = y * cgs.screenYScale + cgs.screenYBias;
+	} else {
+		ay = y * cgs.screenYScale;
+	}
 
 	s = str;
 	while ( *s )
@@ -1082,7 +1125,7 @@ static void UI_DrawBannerString2( int x, int y, const char* str, vec4_t color ) 
 			fwidth = (float)propMapB[ch][2] / 256.0f;
 			fheight = (float)PROPB_HEIGHT / 256.0f;
 			aw = (float)propMapB[ch][2] * cgs.screenXScale;
-			ah = (float)PROPB_HEIGHT * cgs.screenXScale;
+			ah = (float)PROPB_HEIGHT * cgs.screenYScale;
 			trap_R_DrawStretchPic( ax, ay, aw, ah, fcol, frow, fcol + fwidth, frow + fheight, cgs.media.charsetPropB );
 			ax += ( aw + (float)PROPB_GAP_WIDTH * cgs.screenXScale );
 		}
@@ -1174,7 +1217,11 @@ static void UI_DrawProportionalString2( int x, int y, const char* str, vec4_t co
 	trap_R_SetColor( color );
 
 	ax = x * cgs.screenXScale + cgs.screenXBias;
-	ay = y * cgs.screenXScale;
+	if ( cg_fixedAspect.integer ) {
+		ay = y * cgs.screenYScale + cgs.screenYBias;
+	} else {
+		ay = y * cgs.screenYScale;
+	}
 
 	s = str;
 	while ( *s )
@@ -1188,7 +1235,7 @@ static void UI_DrawProportionalString2( int x, int y, const char* str, vec4_t co
 			fwidth = (float)propMap[ch][2] / 256.0f;
 			fheight = (float)PROP_HEIGHT / 256.0f;
 			aw = (float)propMap[ch][2] * cgs.screenXScale * sizeScale;
-			ah = (float)PROP_HEIGHT * cgs.screenXScale * sizeScale;
+			ah = (float)PROP_HEIGHT * cgs.screenYScale * sizeScale;
 			trap_R_DrawStretchPic( ax, ay, aw, ah, fcol, frow, fcol + fwidth, frow + fheight, charset );
 		} else {
 			aw = 0;
@@ -1280,18 +1327,4 @@ void UI_DrawProportionalString( int x, int y, const char* str, int style, vec4_t
 
 	UI_DrawProportionalString2( x, y, str, color, sizeScale, cgs.media.charsetProp );
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 

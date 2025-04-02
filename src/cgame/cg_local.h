@@ -1525,6 +1525,9 @@ typedef struct {
 	float screenXScale;                 // derived from glconfig
 	float screenYScale;
 	float screenXBias;
+	float screenYBias;
+	float screenXScaleStretch;
+	float screenYScaleStretch;
 
 	int serverCommandSequence;              // reliable command stream counter
 	int processedSnapshotNum;            // the number of snapshots cgame has requested
@@ -1608,6 +1611,7 @@ typedef struct {
 
 } cgs_t;
 
+
 //==============================================================================
 
 extern cgs_t cgs;
@@ -1683,6 +1687,8 @@ extern vmCvar_t cg_autoswitch;
 extern vmCvar_t cg_ignore;
 extern vmCvar_t cg_simpleItems;
 extern vmCvar_t cg_fov;
+extern vmCvar_t cg_fixedAspect;
+extern vmCvar_t cg_fixedAspectFOV;
 extern vmCvar_t cg_zoomFov;
 extern vmCvar_t cg_zoomDefaultBinoc;
 extern vmCvar_t cg_zoomDefaultSniper;
@@ -1831,6 +1837,8 @@ void CG_Concussive( centity_t *cent );
 //
 // cg_drawtools.c
 //
+void CG_SetScreenPlacement(screenPlacement_e hpos, screenPlacement_e vpos);
+
 void CG_AdjustFrom640( float *x, float *y, float *w, float *h );
 void CG_FillRect( float x, float y, float width, float height, const float *color );
 void CG_HorizontalPercentBar( float x, float y, float width, float height, float percent );

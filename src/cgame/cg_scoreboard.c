@@ -465,6 +465,10 @@ qboolean CG_DrawScoreboard( void ) {
 		return qfalse;
 	}
 
+	if ( cg_fixedAspect.integer ) {
+		CG_SetScreenPlacement(PLACE_CENTER, PLACE_CENTER);
+	}
+
 	if ( cg.showScores || cg.predictedPlayerState.pm_type == PM_DEAD ||
 		 cg.predictedPlayerState.pm_type == PM_INTERMISSION ) {
 		fade = 1.0;
@@ -621,21 +625,33 @@ void CG_DrawTourneyScoreboard( void ) {
 	int y;
 	int i;
 
+	if ( cg_fixedAspect.integer ) {
+		CG_SetScreenPlacement(PLACE_CENTER, PLACE_CENTER);
+	}
+
 	// request more scores regularly
 	if ( cg.scoresRequestTime + 2000 < cg.time ) {
 		cg.scoresRequestTime = cg.time;
 		trap_SendClientCommand( "score" );
 	}
 
+	// draw the dialog background
+	if ( cg_fixedAspect.integer ) {
+		color[0] = color[1] = color[2] = 0;
+	 	color[3] = 1;
+		CG_SetScreenPlacement(PLACE_STRETCH, PLACE_STRETCH);
+		CG_FillRect( 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, color );
+		CG_SetScreenPlacement(PLACE_CENTER, PLACE_CENTER);
+	} else {
+		color[0] = color[1] = color[2] = 0;
+		color[3] = 1;
+		CG_FillRect( 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, color );
+	}
+
 	color[0] = 1;
 	color[1] = 1;
 	color[2] = 1;
 	color[3] = 1;
-
-	// draw the dialog background
-	color[0] = color[1] = color[2] = 0;
-	color[3] = 1;
-	CG_FillRect( 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, color );
 
 	// print the mesage of the day
 	s = CG_ConfigString( CS_MOTD );

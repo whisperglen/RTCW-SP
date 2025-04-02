@@ -984,6 +984,7 @@ typedef struct {
 	shader_t                *defaultShader;
 	shader_t                *shadowShader;
 //	shader_t				*projectionShadowShader;
+	shader_t				*cinematicShader;
 	shader_t                *dlightShader;      //----(SA) added
 
 	shader_t                *flareShader;

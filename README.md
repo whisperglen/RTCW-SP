@@ -8,7 +8,7 @@ Will it work? Who knows, let's find out!
 
 ### WIP:  
 - translate OGL calls to DX9: 90% (some debug drawcalls still remain)
-- add camera: 99%
+- add camera: 100%
 - tinker with the geometry to get stable hashes: 70% (we have stable hashes with r_novis, need optimisation)
 - convert dynamic lights to T&L: 90% (dynamic lights [torches, fireplaces, flamethrower] are sent via DX9 lights [max. 8], coronas are sent as Remix sphere lights)
 
@@ -29,6 +29,7 @@ Will it work? Who knows, let's find out!
 New console commands: increment/decrement can be used for integer cvars
 
 ### Included in this project:
+- Widescreen support: full credit goes to RealRTCW [https://github.com/wolfetplayer/RealRTCW] and Quake3e [https://github.com/ec-/Quake3e]
 - The StackWalker [https://github.com/JochenKalmbach/StackWalker] project to print crash info (BSD-2-Clause license)
 - part of Microsoft DirectXTex [https://github.com/microsoft/DirectXTex] for DXT5 texture compression (MIT license)
 - FNV hash [http://isthe.com/chongo/tech/comp/fnv/] (CC0 1.0 Public Domain license)

@@ -67,20 +67,34 @@ void SCR_AdjustFrom640( float *x, float *y, float *w, float *h ) {
 	float xscale;
 	float yscale;
 
-#if 0
-	// adjust for wide screens
-	if ( cls.glconfig.vidWidth * 480 > cls.glconfig.vidHeight * 640 ) {
-		*x += 0.5 * ( cls.glconfig.vidWidth - ( cls.glconfig.vidHeight * 640 / 480 ) );
-	}
-#endif
+#define WIDESCREEN_CENTER 0 //center the video on widescreen, with black pillars on the side; otherwise strectch full width
 
+#if 1
+	// adjust for wide screens
+	float biasY = 0;
+	float biasX = 0;
+	float scale = 0;
+	if ( (WIDESCREEN_CENTER == 1) && (cls.glconfig.vidWidth * 480 > cls.glconfig.vidHeight * 640) ) {
+		// wide screen, scale by height
+		scale = cls.glconfig.vidHeight * (1.0/480.0);
+		biasX = 0.5 * ( cls.glconfig.vidWidth - ( cls.glconfig.vidHeight * (640.0/480.0) ) );
+	} else {
+		// no wide screen, scale by width
+		scale = cls.glconfig.vidWidth * (1.0/640.0);
+		biasY = 0.5 * ( cls.glconfig.vidHeight - ( cls.glconfig.vidWidth * (480.0/640) ) );
+	}
+	if ( x ) *x = *x * scale + biasX;
+	if ( y ) *y = *y * scale + biasY;
+	if ( w ) *w = *w * scale;
+	if ( h ) *h = *h * scale;
+#else
 	// scale for screen sizes
 	xscale = cls.glconfig.vidWidth / 640.0;
 	yscale = cls.glconfig.vidHeight / 480.0;
 	if ( x ) {
 		*x *= xscale;
 	}
-	if ( y ) {
+	 {
 		*y *= yscale;
 	}
 	if ( w ) {
@@ -89,6 +103,7 @@ void SCR_AdjustFrom640( float *x, float *y, float *w, float *h ) {
 	if ( h ) {
 		*h *= yscale;
 	}
+#endif
 }
 
 /*

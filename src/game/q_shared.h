@@ -1574,4 +1574,17 @@ typedef enum {
 	MAX_LANGUAGES
 } languages_t;
 
+typedef enum {
+	PLACE_STRETCH,
+	PLACE_CENTER,
+
+	// horizontal only
+	PLACE_LEFT,
+	PLACE_RIGHT,
+
+	// vertical only
+	PLACE_TOP,
+	PLACE_BOTTOM
+} screenPlacement_e;
+
 #endif  // __Q_SHARED_H

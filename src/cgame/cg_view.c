@@ -830,7 +830,7 @@ static int CG_CalcFov( void ) {
 		fov_x = 90;
 	} else {
 		// user selectable
-		if ( cgs.dmflags & DF_FIXED_FOV ) {
+		if ( ( cgs.dmflags & DF_FIXED_FOV ) || ( cg_fixedAspect.integer && cg_fixedAspectFOV.integer ) ) {
 			// dmflag to prevent wide fov for all clients
 			fov_x = 90;
 		} else {
@@ -893,6 +893,16 @@ static int CG_CalcFov( void ) {
 
 	if ( cg.snap->ps.persistant[PERS_HWEAPON_USE] ) {
 		fov_x = 55;
+	}
+
+	if ( cg_fixedAspect.integer ) {
+		// Based on LordHavoc's code for Darkplaces
+		// http://www.quakeworld.nu/forum/topic/53/what-does-your-qw-look-like/page/30
+		const float baseAspect = 0.75f; // 3/4
+		const float aspect = (float)cg.refdef.width/(float)cg.refdef.height;
+		const float desiredFov = fov_x;
+
+		fov_x = atan2( tan( desiredFov*M_PI / 360.0f ) * baseAspect*aspect, 1 )*360.0f / M_PI;
 	}
 
 	x = cg.refdef.width / tan( fov_x / 360 * M_PI );
@@ -1078,6 +1088,16 @@ static int CG_CalcViewValues( void ) {
 			angles[PITCH] = -angles[PITCH];     // (SA) compensate for reversed pitch (this makes the game match the editor, however I'm guessing the real fix is to be done there)
 			VectorCopy( angles, cg.refdefViewAngles );
 			AnglesToAxis( cg.refdefViewAngles, cg.refdef.viewaxis );
+
+			if ( cg_fixedAspect.integer ) {
+				// Based on LordHavoc's code for Darkplaces
+				// http://www.quakeworld.nu/forum/topic/53/what-does-your-qw-look-like/page/30
+				const float baseAspect = 0.75f; // 3/4
+				const float aspect = (float)cg.refdef.width/(float)cg.refdef.height;
+				const float desiredFov = fov;
+		
+				fov = atan2( tan( desiredFov*M_PI / 360.0f ) * baseAspect*aspect, 1 )*360.0f / M_PI;
+			}
 
 			x = cg.refdef.width / tan( fov / 360 * M_PI );
 			cg.refdef.fov_y = atan2( cg.refdef.height, x );
@@ -1342,7 +1362,7 @@ void CG_DrawSkyBoxPortal( void ) {
 			fov_x = 90;
 		} else {
 			// user selectable
-			if ( cgs.dmflags & DF_FIXED_FOV ) {
+			if ( ( cgs.dmflags & DF_FIXED_FOV ) || ( cg_fixedAspect.integer && cg_fixedAspectFOV.integer ) ) {
 				// dmflag to prevent wide fov for all clients
 				fov_x = 90;
 			} else {
@@ -1397,6 +1417,16 @@ void CG_DrawSkyBoxPortal( void ) {
 
 		if ( cg.snap->ps.persistant[PERS_HWEAPON_USE] ) {
 			fov_x = 55;
+		}
+
+		if ( cg_fixedAspect.integer ) {
+			// Based on LordHavoc's code for Darkplaces
+			// http://www.quakeworld.nu/forum/topic/53/what-does-your-qw-look-like/page/30
+			const float baseAspect = 0.75f; // 3/4
+			const float aspect = (float)cg.refdef.width/(float)cg.refdef.height;
+			const float desiredFov = fov_x;
+	
+			fov_x = atan2( tan( desiredFov*M_PI / 360.0f ) * baseAspect*aspect, 1 )*360.0f / M_PI;
 		}
 
 		x = cg.refdef.width / tan( fov_x / 360 * M_PI );

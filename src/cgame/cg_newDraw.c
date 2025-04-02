@@ -277,6 +277,10 @@ static void CG_DrawPlayerWeaponIcon( rectDef_t *rect, qboolean drawHighlighted, 
 		return;
 	}
 
+	if ( cg_fixedAspect.integer == 2 ) {
+		CG_SetScreenPlacement(PLACE_RIGHT, PLACE_BOTTOM);
+	}
+
 	// DHM - Nerve :: special case for WP_CLASS_SPECIAL
 
 	realweap = cg.predictedPlayerState.weapon;
@@ -446,6 +450,10 @@ static void CG_DrawCursorhint( rectDef_t *rect ) {
 
 	icon = cgs.media.hintShaders[cg.cursorHintIcon];
 
+	if ( cg_fixedAspect.integer ) {
+		CG_SetScreenPlacement(PLACE_CENTER, PLACE_CENTER);
+	}
+
 	switch ( cg.cursorHintIcon ) {
 	case HINT_NONE:
 	case HINT_FORCENONE:
@@ -594,6 +602,10 @@ static void CG_DrawPlayerAmmoValue( rectDef_t *rect, int font, float scale, vec4
 
 	if ( ps->weaponstate == WEAPON_RELOADING && type != 0 ) {
 		return;
+	}
+
+	if ( cg_fixedAspect.integer == 2 ) {
+		CG_SetScreenPlacement(PLACE_RIGHT, PLACE_BOTTOM);
 	}
 
 	switch ( weap ) {      // some weapons don't draw ammo count text
@@ -887,6 +899,10 @@ static void CG_DrawHoldableItem( rectDef_t *rect, int font, float scale, qboolea
 		return;
 	}
 
+	if ( cg_fixedAspect.integer == 2 ) {
+		CG_SetScreenPlacement(PLACE_RIGHT, PLACE_CENTER);
+	}
+
 	value   = cg.predictedPlayerState.holdable[cg.holdableSelect];
 
 	if ( value ) {
@@ -1059,6 +1075,10 @@ static void CG_DrawPlayerHealth( rectDef_t *rect, int font, float scale, vec4_t 
 	ps = &cg.snap->ps;
 
 	value = ps->stats[STAT_HEALTH];
+
+	if ( cg_fixedAspect.integer == 2 ) {
+		CG_SetScreenPlacement(PLACE_LEFT, PLACE_BOTTOM);
+	}
 
 	if ( shader ) {
 		trap_R_SetColor( color );
@@ -2152,6 +2172,10 @@ void CG_DrawWeapHeat( rectDef_t *rect, int align ) {
 		return;
 	}
 
+	if ( cg_fixedAspect.integer == 2 ) {
+		CG_SetScreenPlacement(PLACE_RIGHT, PLACE_BOTTOM);
+	}
+
 	if ( align != HUD_HORIZONTAL ) {
 		flags |= 4;   // BAR_VERT
 
@@ -2180,6 +2204,10 @@ static void CG_DrawFatigue( rectDef_t *rect, vec4_t color, int align ) {
 
 	barFrac = (float)cg.snap->ps.sprintTime / SPRINTTIME;
 //	omBarFrac = 1.0f-barFrac;
+
+	if ( cg_fixedAspect.integer == 2 ) {
+		CG_SetScreenPlacement(PLACE_LEFT, PLACE_BOTTOM);
+	}
 
 	if ( align != HUD_HORIZONTAL ) {
 		flags |= 4;   // BAR_VERT

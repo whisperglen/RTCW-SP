@@ -478,6 +478,10 @@ static void CG_DrawStatusBarHead( float x ) {
 
 	VectorClear( angles );
 
+	if ( cg_fixedAspect.integer == 2 ) {
+		CG_SetScreenPlacement(PLACE_CENTER, PLACE_BOTTOM);
+	}
+
 	if ( cg.damageTime && cg.time - cg.damageTime < DAMAGE_TIME ) {
 		frac = (float)( cg.time - cg.damageTime ) / DAMAGE_TIME;
 		size = ICON_SIZE * 1.25 * ( 1.5 - frac * 0.5 );
@@ -714,11 +718,17 @@ static void CG_DrawStatusBar( void ) {
 		float scale,halfScale;
 		float wideOffset;
 
+		if ( cg_fixedAspect.integer == 2 ) {
+			CG_SetScreenPlacement(PLACE_RIGHT, PLACE_BOTTOM);
+		}
+
 		value = ps->ammo[BG_FindAmmoForWeapon( cent->currentState.weapon )];
 		inclip = ps->ammoclip[BG_FindClipForWeapon( cent->currentState.weapon )];
 
 		if ( value > -1 ) {
-			if ( ( cg.predictedPlayerState.weaponstate == WEAPON_FIRING || cg.predictedPlayerState.weaponstate == WEAPON_FIRINGALT )
+			if ( cg.predictedPlayerState.weapon == WP_KNIFE ) {
+				color = 3; 
+			} else if ( ( cg.predictedPlayerState.weaponstate == WEAPON_FIRING || cg.predictedPlayerState.weaponstate == WEAPON_FIRINGALT )
 				 && cg.predictedPlayerState.weaponTime > 100 ) {
 				// draw as dark grey when reloading
 				color = 2;  // dark grey
@@ -808,6 +818,9 @@ static void CG_DrawStatusBar( void ) {
 				}
 			}
 		}
+
+	if ( cg_fixedAspect.integer == 2 ) {
+		CG_SetScreenPlacement(PLACE_LEFT, PLACE_BOTTOM);
 	}
 
 	//
@@ -870,6 +883,8 @@ static void CG_DrawStatusBar( void ) {
 ===========================================================================================
 */
 
+#define UPPERRIGHT_X 500
+
 /*
 ================
 CG_DrawAttacker
@@ -909,18 +924,17 @@ static float CG_DrawAttacker( float y ) {
 	angles[PITCH] = 0;
 	angles[YAW] = 180;
 	angles[ROLL] = 0;
-	CG_DrawHead( 640 - size, y, size, size, clientNum, angles );
+	CG_DrawHead( UPPERRIGHT_X - size, y, size, size, clientNum, angles );
 
 	info = CG_ConfigString( CS_PLAYERS + clientNum );
 	name = Info_ValueForKey(  info, "n" );
 	y += size;
-	CG_DrawBigString( 640 - ( Q_PrintStrlen( name ) * BIGCHAR_WIDTH ), y, name, 0.5 );
+	CG_DrawBigString( UPPERRIGHT_X - ( Q_PrintStrlen( name ) * BIGCHAR_WIDTH ), y, name, 0.5 );
 
 	return y + BIGCHAR_HEIGHT + 2;
 }
 #endif  // #ifdef OLDWOLFUI
 
-#define UPPERRIGHT_X 500
 /*
 ==================
 CG_DrawSnapshot
@@ -1205,6 +1219,10 @@ static void CG_DrawUpperRight( void ) {
 
 	y = 0;
 
+	if ( cg_fixedAspect.integer == 2 ) {
+		CG_SetScreenPlacement(PLACE_RIGHT, PLACE_TOP);
+	}
+
 	if ( cgs.gametype >= GT_TEAM ) {
 		y = CG_DrawTeamOverlay( y );
 	}
@@ -1479,6 +1497,10 @@ static void CG_DrawLowerRight( void ) {
 
 	y = 480 - ICON_SIZE;
 
+	if ( cg_fixedAspect.integer == 2 ) {
+		CG_SetScreenPlacement(PLACE_RIGHT, PLACE_BOTTOM);
+	}
+
 	y = CG_DrawScores( y );
 	y = CG_DrawPowerups( y );
 }
@@ -1575,6 +1597,10 @@ static void CG_DrawPickupItem( void ) {
 	char pickupText[256];
 	float color[4];
 
+	if ( cg_fixedAspect.integer == 2 ) {
+		CG_SetScreenPlacement(PLACE_CENTER, PLACE_BOTTOM);
+	}
+
 	value = cg.itemPickup;
 	if ( value ) {
 		fadeColor = CG_FadeColor( cg.itemPickupTime, 3000 );
@@ -1635,6 +1661,10 @@ void CG_DrawHoldableItem_old( void ) {
 		return;
 	}
 
+	if ( cg_fixedAspect.integer == 2 ) {
+		CG_SetScreenPlacement(PLACE_RIGHT, PLACE_CENTER);
+	}
+
 	value   = cg.predictedPlayerState.holdable[cg.holdableSelect];
 
 	if ( value ) {
@@ -1690,6 +1720,11 @@ static void CG_DrawReward( void ) {
 	if ( !cg_drawRewards.integer ) {
 		return;
 	}
+
+	if ( cg_fixedAspect.integer ) {
+		CG_SetScreenPlacement(PLACE_CENTER, PLACE_CENTER);
+	}
+
 	color = CG_FadeColor( cg.rewardTime, REWARD_TIME );
 	if ( !color ) {
 		return;
@@ -1788,6 +1823,10 @@ static void CG_DrawDisconnect( void ) {
 		return;
 	}
 
+	if ( cg_fixedAspect.integer ) {
+		CG_SetScreenPlacement(PLACE_CENTER, PLACE_CENTER);
+	}
+
 	// also add text in center of screen
 	s = "Connection Interrupted"; // bk 010215 - FIXME
 	w = CG_DrawStrlen( s ) * BIGCHAR_WIDTH;
@@ -1796,6 +1835,10 @@ static void CG_DrawDisconnect( void ) {
 	// blink the icon
 	if ( ( cg.time >> 9 ) & 1 ) {
 		return;
+	}
+
+	if ( cg_fixedAspect.integer == 2 ) {
+		CG_SetScreenPlacement(PLACE_RIGHT, PLACE_BOTTOM);
 	}
 
 	x = 640 - 48;
@@ -1824,6 +1867,10 @@ static void CG_DrawLagometer( void ) {
 //	if(0) {
 		CG_DrawDisconnect();
 		return;
+	}
+
+	if ( cg_fixedAspect.integer == 2 ) {
+		CG_SetScreenPlacement(PLACE_RIGHT, PLACE_BOTTOM);
 	}
 
 	//
@@ -1981,6 +2028,10 @@ static void CG_DrawCenterString( void ) {
 		return;
 	}
 
+	if ( cg_fixedAspect.integer ) {
+		CG_SetScreenPlacement(PLACE_CENTER, PLACE_CENTER);
+	}
+
 	trap_R_SetColor( color );
 
 	start = cg.centerPrint;
@@ -2047,6 +2098,7 @@ static void CG_DrawWeapReticle( void ) {
 	vec4_t snoopercolor = {0.7, .8, 0.7, 0};    // greenish
 	float snooperBrightness;
 	float x = 80, y, w = 240, h = 240;
+	float mask = 0, lb = 0;
 
 	CG_AdjustFrom640( &x, &y, &w, &h );
 
@@ -2062,15 +2114,56 @@ static void CG_DrawWeapReticle( void ) {
 
 
 		// sides
-		CG_FillRect( 0, 0, 80, 480, color );
-		CG_FillRect( 560, 0, 80, 480, color );
+		if ( cg_fixedAspect.integer ) {
+			if ( cgs.glconfig.vidWidth * 480.0 > cgs.glconfig.vidHeight * 640.0 ) {
+				mask = 0.5 * ( ( cgs.glconfig.vidWidth - ( cgs.screenXScale * 480.0 ) ) / cgs.screenXScale );
+
+				CG_SetScreenPlacement(PLACE_LEFT, PLACE_CENTER);
+				CG_FillRect( 0, 0, mask, 480, color );
+				CG_SetScreenPlacement(PLACE_RIGHT, PLACE_CENTER);
+				CG_FillRect( 640 - mask, 0, mask, 480, color );
+			} else if ( cgs.glconfig.vidWidth * 480.0 < cgs.glconfig.vidHeight * 640.0 ) {
+				// sides with letterbox
+				lb = 0.5 * ( ( cgs.glconfig.vidHeight - ( cgs.screenYScale * 480.0 ) ) / cgs.screenYScale );
+
+				CG_SetScreenPlacement(PLACE_LEFT, PLACE_CENTER);
+				CG_FillRect( 0, 0, 80, 480, color );
+				CG_SetScreenPlacement(PLACE_RIGHT, PLACE_CENTER);
+				CG_FillRect( 560, 0, 80, 480, color );
+
+				CG_SetScreenPlacement(PLACE_LEFT, PLACE_BOTTOM);
+				CG_FillRect( 0, 480 - lb, 640, lb, color );
+				CG_SetScreenPlacement(PLACE_LEFT, PLACE_TOP);
+				CG_FillRect( 0, 0, 640, lb, color );
+			} else {
+				// resolution is 4:3
+				CG_SetScreenPlacement(PLACE_LEFT, PLACE_CENTER);
+				CG_FillRect( 0, 0, 80, 480, color );
+				CG_SetScreenPlacement(PLACE_RIGHT, PLACE_CENTER);
+				CG_FillRect( 560, 0, 80, 480, color );
+			}
+		} else {
+			CG_FillRect( 0, 0, 80, 480, color );
+			CG_FillRect( 560, 0, 80, 480, color );
+		}
 
 		// center
+		if ( cg_fixedAspect.integer ) {
+			CG_SetScreenPlacement(PLACE_CENTER, PLACE_CENTER);
+		}
+
 		if ( cgs.media.reticleShaderSimpleQ ) {
-			trap_R_DrawStretchPic( x, 0, w, h, 0, 0, 1, 1, cgs.media.reticleShaderSimpleQ );    // tl
-			trap_R_DrawStretchPic( x + w, 0, w, h, 1, 0, 0, 1, cgs.media.reticleShaderSimpleQ );  // tr
-			trap_R_DrawStretchPic( x, h, w, h, 0, 1, 1, 0, cgs.media.reticleShaderSimpleQ );    // bl
-			trap_R_DrawStretchPic( x + w, h, w, h, 1, 1, 0, 0, cgs.media.reticleShaderSimpleQ );  // br
+			if ( cg_fixedAspect.integer ) {
+				trap_R_DrawStretchPic( x, lb * cgs.screenYScale, w, h, 0, 0, 1, 1, cgs.media.reticleShaderSimpleQ );         // tl
+				trap_R_DrawStretchPic( x + w, lb * cgs.screenYScale, w, h, 1, 0, 0, 1, cgs.media.reticleShaderSimpleQ );     // tr
+				trap_R_DrawStretchPic( x, h + lb * cgs.screenYScale, w, h, 0, 1, 1, 0, cgs.media.reticleShaderSimpleQ );     // bl
+				trap_R_DrawStretchPic( x + w, h + lb * cgs.screenYScale, w, h, 1, 1, 0, 0, cgs.media.reticleShaderSimpleQ ); // br
+			} else {
+				trap_R_DrawStretchPic( x, 0, w, h, 0, 0, 1, 1, cgs.media.reticleShaderSimpleQ );      // tl
+				trap_R_DrawStretchPic( x + w, 0, w, h, 1, 0, 0, 1, cgs.media.reticleShaderSimpleQ );  // tr
+				trap_R_DrawStretchPic( x, h, w, h, 0, 1, 1, 0, cgs.media.reticleShaderSimpleQ );      // bl
+				trap_R_DrawStretchPic( x + w, h, w, h, 1, 1, 0, 0, cgs.media.reticleShaderSimpleQ );  // br
+			}
 		}
 
 		// hairs
@@ -2080,10 +2173,43 @@ static void CG_DrawWeapReticle( void ) {
 		CG_FillRect( 380, 239, 177, 2, color );  // right
 	} else if ( weap == WP_SNOOPERSCOPE ) {
 		// sides
-		CG_FillRect( 0, 0, 80, 480, color );
-		CG_FillRect( 560, 0, 80, 480, color );
+		if ( cg_fixedAspect.integer ) {
+			if ( cgs.glconfig.vidWidth * 480.0 > cgs.glconfig.vidHeight * 640.0 ) {
+				mask = 0.5 * ( ( cgs.glconfig.vidWidth - ( cgs.screenXScale * 480.0 ) ) / cgs.screenXScale );
+
+				CG_SetScreenPlacement(PLACE_LEFT, PLACE_CENTER);
+				CG_FillRect( 0, 0, mask, 480, color );
+				CG_SetScreenPlacement(PLACE_RIGHT, PLACE_CENTER);
+				CG_FillRect( 640 - mask, 0, mask, 480, color );
+			} else if ( cgs.glconfig.vidWidth * 480.0 < cgs.glconfig.vidHeight * 640.0 ) {
+				// sides with letterbox
+				lb = 0.5 * ( ( cgs.glconfig.vidHeight - ( cgs.screenYScale * 480.0 ) ) / cgs.screenYScale );
+
+				CG_SetScreenPlacement(PLACE_LEFT, PLACE_CENTER);
+				CG_FillRect( 0, 0, 80, 480, color );
+				CG_SetScreenPlacement(PLACE_RIGHT, PLACE_CENTER);
+				CG_FillRect( 560, 0, 80, 480, color );
+
+				CG_SetScreenPlacement(PLACE_LEFT, PLACE_BOTTOM);
+				CG_FillRect( 0, 480 - lb, 640, lb, color );
+				CG_SetScreenPlacement(PLACE_LEFT, PLACE_TOP);
+				CG_FillRect( 0, 0, 640, lb, color );
+			} else {
+				// resolution is 4:3
+				CG_SetScreenPlacement(PLACE_LEFT, PLACE_CENTER);
+				CG_FillRect( 0, 0, 80, 480, color );
+				CG_SetScreenPlacement(PLACE_RIGHT, PLACE_CENTER);
+				CG_FillRect( 560, 0, 80, 480, color );
+			}
+		} else {
+			CG_FillRect( 0, 0, 80, 480, color );
+			CG_FillRect( 560, 0, 80, 480, color );
+		}
 
 		// center
+		if ( cg_fixedAspect.integer ) {
+			CG_SetScreenPlacement(PLACE_CENTER, PLACE_CENTER);
+		}
 
 //----(SA)	added
 		// DM didn't like how bright it gets
@@ -2119,15 +2245,56 @@ static void CG_DrawWeapReticle( void ) {
 		CG_FillRect( 240, 220, 1, 40, color );   // r
 	} else if ( weap == WP_FG42SCOPE ) {
 		// sides
-		CG_FillRect( 0, 0, 80, 480, color );
-		CG_FillRect( 560, 0, 80, 480, color );
+		if ( cg_fixedAspect.integer ) {
+			if ( cgs.glconfig.vidWidth * 480.0 > cgs.glconfig.vidHeight * 640.0 ) {
+				mask = 0.5 * ( ( cgs.glconfig.vidWidth - ( cgs.screenXScale * 480.0 ) ) / cgs.screenXScale );
+
+				CG_SetScreenPlacement(PLACE_LEFT, PLACE_CENTER);
+				CG_FillRect( 0, 0, mask, 480, color );
+				CG_SetScreenPlacement(PLACE_RIGHT, PLACE_CENTER);
+				CG_FillRect( 640 - mask, 0, mask, 480, color );
+			} else if ( cgs.glconfig.vidWidth * 480.0 < cgs.glconfig.vidHeight * 640.0 ) {
+				// sides with letterbox
+				lb = 0.5 * ( ( cgs.glconfig.vidHeight - ( cgs.screenYScale * 480.0 ) ) / cgs.screenYScale );
+
+				CG_SetScreenPlacement(PLACE_LEFT, PLACE_CENTER);
+				CG_FillRect( 0, 0, 80, 480, color );
+				CG_SetScreenPlacement(PLACE_RIGHT, PLACE_CENTER);
+				CG_FillRect( 560, 0, 80, 480, color );
+
+				CG_SetScreenPlacement(PLACE_LEFT, PLACE_BOTTOM);
+				CG_FillRect( 0, 480 - lb, 640, lb, color );
+				CG_SetScreenPlacement(PLACE_LEFT, PLACE_TOP);
+				CG_FillRect( 0, 0, 640, lb, color );
+			} else {
+				// resolution is 4:3
+				CG_SetScreenPlacement(PLACE_LEFT, PLACE_CENTER);
+				CG_FillRect( 0, 0, 80, 480, color );
+				CG_SetScreenPlacement(PLACE_RIGHT, PLACE_CENTER);
+				CG_FillRect( 560, 0, 80, 480, color );
+			}
+		} else {
+			CG_FillRect( 0, 0, 80, 480, color );
+			CG_FillRect( 560, 0, 80, 480, color );
+		}
 
 		// center
+		if ( cg_fixedAspect.integer ) {
+			CG_SetScreenPlacement(PLACE_CENTER, PLACE_CENTER);
+		}
+
 		if ( cgs.media.reticleShaderSimpleQ ) {
-			trap_R_DrawStretchPic( x,   0, w, h, 0, 0, 1, 1, cgs.media.reticleShaderSimpleQ );  // tl
-			trap_R_DrawStretchPic( x + w, 0, w, h, 1, 0, 0, 1, cgs.media.reticleShaderSimpleQ );  // tr
-			trap_R_DrawStretchPic( x,   h, w, h, 0, 1, 1, 0, cgs.media.reticleShaderSimpleQ );  // bl
-			trap_R_DrawStretchPic( x + w, h, w, h, 1, 1, 0, 0, cgs.media.reticleShaderSimpleQ );  // br
+			if ( cg_fixedAspect.integer ) {
+				trap_R_DrawStretchPic( x, lb * cgs.screenYScale, w, h, 0, 0, 1, 1, cgs.media.reticleShaderSimpleQ );         // tl
+				trap_R_DrawStretchPic( x + w, lb * cgs.screenYScale, w, h, 1, 0, 0, 1, cgs.media.reticleShaderSimpleQ );     // tr
+				trap_R_DrawStretchPic( x, h + lb * cgs.screenYScale, w, h, 0, 1, 1, 0, cgs.media.reticleShaderSimpleQ );     // bl
+				trap_R_DrawStretchPic( x + w, h + lb * cgs.screenYScale, w, h, 1, 1, 0, 0, cgs.media.reticleShaderSimpleQ ); // br
+			} else {
+				trap_R_DrawStretchPic( x, 0, w, h, 0, 0, 1, 1, cgs.media.reticleShaderSimpleQ );     // tl
+				trap_R_DrawStretchPic( x + w, 0, w, h, 1, 0, 0, 1, cgs.media.reticleShaderSimpleQ ); // tr
+				trap_R_DrawStretchPic( x, h, w, h, 0, 1, 1, 0, cgs.media.reticleShaderSimpleQ );     // bl
+				trap_R_DrawStretchPic( x + w, h, w, h, 1, 1, 0, 0, cgs.media.reticleShaderSimpleQ ); // br
+			}
 		}
 
 		// hairs
@@ -2156,13 +2323,43 @@ static void CG_DrawBinocReticle( void ) {
 	// an alternative.  This gives nice sharp lines at the expense of a few extra polys
 	vec4_t color = {0, 0, 0, 1};
 	float x, y, w = 320, h = 240;
+	float mask = 0, lb = 0;
+
+	if ( cg_fixedAspect.integer ) {
+		if ( cgs.glconfig.vidWidth * 480.0 > cgs.glconfig.vidHeight * 640.0 ) {
+			mask = 0.5 * ( ( cgs.glconfig.vidWidth - ( cgs.screenXScale * 640.0 ) ) / cgs.screenXScale );
+
+			CG_SetScreenPlacement(PLACE_LEFT, PLACE_CENTER);
+			CG_FillRect( 0, 0, mask, 480, color );
+			CG_SetScreenPlacement(PLACE_RIGHT, PLACE_CENTER);
+			CG_FillRect( 640 - mask, 0, mask, 480, color );
+		} else if ( cgs.glconfig.vidWidth * 480.0 < cgs.glconfig.vidHeight * 640.0 ) {
+			lb = 0.5 * ( ( cgs.glconfig.vidHeight - ( cgs.screenYScale * 480.0 ) ) / cgs.screenYScale );
+
+			CG_SetScreenPlacement(PLACE_LEFT, PLACE_BOTTOM);
+			CG_FillRect( 0, 480 - lb, 640, lb, color );
+			CG_SetScreenPlacement(PLACE_LEFT, PLACE_TOP);
+			CG_FillRect( 0, 0, 640, lb, color );
+		}
+	}
+
+	if ( cg_fixedAspect.integer ) {
+		CG_SetScreenPlacement(PLACE_CENTER, PLACE_CENTER);
+	}
 
 	if ( cgs.media.binocShaderSimpleQ ) {
 		CG_AdjustFrom640( &x, &y, &w, &h );
-		trap_R_DrawStretchPic( 0, 0, w, h, 0, 0, 1, 1, cgs.media.binocShaderSimpleQ );  // tl
-		trap_R_DrawStretchPic( w, 0, w, h, 1, 0, 0, 1, cgs.media.binocShaderSimpleQ );  // tr
-		trap_R_DrawStretchPic( 0, h, w, h, 0, 1, 1, 0, cgs.media.binocShaderSimpleQ );  // bl
-		trap_R_DrawStretchPic( w, h, w, h, 1, 1, 0, 0, cgs.media.binocShaderSimpleQ );  // br
+		if ( cg_fixedAspect.integer ) {
+			trap_R_DrawStretchPic( mask * cgs.screenXScale, lb * cgs.screenYScale, w, h, 0, 0, 1, 1, cgs.media.binocShaderSimpleQ );         // tl
+			trap_R_DrawStretchPic( w + mask * cgs.screenXScale, lb * cgs.screenYScale, w, h, 1, 0, 0, 1, cgs.media.binocShaderSimpleQ );     // tr
+			trap_R_DrawStretchPic( mask * cgs.screenXScale, h + lb * cgs.screenYScale, w, h, 0, 1, 1, 0, cgs.media.binocShaderSimpleQ );     // bl
+			trap_R_DrawStretchPic( w + mask * cgs.screenXScale, h + lb * cgs.screenYScale, w, h, 1, 1, 0, 0, cgs.media.binocShaderSimpleQ ); // br
+		} else {
+			trap_R_DrawStretchPic( 0, 0, w, h, 0, 0, 1, 1, cgs.media.binocShaderSimpleQ );  // tl
+			trap_R_DrawStretchPic( w, 0, w, h, 1, 0, 0, 1, cgs.media.binocShaderSimpleQ );  // tr
+			trap_R_DrawStretchPic( 0, h, w, h, 0, 1, 1, 0, cgs.media.binocShaderSimpleQ );  // bl
+			trap_R_DrawStretchPic( w, h, w, h, 1, 1, 0, 0, cgs.media.binocShaderSimpleQ );  // br
+		}
 	}
 
 	CG_FillRect( 146, 239, 348, 1, color );
@@ -2203,6 +2400,9 @@ static void CG_DrawCrosshair( void ) {
 
 	hcolor[3] = cg_crosshairAlpha.value;    //----(SA)	added
 
+	if ( cg_fixedAspect.integer ) {
+		CG_SetScreenPlacement(PLACE_CENTER, PLACE_CENTER);
+	}
 
 	// on mg42
 	if ( cg.snap->ps.eFlags & EF_MG42_ACTIVE ) {
@@ -2343,7 +2543,9 @@ static void CG_DrawCrosshair( void ) {
 
 	x = cg_crosshairX.integer;
 	y = cg_crosshairY.integer;
-	CG_AdjustFrom640( &x, &y, &w, &h );
+	if ( !cg_fixedAspect.integer ) {
+		CG_AdjustFrom640( &x, &y, &w, &h );
+	}
 
 //----(SA)	modified
 	if ( friendInSights ) {
@@ -2355,9 +2557,15 @@ static void CG_DrawCrosshair( void ) {
 
 	// NERVE - SMF - modified, fixes crosshair offset in shifted/scaled 3d views
 	// (SA) also breaks scaled view...
-	trap_R_DrawStretchPic(  x + cg.refdef.x + 0.5 * ( cg.refdef.width - w ),
-							y + cg.refdef.y + 0.5 * ( cg.refdef.height - h ),
-							w, h, 0, 0, 1, 1, hShader );
+	if ( cg_fixedAspect.integer ) {
+		CG_DrawPic( ((SCREEN_WIDTH-w)*0.5f)+x, ((SCREEN_HEIGHT-h)*0.5f)+y, w, h, hShader );
+	} else {
+		trap_R_DrawStretchPic(  x + cg.refdef.x + 0.5 * ( cg.refdef.width - w ),
+								y + cg.refdef.y + 0.5 * ( cg.refdef.height - h ),
+								w, h, 0, 0, 1, 1, hShader );
+	}
+
+	trap_R_SetColor( NULL );
 }
 
 
@@ -2560,6 +2768,9 @@ CG_DrawSpectator
 =================
 */
 static void CG_DrawSpectator( void ) {
+	if ( cg_fixedAspect.integer == 2 ) {
+		CG_SetScreenPlacement(PLACE_CENTER, PLACE_BOTTOM);
+	}
 	CG_DrawBigString( 320 - 9 * 8, 440, "SPECTATOR", 1.0F );
 	if ( cgs.gametype == GT_TOURNAMENT ) {
 		CG_DrawBigString( 320 - 15 * 8, 460, "waiting to play", 1.0F );
@@ -2580,6 +2791,10 @@ static void CG_DrawVote( void ) {
 
 	if ( !cgs.voteTime ) {
 		return;
+	}
+
+	if ( cg_fixedAspect.integer == 2 ) {
+		CG_SetScreenPlacement(PLACE_LEFT, PLACE_CENTER);
 	}
 
 	// play a talk beep whenever it is modified
@@ -2666,6 +2881,11 @@ static qboolean CG_DrawFollow( void ) {
 	if ( !( cg.snap->ps.pm_flags & PMF_FOLLOW ) ) {
 		return qfalse;
 	}
+
+	if ( cg_fixedAspect.integer == 2 ) {
+		CG_SetScreenPlacement(PLACE_LEFT, PLACE_TOP);
+	}
+
 	color[0] = 1;
 	color[1] = 1;
 	color[2] = 1;
@@ -2723,6 +2943,10 @@ static void CG_DrawAmmoWarning( void ) {
 
 	if ( !cg.lowAmmoWarning ) {
 		return;
+	}
+
+	if ( cg_fixedAspect.integer == 2 ) {
+		CG_SetScreenPlacement(PLACE_CENTER, PLACE_TOP);
 	}
 
 	if ( cg.lowAmmoWarning == 2 ) {
@@ -2868,8 +3092,13 @@ static void CG_DrawFlashFade( void ) {
 //		CG_Printf("fade: %f\n", cgs.scrFadeAlphaCurrent);
 		VectorClear( col );
 		col[3] = cgs.scrFadeAlphaCurrent;
-//		CG_FillRect( -10, -10, 650, 490, col );
-		CG_FillRect( 0, 0, 640, 480, col ); // why do a bunch of these extend outside 640x480?
+		if ( cg_fixedAspect.integer ) {
+			CG_SetScreenPlacement(PLACE_STRETCH, PLACE_STRETCH);
+		 	CG_FillRect( 0, 0, 640, 480, col );
+			CG_SetScreenPlacement(PLACE_CENTER, PLACE_CENTER);
+		} else {	
+			CG_FillRect( 0, 0, 640, 480, col );
+		}
 	}
 }
 
@@ -2923,7 +3152,13 @@ static void CG_DrawFlashZoomTransition( void ) {
 			Vector4Set( color, 0, 0, 0, 1.0f - frac );
 		}
 
-		CG_FillRect( -10, -10, 650, 490, color );
+		if ( cg_fixedAspect.integer ) {
+			CG_SetScreenPlacement(PLACE_STRETCH, PLACE_STRETCH);
+			CG_FillRect( -10, -10, 650, 490, color );
+			CG_SetScreenPlacement(PLACE_CENTER, PLACE_CENTER);
+		} else {
+			CG_FillRect( -10, -10, 650, 490, color );
+		}
 	}
 }
 
@@ -2953,7 +3188,13 @@ static void CG_DrawFlashDamage( void ) {
 		VectorSet( col, 0.2, 0, 0 );
 		col[3] =  0.7 * ( redFlash / 5.0 );
 
-		CG_FillRect( -10, -10, 650, 490, col );
+		if ( cg_fixedAspect.integer ) {
+			CG_SetScreenPlacement(PLACE_STRETCH, PLACE_STRETCH);
+			CG_FillRect( -10, -10, 650, 490, col );
+			CG_SetScreenPlacement(PLACE_CENTER, PLACE_CENTER);
+		} else {
+			CG_FillRect( -10, -10, 650, 490, col );
+		}
 	}
 }
 
@@ -3005,7 +3246,13 @@ static void CG_DrawFlashFire( void ) {
 		col[2] = alpha;
 		col[3] = alpha;
 		trap_R_SetColor( col );
-		CG_DrawPic( -10, -10, 650, 490, cgs.media.viewFlashFire[( cg.time / 50 ) % 16] );
+		if ( cg_fixedAspect.integer ) {
+			CG_SetScreenPlacement(PLACE_STRETCH, PLACE_STRETCH);
+			CG_DrawPic( -10, -10, 650, 490, cgs.media.viewFlashFire[( cg.time / 50 ) % 16] );
+			CG_SetScreenPlacement(PLACE_CENTER, PLACE_CENTER);
+		} else {
+			CG_DrawPic( -10, -10, 650, 490, cgs.media.viewFlashFire[( cg.time / 50 ) % 16] );
+		}
 		trap_R_SetColor( NULL );
 
 		trap_S_AddLoopingSound( cg.snap->ps.clientNum, cg.snap->ps.origin, vec3_origin, cgs.media.flameSound, (int)( 255.0 * alpha ) );
@@ -3052,7 +3299,13 @@ static void CG_DrawFlashLightning( void ) {
 			shader = cgs.media.viewTeslaDamageEffectShader;
 		}
 
-		CG_DrawPic( -10, -10, 650, 490, shader );
+		if ( cg_fixedAspect.integer ) {
+			CG_SetScreenPlacement(PLACE_STRETCH, PLACE_STRETCH);
+			CG_DrawPic( -10, -10, 650, 490, shader );
+			CG_SetScreenPlacement(PLACE_CENTER, PLACE_CENTER);
+		} else {
+			CG_DrawPic( -10, -10, 650, 490, shader );
+		}
 	}
 }
 
@@ -3286,7 +3539,13 @@ static void CG_DrawGameScreenFade( void ) {
 
 	VectorClear( col );
 	col[3] = cg.viewFade;
-	CG_FillRect( 0, 0, 640, 480, col );
+	if ( cg_fixedAspect.integer ) {
+		CG_SetScreenPlacement(PLACE_STRETCH, PLACE_STRETCH);
+		CG_FillRect( 0, 0, 640, 480, col );
+		CG_SetScreenPlacement(PLACE_CENTER, PLACE_CENTER);
+	} else {
+		CG_FillRect( 0, 0, 640, 480, col );
+	}
 }
 
 /*
@@ -3319,7 +3578,13 @@ static void CG_ScreenFade( void ) {
 			return;
 		}
 
-		CG_FillRect( 0, 0, 640, 480, cg.fadeColor1 );
+		if ( cg_fixedAspect.integer ) {
+			CG_SetScreenPlacement(PLACE_STRETCH, PLACE_STRETCH);
+			CG_FillRect( 0, 0, 640, 480, cg.fadeColor1 );
+			CG_SetScreenPlacement(PLACE_CENTER, PLACE_CENTER);
+		} else {
+			CG_FillRect( 0, 0, 640, 480, cg.fadeColor1 );
+		}
 
 	} else {
 		t = ( float )msec * cg.fadeRate;
@@ -3330,7 +3595,13 @@ static void CG_ScreenFade( void ) {
 		}
 
 		if ( color[ 3 ] ) {
-			CG_FillRect( 0, 0, 640, 480, color );
+			if ( cg_fixedAspect.integer ) {
+				CG_SetScreenPlacement(PLACE_STRETCH, PLACE_STRETCH);
+				CG_FillRect( 0, 0, 640, 480, color );
+				CG_SetScreenPlacement(PLACE_CENTER, PLACE_CENTER);
+			} else {
+				CG_FillRect( 0, 0, 640, 480, color );
+			}
 		}
 	}
 }
@@ -3379,6 +3650,9 @@ static void CG_Draw2D( void ) {
 			CG_DrawCrosshair();
 
 			if ( cg_drawStatus.integer ) {
+				if ( cg_fixedAspect.integer == 2 ) {
+					CG_SetScreenPlacement(PLACE_LEFT, PLACE_BOTTOM);
+				}
 				Menu_PaintAll();
 				CG_DrawTimedMenus();
 			}

@@ -1355,6 +1355,10 @@ void RE_StretchRaw( int x, int y, int w, int h, int cols, int rows, const byte *
 
 	RB_SetGL2D();
 
+#if 1
+	tr.cinematicShader->stages[0]->bundle[0].image[0] = tr.scratchImage[client];
+	RE_StretchPic( x, y, w, h, 0.5f / cols, 0.5f / rows, 1.0f - 0.5f / cols, 1.0f - 0.5 / rows, tr.cinematicShader->index );
+#else
 	D3DCOLOR color = D3DCOLOR_COLORVALUE(tr.identityLight, tr.identityLight, tr.identityLight, 1.0f);
 	//qglColor3f( tr.identityLight, tr.identityLight, tr.identityLight );
 
@@ -1408,6 +1412,7 @@ void RE_StretchRaw( int x, int y, int w, int h, int cols, int rows, const byte *
 	//qglTexCoord2f( 0.5f / cols, ( rows - 0.5f ) / rows );
 	//qglVertex2f( x, y + h );
 	//qglEnd();
+#endif
 }
 
 
