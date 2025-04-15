@@ -930,8 +930,9 @@ void SV_AddOperatorCommands( void ) {
 	Cmd_AddCommand( "sectorlist", SV_SectorList_f );
 	Cmd_AddCommand( "spmap", SV_Map_f );
 #ifndef WOLF_SP_DEMO
-	Cmd_AddCommand( "map", SV_Map_f );
-	Cmd_AddCommand( "devmap", SV_Map_f );
+	//WG: MP related
+	//Cmd_AddCommand( "map", SV_Map_f );
+	//Cmd_AddCommand( "devmap", SV_Map_f );
 	Cmd_AddCommand( "spdevmap", SV_Map_f );
 #endif
 	Cmd_AddCommand( "loadgame", SV_LoadGame_f );

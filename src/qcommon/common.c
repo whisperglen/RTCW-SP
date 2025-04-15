@@ -2070,6 +2070,7 @@ void Com_Init( char *commandLine ) {
 	Cmd_AddCommand( "quit", Com_Quit_f );
 	Cmd_AddCommand( "changeVectors", MSG_ReportChangeVectors_f );
 	Cmd_AddCommand( "writeconfig", Com_WriteConfig_f );
+	Cmd_AddCommand( "pause", Com_Pause_f );
 
 	s = va( "%s %s %s", Q3_VERSION, CPUSTRING, __DATE__ );
 	com_version = Cvar_Get( "version", s, CVAR_ROM | CVAR_SERVERINFO );

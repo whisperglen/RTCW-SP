@@ -884,6 +884,9 @@ void SV_Frame( int msec );
 void SV_PacketEvent( netadr_t from, msg_t *msg );
 qboolean SV_GameCommand( void );
 
+void Com_Pause();
+void Com_Unpause();
+void Com_Pause_f( void );
 
 //
 // UI interface

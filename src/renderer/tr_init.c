@@ -39,6 +39,9 @@ If you have questions concerning this license or the applicable additional terms
 glconfig_t glConfig;
 glstate_t glState;
 
+//WG: let's make this static, since some buffers are needed inbetween hunk clear and R_Init
+static backEndData_t g_backEndData;
+
 static void GfxInfo_f( void );
 
 cvar_t  *r_flareSize;
@@ -1242,11 +1245,16 @@ void R_Init( void ) {
 	}
 
 //	backEndData[0] = ri.Hunk_Alloc( sizeof( *backEndData[0] ), h_low );
-	backEndData[0] = ri.Hunk_Alloc( sizeof( *backEndData[0] ) + sizeof( srfPoly_t ) * max_polys + sizeof( polyVert_t ) * max_polyverts, h_low );
+//	backEndData[0] = ri.Hunk_Alloc( sizeof( *backEndData[0] ) + sizeof( srfPoly_t ) * max_polys + sizeof( polyVert_t ) * max_polyverts, h_low );
+	memset( &g_backEndData, 0, sizeof( g_backEndData ) );
+	backEndData[0] = &g_backEndData;
+	backEndData[0]->polys = (srfPoly_t *) ri.Hunk_Alloc( sizeof( srfPoly_t ) * max_polys, h_low );
+	backEndData[0]->polyVerts = (polyVert_t *) ri.Hunk_Alloc( sizeof( polyVert_t ) * max_polyverts, h_low );
 
 	if ( r_smp->integer ) {
 //		backEndData[1] = ri.Hunk_Alloc( sizeof( *backEndData[1] ), h_low );
-		backEndData[1] = ri.Hunk_Alloc( sizeof( *backEndData[1] ) + sizeof( srfPoly_t ) * max_polys + sizeof( polyVert_t ) * max_polyverts, h_low );
+//		backEndData[1] = ri.Hunk_Alloc( sizeof( *backEndData[1] ) + sizeof( srfPoly_t ) * max_polys + sizeof( polyVert_t ) * max_polyverts, h_low );
+		ri.Error( ERR_FATAL, "SMP is not supported\n" );
 	} else {
 		backEndData[1] = NULL;
 	}

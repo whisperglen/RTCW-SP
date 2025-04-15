@@ -859,4 +859,56 @@ void SV_Frame( int msec ) {
 	SV_MasterHeartbeat();
 }
 
+/*
+==================
+Com_Pause
+==================
+*/
+void Com_Pause()
+{
+	if( !com_sv_running->integer ) {
+		return;
+	}
+
+	if( sv.state != SS_GAME ) {
+		return;
+	}
+
+	if( cl_paused->integer == 1 ) {
+		return;
+	}
+
+	Cvar_Set( "cl_paused", "1" );
+}
+
+extern void CL_ClearKeys( void );
+
+/*
+==================
+Com_Unpause
+==================
+*/
+void Com_Unpause()
+{
+	if( cl_paused->integer )
+	{
+		Cvar_Set( "cl_paused", "0" );
+		CL_ClearKeys();
+	}
+}
+
+/*
+==================
+Com_Pause_f
+==================
+*/
+void Com_Pause_f()
+{
+	if( cl_paused->integer == 1 ) {
+		Com_Unpause();
+	} else {
+		Com_Pause();
+	}
+}
+
 //============================================================================
