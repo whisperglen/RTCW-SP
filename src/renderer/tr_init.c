@@ -218,6 +218,9 @@ int max_polyverts;
 cvar_t  *r_generichelper;
 cvar_t  *r_getcenterxyz;
 
+cvar_t  *r_rmx_coronas;
+cvar_t  *r_rmx_dynamiclight;
+
 void ( APIENTRY * qglMultiTexCoord2fARB )( GLenum texture, GLfloat s, GLfloat t );
 void ( APIENTRY * qglActiveTextureARB )( GLenum texture );
 void ( APIENTRY * qglClientActiveTextureARB )( GLenum texture );
@@ -1159,6 +1162,9 @@ void R_Register( void ) {
 
 	r_generichelper = ri.Cvar_Get( "r_generichelper", "0", CVAR_TEMP );
 	r_getcenterxyz = ri.Cvar_Get( "r_getcenterxyz", "0", CVAR_TEMP );
+
+	r_rmx_coronas = ri.Cvar_Get( "r_rmx_coronas", "1", CVAR_ARCHIVE );
+	r_rmx_dynamiclight = ri.Cvar_Get( "r_rmx_dynamiclight", "1", CVAR_ARCHIVE );
 
 	// make sure all the commands added here are also
 	// removed in R_Shutdown

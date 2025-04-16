@@ -33,9 +33,11 @@ int r_firstSceneDrawSurf;
 
 int r_numdlights;
 int r_firstSceneDlight;
+int r_rmxdlights;
 
 int r_numcoronas;
 int r_firstSceneCorona;
+int r_rmxcoronas;
 
 int r_numentities;
 int r_firstSceneEntity;
@@ -69,9 +71,11 @@ void R_ToggleSmpFrame( void ) {
 
 	r_numdlights = 0;
 	r_firstSceneDlight = 0;
+	r_rmxdlights = 0;
 
 	r_numcoronas = 0;
 	r_firstSceneCorona = 0;
+	r_rmxcoronas = 0;
 
 	r_numentities = 0;
 	r_firstSceneEntity = 0;
@@ -330,6 +334,13 @@ void RE_AddLightToScene( const vec3_t org, float intensity, float r, float g, fl
 		//WG: flashlight
 		return;
 	}
+	if ( r_rmx_dynamiclight->value )
+	{
+		vec3_t color = { r, g, b };
+		float radius = intensity * r_dlightScale->value;
+		qdx_light_add(LIGHT_DYNAMIC, r_rmxdlights - r_firstSceneDlight, org, org, color, radius, 1.0f / radius);
+		r_rmxdlights++;
+	}
 	if ( r_numdlights >= MAX_DLIGHTS ) {
 		return;
 	}
@@ -388,6 +399,11 @@ void RE_AddCoronaToScene( const vec3_t org, float r, float g, float b, float sca
 
 	if ( !tr.registered ) {
 		return;
+	}
+	if ( r_rmx_coronas->value )
+	{
+		vec3_t color = { r, g, b };
+		qdx_light_add(LIGHT_FLARE, r_rmxcoronas - r_firstSceneCorona, org, org, color, 0.0f, scale);
 	}
 	if ( r_numcoronas >= MAX_CORONAS ) {
 		return;
@@ -502,11 +518,9 @@ void RE_RenderScene( const refdef_t *fd ) {
 
 	// turn off dynamic lighting globally by clearing all the
 	// dlights if it needs to be disabled or if vertex lighting is enabled
-	// RF, disabled (r_dynamiclight forces nolights) so we can force things like lightning dlights
-	// WG: if r_dynamiclight is off AND r_vertexLight is on then we can disable lights
-	if ( r_dynamiclight->integer == 0 &&
-		 ( r_vertexLight->integer == 1 ||
-		   glConfig.hardwareType == GLHW_PERMEDIA2 ) ) {
+	if ( /*r_dynamiclight->integer == 0 ||*/    // RF, disabled so we can force things like lightning dlights
+		r_vertexLight->integer == 1 ||
+		glConfig.hardwareType == GLHW_PERMEDIA2 ) {
 		tr.refdef.num_dlights = 0;
 	}
 

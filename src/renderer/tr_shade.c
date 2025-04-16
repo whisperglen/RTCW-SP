@@ -499,13 +499,6 @@ static void ProjectDlightTexture( void ) {
 		floatColor[1] = dl->color[1] * 255.0f;
 		floatColor[2] = dl->color[2] * 255.0f;
 
-		qdx_light_add(LIGHT_DYNAMIC, l, dl->origin, dl->transformed, dl->color, radius, scale);
-
-		if (r_vertexLight->integer)
-		{
-			continue;
-		}
-
 		for ( i = 0 ; i < tess.numVertexes ; i++, texCoords += 2, colors += 4 ) {
 			vec3_t dist;
 			int clip;
@@ -1725,7 +1718,7 @@ void RB_EndSurface( void ) {
 
 	if (tess.numVertexes > r_maxvertexes->integer)
 	{
-		Cvar_Set("r_maxvertexes", va("%d", tess.numVertexes));
+		//Cvar_Set("r_maxvertexes", va("%d", tess.numVertexes));
 	}
 
 	if ( tess.shader == tr.shadowShader ) {

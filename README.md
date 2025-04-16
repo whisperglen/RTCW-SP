@@ -13,10 +13,12 @@ Will it work? Who knows, let's find out!
 - convert dynamic lights to T&L: 90% (dynamic lights [torches, fireplaces, flamethrower] are sent via DX9 lights [max. 8], coronas are sent as Remix sphere lights)
 
 ### Notable engine cvars:
-- r_flares (default "1"): set to "4" to convert flares into remix sphere lights
+- r_rmx_coronas (default "1") send coronas as remix lights
+- r_rmx_dynamiclight (default "1") send torches/muzzleflash/fireplace flicker to remix (DX9 Lights atm, maybe remix light in the future)
+- r_flares (default "1"): ~~set to "4" to convert flares into remix sphere lights~~ should be "0", superseeded by r_rmx_coronas
 - cg_coronas (default "1"): set to "2" to send all coronas to renderer -since coronas are converted into remix lights, this avoids the pop-in effect
 - cg_lightstyle_ms (default "100"): strobing light frametime (100ms is 10fps); I have set this to 200 (5fps) since I find the flashing effect annoying
-- r_dynamiclight (default "1"): keep on 1 to send dynamic light sources (torches, fireplaces, muzzle flashes) to remix as light sources (idtech3 renders them in software)
+- r_dynamiclight (default "1"): ~~keep on 1 to send dynamic light sources (torches, fireplaces, muzzle flashes) to remix as light sources (idtech3 renders them in software)~~ should be "0", superseeded by r_rmx_dynamiclight
 - r_nocull (default "0"): set to "1" so that geometry in player proximity, which is not in camera-view, is still drawn -this prevents shadows from buildings to dissapear
 - r_novis (default "0"): set to "1" so that all map surfaces(triangles) are drawn -this helps to stabilize the geometry hashes in remix
 - r_wolffog (default "1"): set to "0" to disable ingame fog (there may still be geometry with fog texture applied, those will not be disabled)

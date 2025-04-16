@@ -1235,6 +1235,9 @@ extern cvar_t  *r_highQualityVideo;
 
 extern cvar_t  *r_generichelper;
 extern cvar_t  *r_getcenterxyz;
+
+extern cvar_t  *r_rmx_coronas;
+extern cvar_t  *r_rmx_dynamiclight;
 //====================================================================
 
 float R_NoiseGet4f( float x, float y, float z, float t );
