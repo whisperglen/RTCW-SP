@@ -332,7 +332,7 @@
     <ClCompile Include="..\win32\win_qgl_dummy.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="helpers.cpp">
+    <ClCompile Include="tr_dbghelpers.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="DirectXTex\BC.cpp">
@@ -352,6 +352,12 @@
     </ClCompile>
     <ClCompile Include="fnvhash\hash_64a.c">
       <Filter>Source Files\FNVHash</Filter>
+    </ClCompile>
+    <ClCompile Include="..\win32\win_dx9light.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\win32\win_dx9draw.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -609,6 +615,9 @@
     </ClInclude>
     <ClInclude Include="remix\remix_c.h">
       <Filter>Source Files\remix</Filter>
+    </ClInclude>
+    <ClInclude Include="..\win32\win_dx9int.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

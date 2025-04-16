@@ -187,7 +187,9 @@
     <ClCompile Include="..\jpeg-6\jmemmgr.c" />
     <ClCompile Include="..\jpeg-6\jmemnobs.c" />
     <ClCompile Include="..\jpeg-6\jutils.c" />
+    <ClCompile Include="..\win32\win_dx9draw.cpp" />
     <ClCompile Include="..\win32\win_dx9imp.cpp" />
+    <ClCompile Include="..\win32\win_dx9light.cpp" />
     <ClCompile Include="..\win32\win_qgl_dummy.c" />
     <ClCompile Include="DirectXTex\BC.cpp" />
     <ClCompile Include="DirectXTex\DirectXTexCompress.cpp" />
@@ -195,7 +197,7 @@
     <ClCompile Include="fnvhash\hash_32a.c" />
     <ClCompile Include="fnvhash\hash_64.c" />
     <ClCompile Include="fnvhash\hash_64a.c" />
-    <ClCompile Include="helpers.cpp" />
+    <ClCompile Include="tr_dbghelpers.cpp" />
     <ClCompile Include="tr_animation.c" />
     <ClCompile Include="tr_backend.c" />
     <ClCompile Include="tr_bsp.c" />
@@ -294,6 +296,7 @@
     <ClInclude Include="..\qcommon\qfiles.h" />
     <ClInclude Include="..\win32\glw_win.h" />
     <ClInclude Include="..\win32\resource.h" />
+    <ClInclude Include="..\win32\win_dx9int.h" />
     <ClInclude Include="..\win32\win_local.h" />
     <ClInclude Include="anorms256.h" />
     <ClInclude Include="DirectXTex\BC.h" />
