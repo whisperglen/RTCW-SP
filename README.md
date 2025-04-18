@@ -13,6 +13,7 @@ Will it work? Who knows, let's find out!
 - convert dynamic lights to T&L: 90% (dynamic lights [torches, fireplaces, flamethrower] are sent via DX9 lights [max. 8], coronas are sent as Remix sphere lights)
 
 ### Notable engine cvars:
+- r_rmx_flashlight (default "0") activates a flashlight ingame; Usage: bind v "toggle r_rmx_flashlight"
 - r_rmx_coronas (default "1") send coronas as remix lights
 - r_rmx_dynamiclight (default "1") send torches/muzzleflash/fireplace flicker to remix (DX9 Lights atm, maybe remix light in the future)
 - r_flares (default "1"): ~~set to "4" to convert flares into remix sphere lights~~ should be "0", superseeded by r_rmx_coronas
@@ -28,7 +29,7 @@ Will it work? Who knows, let's find out!
 - r_ext_texture_filter_anisotropic (default "0"): was disabled in OGL mode, it can now be set to 1,2,4,8,16 with Texture filter "trilinear" (r_textureMode "GL_LINEAR_MIPMAP_LINEAR") to allow anisotropy for texture minification filter (when textured object gets farther/smaller)
 - r_systemdll (default "0"): set only on command line; a value of "1" loads the system's d3d9.dll, and ignores any d3d9.dll present in the executable's current dir
 
-New console commands: increment/decrement can be used for integer cvars
+New console commands: increment/decrement can be used for integer cvars, pause will pause and unpause the rendering
 
 ### Included in this project:
 - Widescreen support: full credit goes to RealRTCW [https://github.com/wolfetplayer/RealRTCW] and Quake3e [https://github.com/ec-/Quake3e]

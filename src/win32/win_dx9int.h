@@ -19,4 +19,9 @@ extern void qdx_log_comment(const char *name, UINT vattbits, const void *ptr);
 extern void qdx_log_matrix(const char *name, const float *mat);
 extern void qdx_log_dump_buffer(const char* name, const uint32_t* buffer, uint32_t size, int wide, uint32_t hashid, uint32_t hashbuf);
 
+#define MINI_CASE_SENSITIVE
+#include "ini.h"
+
+extern void qdx_lights_load(enum light_type type, mINI::INIMap<std::string> *opts);
+
 #endif

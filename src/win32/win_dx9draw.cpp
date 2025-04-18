@@ -432,7 +432,7 @@ void qdx_objects_reset()
 {
 	qdx_clear_buffers();
 	qdx_texobj_delete_all();
-	qdx_lights_clear(LIGHT_DYNAMIC | LIGHT_FLARE);
+	qdx_lights_clear(LIGHT_ALL);
 }
 
 void qdx_frame_ended()
@@ -984,6 +984,7 @@ void qdx_vatt_assemble_and_draw(UINT numindexes, const qdxIndex_t *indexes, cons
 		break;
 	default:
 		qassert(FALSE);
+		return;
 	}
 
 	LPDIRECT3DINDEXBUFFER9 i_buffer = 0;
@@ -2066,19 +2067,20 @@ void qdx_begin_loading_map(const char* mapname)
 			namelen = strlen(name);
 		}
 
-		mINI::INIMap<std::string> opts;
+		mINI::INIMap<std::string> *opts;
 
+		// Apply RTX.conf options
 		snprintf(section, sizeof(section), "rtxconf.%.*s", namelen, name);
 		if (g_iniconf.has(section))
 		{
-			opts = g_iniconf.get(section);
+			opts = &g_iniconf.get(section);
 		}
 		else
 		{
-			opts = g_iniconf.get("rtxconf.default");
+			opts = &g_iniconf.get("rtxconf.default");
 		}
 
-		for (auto it = opts.begin(); it != opts.end(); it++)
+		for (auto it = opts->begin(); it != opts->end(); it++)
 		{
 			const char* key = it->first.c_str();
 			const char* value = it->second.c_str();
@@ -2088,6 +2090,32 @@ void qdx_begin_loading_map(const char* mapname)
 				ri.Printf(PRINT_ERROR, "RMX failed to set config var %d\n", rercd);
 			}
 		}
+
+		// Load Static Lights settings (corona lights)
+		snprintf(section, sizeof(section), "lightstatic.%.*s", namelen, name);
+		if (g_iniconf.has(section))
+		{
+			opts = &g_iniconf.get(section);
+		}
+		else
+		{
+			opts = &g_iniconf.get("lightstatic.default");
+		}
+
+		qdx_lights_load( LIGHT_CORONA, opts );
+
+		// Load Dynamic Lights settings (torches)
+		snprintf(section, sizeof(section), "lightdynamic.%.*s", namelen, name);
+		if (g_iniconf.has(section))
+		{
+			opts = &g_iniconf.get(section);
+		}
+		else
+		{
+			opts = &g_iniconf.get("lightdynamic.default");
+		}
+
+		qdx_lights_load( LIGHT_DYNAMIC, opts );
 	}
 }
 

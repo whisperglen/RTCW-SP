@@ -3,6 +3,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 static int tests_total = 0;
 static int tests_ok = 0;
@@ -12,16 +13,22 @@ extern void test_matrix();
 extern void test_buffers();
 extern void maintest_snapvector();
 extern void maintest_boxonplaneside();
+extern void test_errorcode();
+extern void test_sorting();
+extern void test_gamevals();
 
 int main()
 {
     printf("Hello Test!\n\n");
 
-	test_rsqrt();
+	//test_rsqrt();
 	//test_matrix();
-	test_buffers();
-	maintest_snapvector();
-	maintest_boxonplaneside();
+	//test_buffers();
+	//maintest_snapvector();
+	//maintest_boxonplaneside();
+	//test_errorcode();
+	//test_sorting();
+	//test_gamevals();
 
 	printf("Tests results: %d/%d\n", tests_ok, tests_total);
 	system("pause");

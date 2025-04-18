@@ -2800,6 +2800,13 @@ void CG_AddPlayerWeapon( refEntity_t *parent, playerState_t *ps, centity_t *cent
 
 	CG_PositionRotatedEntityOnTag( &flash, &gun, "tag_flash" );
 
+	if ( ps && isPlayer )
+	{
+		vec3_t forward;
+		AngleVectors( ps->viewangles, forward, NULL, NULL );
+		trap_R_AddLightToScene( parent->origin, 1.0, forward[0], forward[1], forward[2], 50 );
+	}
+
 	// store this position for other cgame elements to access
 	cent->pe.gunRefEnt = gun;
 	cent->pe.gunRefEntFrame = cg.clientFrame;
