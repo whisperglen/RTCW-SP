@@ -332,6 +332,10 @@ void RE_AddLightToScene( const vec3_t org, float intensity, float r, float g, fl
 	if ( overdraw == 50 )
 	{
 		//WG: flashlight
+		vec3_t dir = { r, g, b };
+		vec3_t color = { 1.0f, 1.0f, 1.0f };
+		float radius = intensity * r_dlightScale->value;
+		qdx_light_add(LIGHT_FLASHLIGHT, 0, org, dir, color, radius, 1.0f / radius);
 		return;
 	}
 	if ( r_rmx_dynamiclight->value )

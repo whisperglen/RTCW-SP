@@ -212,6 +212,7 @@ enum light_type
 {
 	LIGHT_DYNAMIC = 1,
 	LIGHT_FLARE = 2,
+	LIGHT_FLASHLIGHT = 3
 };
 
 void qdx_light_add(int light_type, int ord, float *position, float *transformed, float *color, float radius, float scale);

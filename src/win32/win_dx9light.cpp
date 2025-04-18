@@ -33,13 +33,15 @@ static int MAX_LIGHTS = 0;
 std::map<uint64_t, light_data_t> g_lights_dynamic;
 std::map<uint64_t, light_data_t> g_lights_flares;
 static int g_lights_number = 0;
+static remixapi_LightHandle g_flashlight_handle = 0;
 
 //no idea what to choose here
 #define LIGHT_RADIANCE_DYNAMIC 15000.0f
 #define LIGHT_RADIANCE_FLARES 50.0f
+#define LIGHT_RADIANCE_FLASHLIGHT 50.0f
 #define LIGHT_RADIANCE_KILL_REDFLARES 0.3f
 
-static void qdx_ligt_color_to_radiance(remixapi_Float3D* rad, const vec3_t color, float scale, int light_type)
+static void qdx_light_color_to_radiance(remixapi_Float3D* rad, const vec3_t color, float scale, int light_type)
 {
 	float radiance = 1.0f;
 	if (light_type == LIGHT_DYNAMIC)
@@ -56,6 +58,10 @@ static void qdx_ligt_color_to_radiance(remixapi_Float3D* rad, const vec3_t color
 		{
 			radiance = LIGHT_RADIANCE_FLARES;
 		}
+	}
+	else if ( light_type == LIGHT_FLASHLIGHT )
+	{
+		radiance = LIGHT_RADIANCE_FLASHLIGHT;
 	}
 
 	rad->x = radiance * color[0];
@@ -117,6 +123,10 @@ void qdx_lights_draw()
 	{
 		remixInterface.DrawLightInstance(it->second.handle);
 	}
+	if ( g_flashlight_handle )
+	{
+		remixInterface.DrawLightInstance( g_flashlight_handle );
+	}
 }
 
 #define DYNAMIC_LIGHTS_USE_DX9 1
@@ -158,6 +168,53 @@ void qdx_light_add(int light_type, int ord, float *position, float *transformed,
 			//flare already exists, nothing to do
 			return;
 		}
+	}
+	if ( light_type == LIGHT_FLASHLIGHT )
+	{
+		if ( !remixOnline )
+		{
+			return;
+		}
+
+		hash = 0xF1A5811687;
+
+		if ( 0 && g_flashlight_handle )
+		{
+			rercd = remixInterface.DestroyLight( g_flashlight_handle );
+			if (rercd != REMIXAPI_ERROR_CODE_SUCCESS)
+			{
+				ri.Printf(PRINT_ERROR, "RMX failed to delete flashlight %d\n", rercd);
+				return;
+			}
+			g_flashlight_handle = 0;
+		}
+
+		remixapi_LightInfoSphereEXT light_sphere;
+		ZeroMemory(&light_sphere, sizeof(light_sphere));
+
+		light_sphere.sType = REMIXAPI_STRUCT_TYPE_LIGHT_INFO_SPHERE_EXT;
+		light_sphere.position.x = position[0];
+		light_sphere.position.y = position[1];
+		light_sphere.position.z = position[2];
+		light_sphere.radius = 4.0f;
+		light_sphere.shaping_hasvalue = 0;
+
+		remixapi_LightInfo lightinfo;
+		ZeroMemory(&lightinfo, sizeof(lightinfo));
+
+		lightinfo.sType = REMIXAPI_STRUCT_TYPE_LIGHT_INFO;
+		lightinfo.pNext = &light_sphere;
+		lightinfo.hash = hash;
+		qdx_light_color_to_radiance(&lightinfo.radiance, color, scale, light_type);
+
+		rercd = remixInterface.CreateLight(&lightinfo, &g_flashlight_handle);
+		if (rercd != REMIXAPI_ERROR_CODE_SUCCESS)
+		{
+			ri.Printf(PRINT_ERROR, "RMX failed to create flashlight %d\n", rercd);
+			return;
+		}
+
+		return;
 	}
 
 	if (ord == 0 && light_type == LIGHT_DYNAMIC)
@@ -227,7 +284,7 @@ void qdx_light_add(int light_type, int ord, float *position, float *transformed,
 		lightinfo.sType = REMIXAPI_STRUCT_TYPE_LIGHT_INFO;
 		lightinfo.pNext = &light_sphere;
 		lightinfo.hash = hash;
-		qdx_ligt_color_to_radiance(&lightinfo.radiance, color, scale, light_type);
+		qdx_light_color_to_radiance(&lightinfo.radiance, color, scale, light_type);
 
 		light_store.isRemix = true;
 		rercd = remixInterface.CreateLight(&lightinfo, &light_store.handle);

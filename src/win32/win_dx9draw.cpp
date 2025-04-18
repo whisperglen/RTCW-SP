@@ -984,6 +984,7 @@ void qdx_vatt_assemble_and_draw(UINT numindexes, const qdxIndex_t *indexes, cons
 		break;
 	default:
 		qassert(FALSE);
+		return;
 	}
 
 	LPDIRECT3DINDEXBUFFER9 i_buffer = 0;
