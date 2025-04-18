@@ -471,7 +471,14 @@ void RE_BeginFrame( stereoFrame_t stereoFrame ) {
 	if (r_rmx_coronas->modified)
 	{
 		r_rmx_coronas->modified = qfalse;
-		qdx_lights_clear(LIGHT_FLARE);
+		qdx_lights_clear(LIGHT_CORONA);
+	}
+
+	if ( r_rmx_flashlight->modified )
+	{
+		r_rmx_flashlight->modified = qfalse;
+		if ( !r_rmx_flashlight->integer )
+			qdx_lights_clear( LIGHT_FLASHLIGHT );
 	}
 
 	//

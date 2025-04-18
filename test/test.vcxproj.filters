@@ -45,6 +45,15 @@
     <ClCompile Include="perftesthelpers\csv.c">
       <Filter>Source Files\tools</Filter>
     </ClCompile>
+    <ClCompile Include="errorcode.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sorting.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="gamevals.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="perftesthelpers\include\bdmpx.h">

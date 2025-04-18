@@ -3110,6 +3110,18 @@ void CG_AddViewWeapon( playerState_t *ps ) {
 
 	}   // end  "if ( ps->weapon > WP_NONE)"
 
+	{	// WG: add flashlight
+		vec3_t origin, forward, tmp;
+		
+		if ( ps->weapon > WP_NONE )
+			VectorCopy( hand.origin, origin );
+		else
+			CG_CalculateWeaponPosition( origin, tmp );
+
+		AngleVectors( ps->viewangles, forward, NULL, NULL );
+		trap_R_AddLightToScene( /*ps->origin*/origin, 1.0f, forward[0], forward[1], forward[2], 50);
+	}
+
 	// Rafael
 	// add the foot
 	CG_AddPlayerFoot( &hand, ps, &cg.predictedPlayerEntity );

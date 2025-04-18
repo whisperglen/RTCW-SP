@@ -220,6 +220,7 @@ cvar_t  *r_getcenterxyz;
 
 cvar_t  *r_rmx_coronas;
 cvar_t  *r_rmx_dynamiclight;
+cvar_t  *r_rmx_flashlight;
 
 void ( APIENTRY * qglMultiTexCoord2fARB )( GLenum texture, GLfloat s, GLfloat t );
 void ( APIENTRY * qglActiveTextureARB )( GLenum texture );
@@ -1165,6 +1166,7 @@ void R_Register( void ) {
 
 	r_rmx_coronas = ri.Cvar_Get( "r_rmx_coronas", "1", CVAR_ARCHIVE );
 	r_rmx_dynamiclight = ri.Cvar_Get( "r_rmx_dynamiclight", "1", CVAR_ARCHIVE );
+	r_rmx_flashlight = ri.Cvar_Get( "r_rmx_flashlight", "0", CVAR_TEMP );
 
 	// make sure all the commands added here are also
 	// removed in R_Shutdown
