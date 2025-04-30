@@ -27,6 +27,46 @@ typedef struct cplane_s {
 	byte pad[2];
 } cplane_t;
 
+#define DotProduct(x,y)			((x)[0]*(y)[0]+(x)[1]*(y)[1]+(x)[2]*(y)[2])
+
+/**
+* BoxOnPlaneSide
+* 
+* Returns 1, 2, or 1 + 2
+* 
+* // this is the slow, general version
+*/
+int BoxOnPlaneSide2 (vec3_t emins, vec3_t emaxs, struct cplane_s *p)
+{
+	int		i;
+	float	dist1, dist2;
+	int		sides;
+	vec3_t	corners[2];
+
+	for (i=0 ; i<3 ; i++)
+	{
+		if (p->normal[i] < 0)
+		{
+			corners[0][i] = emins[i];
+			corners[1][i] = emaxs[i];
+		}
+		else
+		{
+			corners[1][i] = emins[i];
+			corners[0][i] = emaxs[i];
+		}
+	}
+	dist1 = DotProduct (p->normal, corners[0]) - p->dist;
+	dist2 = DotProduct (p->normal, corners[1]) - p->dist;
+	sides = 0;
+	if (dist1 >= 0)
+		sides = 1;
+	if (dist2 < 0)
+		sides |= 2;
+
+	return sides;
+}
+
 int BoxOnPlaneSide(vec3_t emins, vec3_t emaxs, struct cplane_s *p) {
 	float dist1, dist2;
 	int sides;

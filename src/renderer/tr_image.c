@@ -173,7 +173,7 @@ void GL_TextureMode( const char *string ) {
 	}
 
 	if ( i == 6 ) {
-		ri.Printf( PRINT_ALL, "bad filter name\n" );
+		ri.Printf( PRINT_ALL, "GL_TextureMode: bad filter name %.30s\n", string );
 		return;
 	}
 

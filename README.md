@@ -37,6 +37,7 @@ New console commands: increment/decrement can be used for integer cvars, pause w
 - part of Microsoft DirectXTex [https://github.com/microsoft/DirectXTex] for DXT5 texture compression (MIT license)
 - FNV hash [http://isthe.com/chongo/tech/comp/fnv/] (CC0 1.0 Public Domain license)
 - mINI library [https://github.com/metayeti/mINI] (MIT license)
+- Dear ImGui [https://github.com/ocornut/imgui] (MIT license)
 
 ### *Original README text follows:*
 

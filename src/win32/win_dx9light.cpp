@@ -29,21 +29,43 @@ typedef struct light_data
 	float distance;
 } light_data_t;
 
-static int MAX_LIGHTS = 0;
 std::map<uint64_t, light_data_t> g_lights_dynamic;
 std::map<uint64_t, light_data_t> g_lights_flares;
 static int g_lights_number = 0;
-#define NUM_FLASHLIGHT_HND 3
 static remixapi_LightHandle g_flashlight_handle[NUM_FLASHLIGHT_HND] = { 0 };
 #define FLASHLIGHT_HASH 0xF1A581168700ULL
 
 //no idea what to choose here
-#define LIGHT_RADIANCE_DYNAMIC 15000.0f
-#define LIGHT_RADIANCE_FLARES 300.0f
+static float LIGHT_RADIANCE_DYNAMIC = 15000.0f;
+static float LIGHT_RADIANCE_CORONAS = 300.0f;
 static float LIGHT_RADIANCE_FLASHLIGHT[NUM_FLASHLIGHT_HND] = { 400.0f, 960.0f, 4000.0f };
+static float FLASHLIGHT_COLORS[NUM_FLASHLIGHT_HND][3] = {
+	{ 0.9f, 0.98f, 1.0f },
+	{ 1.0f, 0.95f, 0.9f },
+	{ 0.9f, 1.0f, 0.97f }
+};
+static float FLASHLIGHT_CONE_ANGLES[NUM_FLASHLIGHT_HND] = { 32.0f, 21.0f, 18.0f }; //{ 40.0f, 28.0f, 24.0f };
+static float FLASHLIGHT_CONE_SOFTNESS[NUM_FLASHLIGHT_HND] = { 0.05f, 0.02f, 0.02f };
+static float FLASHLIGHT_POSITION_CACHE[3] = { 0 };
+static float FLASHLIGHT_DIRECTION_CACHE[3] = { 0 };
+static float FLASHLIGHT_POSITION_OFFSET[3] = { 0 };
+static float FLASHLIGHT_DIRECTION_OFFSET[3] = { 0 };
+
+float* qdx_4imgui_radiance_dynamic_1f() { return &LIGHT_RADIANCE_DYNAMIC; }
+float* qdx_4imgui_radiance_coronas_1f() { return &LIGHT_RADIANCE_CORONAS; }
+float* qdx_4imgui_flashlight_radiance_1f(int idx) { return &LIGHT_RADIANCE_FLASHLIGHT[idx]; }
+float* qdx_4imgui_flashlight_colors_3f(int idx) { return &FLASHLIGHT_COLORS[idx][0]; }
+float* qdx_4imgui_flashlight_coneangles_1f(int idx) { return &FLASHLIGHT_CONE_ANGLES[idx]; }
+float* qdx_4imgui_flashlight_conesoft_1f(int idx) { return &FLASHLIGHT_CONE_SOFTNESS[idx]; }
+const float* qdx_4imgui_flashlight_position_3f() { return FLASHLIGHT_POSITION_CACHE; }
+const float* qdx_4imgui_flashlight_direction_3f() { return FLASHLIGHT_DIRECTION_CACHE; }
+float* qdx_4imgui_flashlight_position_off_3f() { return FLASHLIGHT_POSITION_OFFSET; }
+float* qdx_4imgui_flashlight_direction_off_3f() { return FLASHLIGHT_DIRECTION_OFFSET; }
+
 #define LIGHT_RADIANCE_KILL_REDFLARES 1.8f
 
-void qdx_lights_load( enum light_type type, mINI::INIMap<std::string> *opts )
+
+void qdx_lights_load( mINI::INIStructure &ini )
 {
 
 }
@@ -63,7 +85,7 @@ static void qdx_light_color_to_radiance(remixapi_Float3D* rad, int light_type, u
 		}
 		else
 		{
-			radiance = LIGHT_RADIANCE_FLARES;
+			radiance = LIGHT_RADIANCE_CORONAS;
 		}
 	}
 	else if ( light_type == LIGHT_FLASHLIGHT )
@@ -158,7 +180,7 @@ void qdx_lights_draw()
 	}
 }
 
-#define DYNAMIC_LIGHTS_USE_DX9 1
+#define DYNAMIC_LIGHTS_USE_DX9 0
 
 void qdx_light_add(int light_type, int ord, float *position, float *direction, float *color, float radius, float scale)
 {
@@ -192,19 +214,20 @@ void qdx_light_add(int light_type, int ord, float *position, float *direction, f
 	}
 	if ( light_type == LIGHT_FLASHLIGHT )
 	{
+		//stuff for imgui
+		FLASHLIGHT_POSITION_CACHE[0] = position[0];
+		FLASHLIGHT_POSITION_CACHE[1] = position[1];
+		FLASHLIGHT_POSITION_CACHE[2] = position[2];
+		FLASHLIGHT_DIRECTION_CACHE[0] = direction[0];
+		FLASHLIGHT_DIRECTION_CACHE[1] = direction[1];
+		FLASHLIGHT_DIRECTION_CACHE[2] = direction[2];
+
 		if ( !remixOnline || !r_rmx_flashlight->integer )
 		{
 			return;
 		}
 
 		hash = FLASHLIGHT_HASH;
-		const float flcolor[NUM_FLASHLIGHT_HND][3] = {
-			{ 0.9f, 0.98f, 1.0f },
-			{ 1.0f, 0.95f, 0.9f },
-			{ 0.9f, 1.0f, 0.97f }
-		};
-		const float coneAngle[NUM_FLASHLIGHT_HND] = { 32.0f, 21.0f, 18.0f }; //{ 40.0f, 28.0f, 24.0f };
-		const float conseSoft[NUM_FLASHLIGHT_HND] = { 0.05f, 0.02f, 0.02f };
 
 		if ( 0 && g_flashlight_handle ) //destroying light creates artifacts; light props get updated regardless
 		{
@@ -218,19 +241,19 @@ void qdx_light_add(int light_type, int ord, float *position, float *direction, f
 			ZeroMemory( &light_sphere, sizeof( light_sphere ) );
 
 			light_sphere.sType = REMIXAPI_STRUCT_TYPE_LIGHT_INFO_SPHERE_EXT;
-			light_sphere.position.x = position[0];
-			light_sphere.position.y = position[1];
-			light_sphere.position.z = position[2];
+			light_sphere.position.x = FLASHLIGHT_POSITION_OFFSET[0] + position[0];
+			light_sphere.position.y = FLASHLIGHT_POSITION_OFFSET[1] + position[1];
+			light_sphere.position.z = FLASHLIGHT_POSITION_OFFSET[2] + position[2];
 			light_sphere.radius = 1.0f;
 			light_sphere.volumetricRadianceScale = 1.0f;
 
 			light_sphere.shaping_hasvalue = 1;
 			{
-				light_sphere.shaping_value.direction.x = direction[0];
-				light_sphere.shaping_value.direction.y = direction[1];
-				light_sphere.shaping_value.direction.z = direction[2];
-				light_sphere.shaping_value.coneAngleDegrees = coneAngle[i];
-				light_sphere.shaping_value.coneSoftness = conseSoft[i];
+				light_sphere.shaping_value.direction.x = FLASHLIGHT_DIRECTION_OFFSET[0] + direction[0];
+				light_sphere.shaping_value.direction.y = FLASHLIGHT_DIRECTION_OFFSET[1] + direction[1];
+				light_sphere.shaping_value.direction.z = FLASHLIGHT_DIRECTION_OFFSET[2] + direction[2];
+				light_sphere.shaping_value.coneAngleDegrees = FLASHLIGHT_CONE_ANGLES[i];
+				light_sphere.shaping_value.coneSoftness = FLASHLIGHT_CONE_SOFTNESS[i];
 				light_sphere.shaping_value.focusExponent = 0.0f;
 			}
 
@@ -242,7 +265,7 @@ void qdx_light_add(int light_type, int ord, float *position, float *direction, f
 			lightinfo.sType = REMIXAPI_STRUCT_TYPE_LIGHT_INFO;
 			lightinfo.pNext = &light_sphere;
 			lightinfo.hash = fhash;
-			qdx_light_color_to_radiance( &lightinfo.radiance, light_type, fhash, flcolor[i], 1.0 );
+			qdx_light_color_to_radiance( &lightinfo.radiance, light_type, fhash, FLASHLIGHT_COLORS[i], 1.0 );
 
 			rercd = remixInterface.CreateLight( &lightinfo, &g_flashlight_handle[i] );
 			if ( rercd != REMIXAPI_ERROR_CODE_SUCCESS )
@@ -255,7 +278,7 @@ void qdx_light_add(int light_type, int ord, float *position, float *direction, f
 		return;
 	}
 
-	if (ord == 0 && light_type == LIGHT_DYNAMIC)
+	if (0 && ord == 0 && light_type == LIGHT_DYNAMIC)
 	{
 		qdx_lights_clear(LIGHT_DYNAMIC);
 	}

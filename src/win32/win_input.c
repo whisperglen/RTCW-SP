@@ -494,9 +494,11 @@ void IN_Frame( void ) {
 
 	IN_ActivateMouse();
 
-	// post events to the system que
-	IN_MouseMove();
-
+	if ( s_wmv.mouseActive )
+	{
+		// post events to the system que
+		IN_MouseMove();
+	}
 }
 
 

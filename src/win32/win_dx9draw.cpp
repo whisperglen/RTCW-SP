@@ -32,9 +32,10 @@ struct qdx_matrixes
 	}
 } qdx_mats;
 
-void qdx_draw_init()
+void qdx_draw_init(void *hwnd, void *device)
 {
 	qdx_mats.init();
+	qdx_imgui_init(hwnd, device);
 }
 
 D3DTEXTUREADDRESS qdx_texture_wrapmode(int gl_mode)
@@ -437,11 +438,13 @@ void qdx_objects_reset()
 
 void qdx_frame_ended()
 {
+	keypress_frame_ended();
 }
 
 void qdx_before_frame_end()
 {
 	qdx_lights_draw();
+	qdx_imgui_draw();
 }
 
 static int qdx_get_buffers(LPDIRECT3DINDEXBUFFER9 *index_buf, LPDIRECT3DVERTEXBUFFER9 *vertex_buf, UINT vatt_spec, UINT vatt_stride, UINT hash, vatt_buff_stats_t **stats)
@@ -2044,82 +2047,149 @@ void qdx_assert_failed_str(const char* expression, const char* function, unsigne
 #define MINI_CASE_SENSITIVE
 #include "ini.h"
 
-mINI::INIFile g_inifile("wolf_customise.ini");
-mINI::INIStructure g_iniconf;
+static mINI::INIFile g_inifile("wolf_customise.ini");
+static mINI::INIStructure g_iniconf;
+std::string active_map( "" );
+
+const char* qdx_get_active_map()
+{
+	return active_map.c_str();
+}
+
+mINI::INIStructure& qdx_get_iniconf()
+{
+	return g_iniconf;
+}
+
+void qdx_save_iniconf()
+{
+	g_inifile.write( g_iniconf, true );
+}
+
+#define INICONF_GLOBAL "global"
+
+int qdx_readmapconf(const char* valname)
+{
+	int ret = 0;
+	const char* gamename = active_map.length() ? active_map.c_str() : INICONF_GLOBAL;
+	if( gamename )
+	for(int tries = 0; tries < 2; tries++)
+	{
+		if (gamename && g_iniconf.has(gamename) && g_iniconf[gamename].has(valname))
+		{
+			ret = strtoul( g_iniconf[gamename][valname].c_str(), NULL, 10 );
+			break;
+		}
+		else
+		{
+			gamename = INICONF_GLOBAL;
+		}
+	}
+	return ret;
+}
+
+void* qdx_readmapconfptr(const char* valname)
+{
+	void* ret = 0;
+	const char* gamename = active_map.length() ? active_map.c_str() : INICONF_GLOBAL;
+	for(int tries = 0; tries < 2; tries++)
+	{
+		if (gamename && g_iniconf.has(gamename) && g_iniconf[gamename].has(valname))
+		{
+			ret = (void*)strtoul( g_iniconf[gamename][valname].c_str(), NULL, 16 );
+			break;
+		}
+		else
+		{
+			gamename = INICONF_GLOBAL;
+		}
+	}
+	return ret;
+}
+
+int qdx_readmapconfstr(const char* valname, char *out, int outsz)
+{
+	int ret = 0;
+	const char* gamename = active_map.length() ? active_map.c_str() : INICONF_GLOBAL;
+	for(int tries = 0; tries < 2; tries++)
+	{
+		if (gamename && g_iniconf.has(gamename) && g_iniconf[gamename].has(valname))
+		{
+			errno_t ercd = strncpy_s(out, outsz, g_iniconf[gamename][valname].c_str(), _TRUNCATE);
+			if ( ercd == STRUNCATE )
+			{
+				ri.Printf( PRINT_ALL, "ReadGameConf: string truncation for %s, expected max %d bytes.\n", valname, outsz );
+				return 0;
+			}
+			if ( ercd == 0 )
+			{
+				return 1;
+			}
+		}
+		else
+		{
+			gamename = INICONF_GLOBAL;
+		}
+	}
+	return ret;
+}
 
 void qdx_begin_loading_map(const char* mapname)
 {
 	static char section[256];
-	if (g_inifile.read(g_iniconf) && remixOnline)
+
+	const char *name = strrchr(mapname, '/');
+	if (name == NULL) return;
+	name++;
+
+	const char* ext = strrchr(mapname, '.');
+	int namelen = 0;
+	if(ext)
 	{
-		const char *name = strrchr(mapname, '/');
-		if (name == NULL) return;
-		name++;
+		namelen = ext - name;
+	}
+	else
+	{
+		namelen = strlen(name);
+	}
 
-		const char* ext = strrchr(mapname, '.');
-		int namelen = 0;
-		if(ext)
-		{
-			namelen = ext - name;
-		}
-		else
-		{
-			namelen = strlen(name);
-		}
+	active_map.assign( name );
 
-		mINI::INIMap<std::string> *opts;
+	if (g_inifile.read(g_iniconf))
+	{
+		if ( remixOnline )
+		{
+			mINI::INIMap<std::string>* opts;
 
-		// Apply RTX.conf options
-		snprintf(section, sizeof(section), "rtxconf.%.*s", namelen, name);
-		if (g_iniconf.has(section))
-		{
-			opts = &g_iniconf.get(section);
-		}
-		else
-		{
-			opts = &g_iniconf.get("rtxconf.default");
-		}
-
-		for (auto it = opts->begin(); it != opts->end(); it++)
-		{
-			const char* key = it->first.c_str();
-			const char* value = it->second.c_str();
-			remixapi_ErrorCode rercd = remixInterface.SetConfigVariable(key, value);
-			if (REMIXAPI_ERROR_CODE_SUCCESS != rercd)
+			// Apply RTX.conf options
+			snprintf( section, sizeof( section ), "rtxconf.%.*s", namelen, name );
+			if ( g_iniconf.has( section ) )
 			{
-				ri.Printf(PRINT_ERROR, "RMX failed to set config var %d\n", rercd);
+				opts = &g_iniconf.get( section );
+			}
+			else
+			{
+				opts = &g_iniconf.get( "rtxconf.default" );
+			}
+
+			for ( auto it = opts->begin(); it != opts->end(); it++ )
+			{
+				const char* key = it->first.c_str();
+				const char* value = it->second.c_str();
+				remixapi_ErrorCode rercd = remixInterface.SetConfigVariable( key, value );
+				if ( REMIXAPI_ERROR_CODE_SUCCESS != rercd )
+				{
+					ri.Printf( PRINT_ERROR, "RMX failed to set config var %d\n", rercd );
+				}
 			}
 		}
 
-		// Load Static Lights settings (corona lights)
-		snprintf(section, sizeof(section), "lightstatic.%.*s", namelen, name);
-		if (g_iniconf.has(section))
-		{
-			opts = &g_iniconf.get(section);
-		}
-		else
-		{
-			opts = &g_iniconf.get("lightstatic.default");
-		}
-
-		qdx_lights_load( LIGHT_CORONA, opts );
-
-		// Load Dynamic Lights settings (torches)
-		snprintf(section, sizeof(section), "lightdynamic.%.*s", namelen, name);
-		if (g_iniconf.has(section))
-		{
-			opts = &g_iniconf.get(section);
-		}
-		else
-		{
-			opts = &g_iniconf.get("lightdynamic.default");
-		}
-
-		qdx_lights_load( LIGHT_DYNAMIC, opts );
+		// Load Light settings
+		qdx_lights_load( g_iniconf );
 	}
 }
 
-std::map<UINT32, std::vector<const void*>> g_surfaces;
+static std::map<UINT32, std::vector<const void*>> g_surfaces;
 
 void qdx_surface_clear()
 {

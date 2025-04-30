@@ -94,7 +94,7 @@ void SCR_AdjustFrom640( float *x, float *y, float *w, float *h ) {
 	if ( x ) {
 		*x *= xscale;
 	}
-	 {
+	if ( y ) {
 		*y *= yscale;
 	}
 	if ( w ) {

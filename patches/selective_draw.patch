@@ -78,10 +78,10 @@ index 5d05db7..d5ace54 100644
  	// do overdraw measurement
  	//
 diff --git a/src/renderer/tr_shade.c b/src/renderer/tr_shade.c
-index 02fdb69..4b2bde4 100644
+index 57dc9cd..71a7353 100644
 --- a/src/renderer/tr_shade.c
 +++ b/src/renderer/tr_shade.c
-@@ -1222,6 +1222,9 @@ void SetIteratorFog( void ) {
+@@ -1187,6 +1187,9 @@ void SetIteratorFog( void ) {
  	}
  }
  
@@ -91,8 +91,8 @@ index 02fdb69..4b2bde4 100644
  
  /*
  ** RB_IterateStagesGeneric
-@@ -1246,6 +1249,10 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input ) {
- 			qdx_fvf_buffer(FVF_COLOR, input->svars.colors, 0, 4);
+@@ -1211,6 +1214,10 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input ) {
+ 			qdx_vatt_set_buffer(VATT_COLOR, input->svars.colors, 0, 4);
  		}
  
 +		qdx_drawp.drawcall_count++;
@@ -102,13 +102,13 @@ index 02fdb69..4b2bde4 100644
  		//
  		// do multitexture
  		//
-@@ -1339,7 +1346,34 @@ void RB_StageIteratorGeneric( void ) {
+@@ -1304,7 +1311,34 @@ void RB_StageIteratorGeneric( void ) {
  	shaderCommands_t *input;
  
  	input = &tess;
 -
-+#if 0
-+	inputs_t keys = get_keypressed();
++#if 1
++	inputs_t keys = { 0 };// get_keypressed();
 +	if( ! Con_ConsoleShown())
 +	{
 +		if (keys.i)
@@ -138,7 +138,7 @@ index 02fdb69..4b2bde4 100644
  	RB_DeformTessGeometry();
  
  	//
-@@ -1439,6 +1473,8 @@ void RB_StageIteratorGeneric( void ) {
+@@ -1405,6 +1439,8 @@ void RB_StageIteratorGeneric( void ) {
  	//
  	// call shader function
  	//
@@ -147,7 +147,7 @@ index 02fdb69..4b2bde4 100644
  	RB_IterateStagesGeneric( input );
  
  	//
-@@ -1455,6 +1491,7 @@ void RB_StageIteratorGeneric( void ) {
+@@ -1421,6 +1457,7 @@ void RB_StageIteratorGeneric( void ) {
  	if ( tess.fogNum && tess.shader->fogPass ) {
  		RB_FogPass();
  	}
