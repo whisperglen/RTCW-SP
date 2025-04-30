@@ -8,12 +8,15 @@
 extern remixapi_Interface remixInterface;
 extern BOOL remixOnline;
 
-extern void qdx_draw_init();
+extern void qdx_draw_init(void *hwnd, void *device);
 extern void qdx_before_frame_end();
 extern void qdx_frame_ended();
 extern void qdx_clear_buffers();
 extern void qdx_texobj_delete_all();
 extern void qdx_lights_draw();
+extern void qdx_imgui_init(void *hwnd, void *device);
+extern void qdx_imgui_draw();
+extern void qdx_imgui_deinit();
 
 extern void qdx_log_comment(const char *name, UINT vattbits, const void *ptr);
 extern void qdx_log_matrix(const char *name, const float *mat);

@@ -17,6 +17,7 @@ static std::map<std::string, int> occurences;
 static std::vector<std::string> ordered_calls;
 
 inputs_t prevstate = { 0 };
+inputs_t prevstate_clr = { 0 };
 
 #define IS_PRESSED(X) (((X) & 0x8000) != 0)
 
@@ -24,43 +25,60 @@ extern "C" inputs_t get_keypressed()
 {
 	inputs_t ret = { 0 };
 
+	bool isShift = false;
+
+	///
+	if (IS_PRESSED(GetAsyncKeyState(VK_SHIFT)))
+	{
+		isShift = true;
+	}
 	///
 	if (IS_PRESSED(GetAsyncKeyState(VK_CONTROL)))
 	{
-		prevstate.ctrl = 1;
-	}
-	else if (prevstate.ctrl == 1)
-	{
 		ret.ctrl = 1;
-		prevstate.ctrl = 0;
+	}
+	///
+	if (IS_PRESSED(GetAsyncKeyState(VK_MENU)))
+	{
+		ret.alt = 1;
 	}
 	///
 	if (IS_PRESSED(GetAsyncKeyState(VK_UP)))
 	{
 		prevstate.updown = 1;
+		if (isShift)
+			ret.updown = 1;
 	}
 	else if (IS_PRESSED(GetAsyncKeyState(VK_DOWN)))
 	{
 		prevstate.updown = -1;
+		if (isShift)
+			ret.updown = -1;
 	}
 	else if (prevstate.updown != 0)
 	{
 		ret.updown = prevstate.updown;
-		prevstate.updown = 0;
+		//prevstate.updown = 0;
+		prevstate_clr.updown = 1;
 	}
 	///
 	if (IS_PRESSED(GetAsyncKeyState(VK_LEFT)))
 	{
 		prevstate.leftright = -1;
+		if (isShift)
+			ret.leftright = -1;
 	}
 	else if (IS_PRESSED(GetAsyncKeyState(VK_RIGHT)))
 	{
 		prevstate.leftright = 1;
+		if (isShift)
+			ret.leftright = 1;
 	}
 	else if (prevstate.leftright != 0)
 	{
 		ret.leftright = prevstate.leftright;
-		prevstate.leftright = 0;
+		//prevstate.leftright = 0;
+		prevstate_clr.leftright = 1;
 	}
 	///
 	if (IS_PRESSED(GetAsyncKeyState('X')))
@@ -70,7 +88,8 @@ extern "C" inputs_t get_keypressed()
 	else if (prevstate.x == 1)
 	{
 		ret.x = 1;
-		prevstate.x = 0;
+		//prevstate.x = 0;
+		prevstate_clr.x = 1;
 	}
 	///
 	if (IS_PRESSED(GetAsyncKeyState('Y')))
@@ -80,7 +99,8 @@ extern "C" inputs_t get_keypressed()
 	else if (prevstate.y == 1)
 	{
 		ret.y = 1;
-		prevstate.y = 0;
+		//prevstate.y = 0;
+		prevstate_clr.y = 1;
 	}
 	///
 	if (IS_PRESSED(GetAsyncKeyState('Z')))
@@ -90,7 +110,8 @@ extern "C" inputs_t get_keypressed()
 	else if (prevstate.z == 1)
 	{
 		ret.z = 1;
-		prevstate.z = 0;
+		//prevstate.z = 0;
+		prevstate_clr.z = 1;
 	}
 	///
 	if (IS_PRESSED(GetAsyncKeyState('I')))
@@ -100,7 +121,8 @@ extern "C" inputs_t get_keypressed()
 	else if (prevstate.i == 1)
 	{
 		ret.i = 1;
-		prevstate.i = 0;
+		//prevstate.i = 0;
+		prevstate_clr.i = 1;
 	}
 	///
 	if (IS_PRESSED(GetAsyncKeyState('O')))
@@ -110,7 +132,8 @@ extern "C" inputs_t get_keypressed()
 	else if (prevstate.o == 1)
 	{
 		ret.o = 1;
-		prevstate.o = 0;
+		//prevstate.o = 0;
+		prevstate_clr.o = 1;
 	}
 	///
 	if (IS_PRESSED(GetAsyncKeyState('U')))
@@ -120,10 +143,42 @@ extern "C" inputs_t get_keypressed()
 	else if (prevstate.u == 1)
 	{
 		ret.u = 1;
-		prevstate.u = 0;
+		//prevstate.u = 0;
+		prevstate_clr.u = 1;
+	}
+	///
+	if (IS_PRESSED(GetAsyncKeyState('C')))
+	{
+		prevstate.c = 1;
+	}
+	else if (prevstate.c == 1)
+	{
+		ret.c = 1;
+		//prevstate.c = 0;
+		prevstate_clr.c = 1;
+	}
+	///
+	if (IS_PRESSED(GetAsyncKeyState(VK_F10)))
+	{
+		prevstate.f10 = 1;
+	}
+	else if (prevstate.f10 == 1)
+	{
+		ret.f10 = 1;
+		//prevstate.f10 = 0;
+		prevstate_clr.f10 = 1;
 	}
 
 	return ret;
+}
+
+extern "C" void keypress_frame_ended()
+{
+	if ( prevstate_clr.all )
+	{
+		prevstate.all = prevstate.all & ~prevstate_clr.all;
+		prevstate_clr.all = 0;
+	}
 }
 
 extern "C" void function_called(const char *name)

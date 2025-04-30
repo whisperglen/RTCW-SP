@@ -65,7 +65,7 @@
       <ProgramDataBaseFileName>.\Release/</ProgramDataBaseFileName>
       <WarningLevel>Level4</WarningLevel>
       <SuppressStartupBanner>true</SuppressStartupBanner>
-      <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)dx9sdk\include;$(ProjectDir)fnvhash;$(ProjectDir)remix;$(ProjectDir)mINI;$(ProjectDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)dx9sdk\include;$(ProjectDir)fnvhash;$(ProjectDir)remix;$(ProjectDir)mINI;$(ProjectDir)imgui;$(ProjectDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -96,7 +96,7 @@
       <WarningLevel>Level3</WarningLevel>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
-      <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)dx9sdk\include;$(ProjectDir)fnvhash;$(ProjectDir)remix;$(ProjectDir)mINI;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir);$(ProjectDir)dx9sdk\include;$(ProjectDir)fnvhash;$(ProjectDir)remix;$(ProjectDir)mINI;$(ProjectDir)imgui;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <ResourceCompile>
       <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -188,6 +188,7 @@
     <ClCompile Include="..\jpeg-6\jmemnobs.c" />
     <ClCompile Include="..\jpeg-6\jutils.c" />
     <ClCompile Include="..\win32\win_dx9draw.cpp" />
+    <ClCompile Include="..\win32\win_dx9imgui.cpp" />
     <ClCompile Include="..\win32\win_dx9imp.cpp" />
     <ClCompile Include="..\win32\win_dx9light.cpp" />
     <ClCompile Include="..\win32\win_qgl_dummy.c" />
@@ -197,6 +198,12 @@
     <ClCompile Include="fnvhash\hash_32a.c" />
     <ClCompile Include="fnvhash\hash_64.c" />
     <ClCompile Include="fnvhash\hash_64a.c" />
+    <ClCompile Include="imgui\backends\imgui_impl_dx9.cpp" />
+    <ClCompile Include="imgui\backends\imgui_impl_win32.cpp" />
+    <ClCompile Include="imgui\imgui.cpp" />
+    <ClCompile Include="imgui\imgui_draw.cpp" />
+    <ClCompile Include="imgui\imgui_tables.cpp" />
+    <ClCompile Include="imgui\imgui_widgets.cpp" />
     <ClCompile Include="tr_dbghelpers.cpp" />
     <ClCompile Include="tr_animation.c" />
     <ClCompile Include="tr_backend.c" />
@@ -304,6 +311,14 @@
     <ClInclude Include="DirectXTex\DirectXTexP.h" />
     <ClInclude Include="DirectXTex\scoped.h" />
     <ClInclude Include="fnvhash\fnv.h" />
+    <ClInclude Include="imgui\backends\imgui_impl_dx9.h" />
+    <ClInclude Include="imgui\backends\imgui_impl_win32.h" />
+    <ClInclude Include="imgui\imconfig.h" />
+    <ClInclude Include="imgui\imgui.h" />
+    <ClInclude Include="imgui\imgui_internal.h" />
+    <ClInclude Include="imgui\imstb_rectpack.h" />
+    <ClInclude Include="imgui\imstb_textedit.h" />
+    <ClInclude Include="imgui\imstb_truetype.h" />
     <ClInclude Include="qgl.h" />
     <ClInclude Include="qdx9.h" />
     <ClInclude Include="remix\remix.h" />

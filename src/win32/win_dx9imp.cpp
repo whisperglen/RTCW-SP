@@ -1809,7 +1809,7 @@ void DX9imp_Init(void) {
 	GLW_InitExtensions();
 	DX9imp_CheckHardwareGamma();
 
-	qdx_draw_init();
+	qdx_draw_init(g_wv.hWnd, qdx.device);
 }
 
 /*
@@ -1842,6 +1842,7 @@ void DX9imp_Shutdown(void) {
 	if (qdx.device)
 	{
 		qdx_objects_reset();
+		qdx_imgui_deinit();
 #if 1
 		//if (dx9imp_state.cdsFullscreen)
 		{

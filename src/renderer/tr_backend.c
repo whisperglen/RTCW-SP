@@ -1044,7 +1044,7 @@ void RB_RenderDrawSurfList( drawSurf_t *drawSurfs, int numDrawSurfs ) {
 	oldDepthRange = qfalse;
 	oldDlighted = qfalse;
 	oldSort = -1;
-	oldSurfType = SS_BAD;
+	oldSurfType = NULL;
 	depthRange = qfalse;
 // GR - tessellation also forces to draw everything
 	oldAtiTess = -1;

@@ -32,9 +32,10 @@ struct qdx_matrixes
 	}
 } qdx_mats;
 
-void qdx_draw_init()
+void qdx_draw_init(void *hwnd, void *device)
 {
 	qdx_mats.init();
+	qdx_imgui_init(hwnd, device);
 }
 
 D3DTEXTUREADDRESS qdx_texture_wrapmode(int gl_mode)
@@ -437,11 +438,13 @@ void qdx_objects_reset()
 
 void qdx_frame_ended()
 {
+	keypress_frame_ended();
 }
 
 void qdx_before_frame_end()
 {
 	qdx_lights_draw();
+	qdx_imgui_draw();
 }
 
 static int qdx_get_buffers(LPDIRECT3DINDEXBUFFER9 *index_buf, LPDIRECT3DVERTEXBUFFER9 *vertex_buf, UINT vatt_spec, UINT vatt_stride, UINT hash, vatt_buff_stats_t **stats)
