@@ -33,6 +33,7 @@ typedef enum
 
 static void Com_Prefetch( const void *s, const unsigned int bytes, e_prefetch type );
 
+#if id386
 #define EMMS_INSTRUCTION    __asm emms
 
 static void _copyDWord( unsigned int* dest, const unsigned int constant, const unsigned int count ) {
@@ -316,3 +317,5 @@ skip:
 		break;
 	}
 }
+
+#endif

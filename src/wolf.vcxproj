@@ -271,22 +271,22 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="..\README.md" />
-    <CopyFileToFolders Include="resources\autoexec.cfg">
+    <CopyFileToFolders Include="..\resources\autoexec.cfg">
       <FileType>Document</FileType>
     </CopyFileToFolders>
-    <CopyFileToFolders Include="resources\bridge.conf">
+    <CopyFileToFolders Include="..\resources\bridge.conf">
       <FileType>Document</FileType>
     </CopyFileToFolders>
-    <CopyFileToFolders Include="win32\package.bat">
+    <CopyFileToFolders Include="..\resources\package.bat">
       <FileType>Document</FileType>
     </CopyFileToFolders>
-    <CopyFileToFolders Include="resources\CopyCrashDumpHere.bat">
+    <CopyFileToFolders Include="..\resources\CopyCrashDumpHere.bat">
       <FileType>Document</FileType>
     </CopyFileToFolders>
-    <CopyFileToFolders Include="resources\CrashConfig.reg">
+    <CopyFileToFolders Include="..\resources\CrashConfig.reg">
       <FileType>Document</FileType>
     </CopyFileToFolders>
-    <CopyFileToFolders Include="resources\wolf_customise.ini">
+    <CopyFileToFolders Include="..\resources\wolf_customise.ini">
       <FileType>Document</FileType>
     </CopyFileToFolders>
   </ItemGroup>

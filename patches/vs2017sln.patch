@@ -1,0 +1,242 @@
+diff --git a/src/botlib/botlib.vcxproj b/src/botlib/botlib.vcxproj
+index deeef31..32a2355 100644
+--- a/src/botlib/botlib.vcxproj
++++ b/src/botlib/botlib.vcxproj
+@@ -12,17 +12,18 @@
+   </ItemGroup>
+   <PropertyGroup Label="Globals">
+     <ProjectGuid>{86691FDD-E0C6-4D71-9FFD-E0F30F19AA3E}</ProjectGuid>
++    <WindowsTargetPlatformVersion>10.0.19041.0</WindowsTargetPlatformVersion>
+   </PropertyGroup>
+   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+     <ConfigurationType>StaticLibrary</ConfigurationType>
+-    <PlatformToolset>v142</PlatformToolset>
++    <PlatformToolset>v141</PlatformToolset>
+     <UseOfMfc>false</UseOfMfc>
+     <CharacterSet>MultiByte</CharacterSet>
+   </PropertyGroup>
+   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+     <ConfigurationType>StaticLibrary</ConfigurationType>
+-    <PlatformToolset>v142</PlatformToolset>
++    <PlatformToolset>v141</PlatformToolset>
+     <UseOfMfc>false</UseOfMfc>
+     <CharacterSet>MultiByte</CharacterSet>
+   </PropertyGroup>
+diff --git a/src/cgame/cgame.vcxproj b/src/cgame/cgame.vcxproj
+index b2cf4ff..cb54748 100644
+--- a/src/cgame/cgame.vcxproj
++++ b/src/cgame/cgame.vcxproj
+@@ -12,16 +12,17 @@
+   </ItemGroup>
+   <PropertyGroup Label="Globals">
+     <ProjectGuid>{A981B743-DF98-4346-AA89-5DECB39C165D}</ProjectGuid>
++    <WindowsTargetPlatformVersion>10.0.19041.0</WindowsTargetPlatformVersion>
+   </PropertyGroup>
+   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+     <ConfigurationType>DynamicLibrary</ConfigurationType>
+-    <PlatformToolset>v142</PlatformToolset>
++    <PlatformToolset>v141</PlatformToolset>
+     <UseOfMfc>false</UseOfMfc>
+   </PropertyGroup>
+   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+     <ConfigurationType>DynamicLibrary</ConfigurationType>
+-    <PlatformToolset>v142</PlatformToolset>
++    <PlatformToolset>v141</PlatformToolset>
+     <UseOfMfc>false</UseOfMfc>
+   </PropertyGroup>
+   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+diff --git a/src/extractfuncs/extractfuncs.vcxproj b/src/extractfuncs/extractfuncs.vcxproj
+index f0afa14..07aee23 100644
+--- a/src/extractfuncs/extractfuncs.vcxproj
++++ b/src/extractfuncs/extractfuncs.vcxproj
+@@ -12,17 +12,18 @@
+   </ItemGroup>
+   <PropertyGroup Label="Globals">
+     <ProjectGuid>{0FC559FD-6DCD-4A81-B286-688F79286AEF}</ProjectGuid>
++    <WindowsTargetPlatformVersion>10.0.19041.0</WindowsTargetPlatformVersion>
+   </PropertyGroup>
+   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+     <ConfigurationType>Application</ConfigurationType>
+-    <PlatformToolset>v142</PlatformToolset>
++    <PlatformToolset>v141</PlatformToolset>
+     <UseOfMfc>false</UseOfMfc>
+     <CharacterSet>MultiByte</CharacterSet>
+   </PropertyGroup>
+   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+     <ConfigurationType>Application</ConfigurationType>
+-    <PlatformToolset>v142</PlatformToolset>
++    <PlatformToolset>v141</PlatformToolset>
+     <UseOfMfc>false</UseOfMfc>
+     <CharacterSet>MultiByte</CharacterSet>
+   </PropertyGroup>
+diff --git a/src/game/game.vcxproj b/src/game/game.vcxproj
+index 52ccd68..110b426 100644
+--- a/src/game/game.vcxproj
++++ b/src/game/game.vcxproj
+@@ -12,16 +12,17 @@
+   </ItemGroup>
+   <PropertyGroup Label="Globals">
+     <ProjectGuid>{99EE8E3F-250E-4082-A92E-C7BC6202FDFE}</ProjectGuid>
++    <WindowsTargetPlatformVersion>10.0.19041.0</WindowsTargetPlatformVersion>
+   </PropertyGroup>
+   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+     <ConfigurationType>DynamicLibrary</ConfigurationType>
+-    <PlatformToolset>v142</PlatformToolset>
++    <PlatformToolset>v141</PlatformToolset>
+     <UseOfMfc>false</UseOfMfc>
+   </PropertyGroup>
+   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+     <ConfigurationType>DynamicLibrary</ConfigurationType>
+-    <PlatformToolset>v142</PlatformToolset>
++    <PlatformToolset>v141</PlatformToolset>
+     <UseOfMfc>false</UseOfMfc>
+   </PropertyGroup>
+   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+diff --git a/src/renderer/renderer.vcxproj b/src/renderer/renderer.vcxproj
+index 625e254..77b2932 100644
+--- a/src/renderer/renderer.vcxproj
++++ b/src/renderer/renderer.vcxproj
+@@ -12,19 +12,19 @@
+   </ItemGroup>
+   <PropertyGroup Label="Globals">
+     <ProjectGuid>{F45A4F73-0EA1-4EB2-9829-154964ADEC6A}</ProjectGuid>
+-    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
++    <WindowsTargetPlatformVersion>10.0.19041.0</WindowsTargetPlatformVersion>
+     <ProjectName>renderer</ProjectName>
+   </PropertyGroup>
+   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+     <ConfigurationType>StaticLibrary</ConfigurationType>
+-    <PlatformToolset>v142</PlatformToolset>
++    <PlatformToolset>v141</PlatformToolset>
+     <UseOfMfc>false</UseOfMfc>
+     <CharacterSet>MultiByte</CharacterSet>
+   </PropertyGroup>
+   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+     <ConfigurationType>StaticLibrary</ConfigurationType>
+-    <PlatformToolset>v142</PlatformToolset>
++    <PlatformToolset>v141</PlatformToolset>
+     <UseOfMfc>false</UseOfMfc>
+     <CharacterSet>MultiByte</CharacterSet>
+   </PropertyGroup>
+diff --git a/src/splines/Splines.vcxproj b/src/splines/Splines.vcxproj
+index 5bc6ecc..07b6961 100644
+--- a/src/splines/Splines.vcxproj
++++ b/src/splines/Splines.vcxproj
+@@ -12,17 +12,18 @@
+   </ItemGroup>
+   <PropertyGroup Label="Globals">
+     <ProjectGuid>{AA96579B-0F16-4614-8453-0B03C8B39A46}</ProjectGuid>
++    <WindowsTargetPlatformVersion>10.0.19041.0</WindowsTargetPlatformVersion>
+   </PropertyGroup>
+   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+     <ConfigurationType>StaticLibrary</ConfigurationType>
+-    <PlatformToolset>v142</PlatformToolset>
++    <PlatformToolset>v141</PlatformToolset>
+     <UseOfMfc>false</UseOfMfc>
+     <CharacterSet>MultiByte</CharacterSet>
+   </PropertyGroup>
+   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+     <ConfigurationType>StaticLibrary</ConfigurationType>
+-    <PlatformToolset>v142</PlatformToolset>
++    <PlatformToolset>v141</PlatformToolset>
+     <UseOfMfc>false</UseOfMfc>
+     <CharacterSet>MultiByte</CharacterSet>
+   </PropertyGroup>
+diff --git a/src/ui/ui.vcxproj b/src/ui/ui.vcxproj
+index 9b9c9f1..20b059b 100644
+--- a/src/ui/ui.vcxproj
++++ b/src/ui/ui.vcxproj
+@@ -12,17 +12,18 @@
+   </ItemGroup>
+   <PropertyGroup Label="Globals">
+     <ProjectGuid>{9FC6663B-403B-4429-90C3-4CE12E5D0619}</ProjectGuid>
++    <WindowsTargetPlatformVersion>10.0.19041.0</WindowsTargetPlatformVersion>
+   </PropertyGroup>
+   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+     <ConfigurationType>DynamicLibrary</ConfigurationType>
+-    <PlatformToolset>v142</PlatformToolset>
++    <PlatformToolset>v141</PlatformToolset>
+     <UseOfMfc>false</UseOfMfc>
+     <CharacterSet>MultiByte</CharacterSet>
+   </PropertyGroup>
+   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+     <ConfigurationType>DynamicLibrary</ConfigurationType>
+-    <PlatformToolset>v142</PlatformToolset>
++    <PlatformToolset>v141</PlatformToolset>
+     <UseOfMfc>false</UseOfMfc>
+     <CharacterSet>MultiByte</CharacterSet>
+   </PropertyGroup>
+diff --git a/src/wolf.vcxproj b/src/wolf.vcxproj
+index a415977..6b4dd21 100644
+--- a/src/wolf.vcxproj
++++ b/src/wolf.vcxproj
+@@ -12,17 +12,17 @@
+   </ItemGroup>
+   <PropertyGroup Label="Globals">
+     <ProjectGuid>{47CCBCAD-2A5C-4A70-8504-371F2EC29CBE}</ProjectGuid>
+-    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
++    <WindowsTargetPlatformVersion>10.0.19041.0</WindowsTargetPlatformVersion>
+   </PropertyGroup>
+   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+     <ConfigurationType>Application</ConfigurationType>
+-    <PlatformToolset>v142</PlatformToolset>
++    <PlatformToolset>v141</PlatformToolset>
+     <UseOfMfc>false</UseOfMfc>
+   </PropertyGroup>
+   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+     <ConfigurationType>Application</ConfigurationType>
+-    <PlatformToolset>v142</PlatformToolset>
++    <PlatformToolset>v141</PlatformToolset>
+     <UseOfMfc>false</UseOfMfc>
+   </PropertyGroup>
+   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+diff --git a/test/test.vcxproj b/test/test.vcxproj
+index d35fe98..5109791 100644
+--- a/test/test.vcxproj
++++ b/test/test.vcxproj
+@@ -23,32 +23,32 @@
+     <Keyword>Win32Proj</Keyword>
+     <ProjectGuid>{8ab784db-c647-4330-ab84-e42dbae86bc1}</ProjectGuid>
+     <RootNamespace>test</RootNamespace>
+-    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
++    <WindowsTargetPlatformVersion>10.0.19041.0</WindowsTargetPlatformVersion>
+   </PropertyGroup>
+   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+     <ConfigurationType>Application</ConfigurationType>
+     <UseDebugLibraries>true</UseDebugLibraries>
+-    <PlatformToolset>v142</PlatformToolset>
++    <PlatformToolset>v141</PlatformToolset>
+     <CharacterSet>MultiByte</CharacterSet>
+   </PropertyGroup>
+   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+     <ConfigurationType>Application</ConfigurationType>
+     <UseDebugLibraries>false</UseDebugLibraries>
+-    <PlatformToolset>v142</PlatformToolset>
++    <PlatformToolset>v141</PlatformToolset>
+     <WholeProgramOptimization>true</WholeProgramOptimization>
+     <CharacterSet>MultiByte</CharacterSet>
+   </PropertyGroup>
+   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+     <ConfigurationType>Application</ConfigurationType>
+     <UseDebugLibraries>true</UseDebugLibraries>
+-    <PlatformToolset>v142</PlatformToolset>
++    <PlatformToolset>v141</PlatformToolset>
+     <CharacterSet>MultiByte</CharacterSet>
+   </PropertyGroup>
+   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+     <ConfigurationType>Application</ConfigurationType>
+     <UseDebugLibraries>false</UseDebugLibraries>
+-    <PlatformToolset>v142</PlatformToolset>
++    <PlatformToolset>v141</PlatformToolset>
+     <WholeProgramOptimization>true</WholeProgramOptimization>
+     <CharacterSet>MultiByte</CharacterSet>
+   </PropertyGroup>

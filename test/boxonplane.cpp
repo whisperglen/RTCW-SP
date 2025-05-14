@@ -36,7 +36,7 @@ typedef struct cplane_s {
 * 
 * // this is the slow, general version
 */
-int BoxOnPlaneSide2 (vec3_t emins, vec3_t emaxs, struct cplane_s *p)
+int BoxOnPlaneSide_s (vec3_t emins, vec3_t emaxs, struct cplane_s *p)
 {
 	int		i;
 	float	dist1, dist2;
@@ -374,8 +374,11 @@ struct function_data
 
 static struct function_data data_fn[] =
 {
+	{ BoxOnPlaneSide_s,      "    boxon_s" },
 	{ BoxOnPlaneSide,        "      boxon" },
+#if id386
 	{ BoxOnPlaneSide_asm,    "  boxon_asm" },
+#endif
 	{ 0, 0 }
 };
 
@@ -392,9 +395,9 @@ struct boxon_input
 //#define TEST_SIZE 1 * 1000 * 1000
 
 struct boxon_input input[TEST_SIZE];
-int output[2][TEST_SIZE];
+int output[3][TEST_SIZE];
 
-C_ASSERT(ARRAY_SIZE(output) == ARRAY_SIZE(data_fn) - 1);
+C_ASSERT(ARRAY_SIZE(output) >= ARRAY_SIZE(data_fn) - 1);
 
 #define MAX_ERRORS 10
 #define REPETITIONS 1

@@ -203,7 +203,8 @@ void Sys_Exit( int errorcode )
 		}
 	}
 
-	TerminateProcess( GetCurrentProcess(), 0 );
+	//TerminateProcess( GetCurrentProcess(), 0 );
+	exit( 0 );
 }
 
 /*
