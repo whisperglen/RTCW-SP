@@ -14,6 +14,7 @@ extern "C"
 #include <string>
 #include <map>
 
+static void iniconf_first_init();
 
 struct qdx_matrixes
 {
@@ -35,6 +36,7 @@ struct qdx_matrixes
 void qdx_draw_init(void *hwnd, void *device)
 {
 	qdx_mats.init();
+	iniconf_first_init();
 	qdx_imgui_init(hwnd, device);
 }
 
@@ -2049,7 +2051,17 @@ void qdx_assert_failed_str(const char* expression, const char* function, unsigne
 
 static mINI::INIFile g_inifile("wolf_customise.ini");
 static mINI::INIStructure g_iniconf;
-std::string active_map( "" );
+static BOOL g_ini_first_init = FALSE;
+static std::string active_map( "" );
+
+static void iniconf_first_init()
+{
+	if ( g_ini_first_init == FALSE )
+	{
+		g_ini_first_init = TRUE;
+		g_inifile.read( g_iniconf );
+	}
+}
 
 const char* qdx_get_active_map()
 {
@@ -2067,58 +2079,139 @@ void qdx_save_iniconf()
 }
 
 #define INICONF_GLOBAL "global"
+#define INICONF_SETTINGS "Settings"
 
-int qdx_readmapconf(const char* valname)
+int qdx_readsetting( const char* valname, int default )
 {
-	int ret = 0;
-	const char* gamename = active_map.length() ? active_map.c_str() : INICONF_GLOBAL;
-	if( gamename )
-	for(int tries = 0; tries < 2; tries++)
+	if (g_iniconf.has(INICONF_SETTINGS) && g_iniconf[INICONF_SETTINGS].has(valname))
 	{
-		if (gamename && g_iniconf.has(gamename) && g_iniconf[gamename].has(valname))
+		return strtoul( g_iniconf[INICONF_SETTINGS][valname].c_str(), NULL, 10 );
+	}
+
+	return default;
+}
+
+intptr_t qdx_readmapconf_ex(const char* base, const char* valname, int radix)
+{
+	intptr_t ret = 0;
+	int tries = 0;
+	std::string section( base );
+	section.append( "." );
+	if ( active_map.length() )
+	{
+		section.append( active_map.c_str() );
+	}
+	else
+	{
+		section.append( INICONF_GLOBAL );
+		tries = 1;
+	}
+
+	for(; tries < 2; tries++)
+	{
+		if (g_iniconf.has(section) && g_iniconf[section].has(valname))
 		{
-			ret = strtoul( g_iniconf[gamename][valname].c_str(), NULL, 10 );
+			ret = strtoul( g_iniconf[section][valname].c_str(), NULL, radix );
 			break;
 		}
 		else
 		{
-			gamename = INICONF_GLOBAL;
+			section.assign( base );
+			section.append( "." );
+			section.append( INICONF_GLOBAL );
 		}
 	}
 	return ret;
 }
 
-void* qdx_readmapconfptr(const char* valname)
+int qdx_readmapconf( const char* base, const char* valname )
 {
-	void* ret = 0;
-	const char* gamename = active_map.length() ? active_map.c_str() : INICONF_GLOBAL;
-	for(int tries = 0; tries < 2; tries++)
+	return (int) qdx_readmapconf_ex( base, valname, 10 );
+}
+
+void* qdx_readmapconfptr( const char* base, const char* valname)
+{
+	return (void*) qdx_readmapconf_ex( base, valname, 16 );
+}
+
+float qdx_readmapconfflt(const char* base, const char* valname, float default)
+{
+	float ret = default;
+	int tries = 0;
+	std::string section( base );
+	section.append( "." );
+	if ( active_map.length() )
 	{
-		if (gamename && g_iniconf.has(gamename) && g_iniconf[gamename].has(valname))
+		section.append( active_map.c_str() );
+	}
+	else
+	{
+		section.append( INICONF_GLOBAL );
+		tries = 1;
+	}
+
+	for(; tries < 2; tries++)
+	{
+		if (g_iniconf.has(section) && g_iniconf[section].has(valname))
 		{
-			ret = (void*)strtoul( g_iniconf[gamename][valname].c_str(), NULL, 16 );
+			ret = strtof( g_iniconf[section][valname].c_str(), NULL );
 			break;
 		}
 		else
 		{
-			gamename = INICONF_GLOBAL;
+			section.assign( base );
+			section.append( "." );
+			section.append( INICONF_GLOBAL );
 		}
 	}
 	return ret;
 }
 
-int qdx_readmapconfstr(const char* valname, char *out, int outsz)
+void qdx_storemapconfflt( const char* base, const char* valname, float value, bool inGlobal )
 {
-	int ret = 0;
-	const char* gamename = active_map.length() ? active_map.c_str() : INICONF_GLOBAL;
-	for(int tries = 0; tries < 2; tries++)
+	if ( inGlobal == false && active_map.length() == 0 )
 	{
-		if (gamename && g_iniconf.has(gamename) && g_iniconf[gamename].has(valname))
+		return;
+	}
+	char data[32];
+	snprintf( data, sizeof( data ), "%.4f", value );
+
+	std::string section( base );
+	section.append( "." );
+	if ( inGlobal )
+	{
+		section.append( INICONF_GLOBAL );
+	}
+	else
+	{
+		section.append( active_map.c_str() );
+	}
+	g_iniconf[section][valname] = data;
+}
+
+int qdx_readmapconfstr( const char* base, const char* valname, char *out, int outsz )
+{
+	int tries = 0;
+	std::string section( base );
+	section.append( "." );
+	if ( active_map.length() )
+	{
+		section.append( active_map.c_str() );
+	}
+	else
+	{
+		section.append( INICONF_GLOBAL );
+		tries = 1;
+	}
+
+	for(; tries < 2; tries++)
+	{
+		if (g_iniconf.has(section) && g_iniconf[section].has(valname))
 		{
-			errno_t ercd = strncpy_s(out, outsz, g_iniconf[gamename][valname].c_str(), _TRUNCATE);
+			errno_t ercd = strncpy_s(out, outsz, g_iniconf[section][valname].c_str(), _TRUNCATE);
 			if ( ercd == STRUNCATE )
 			{
-				ri.Printf( PRINT_ALL, "ReadGameConf: string truncation for %s, expected max %d bytes.\n", valname, outsz );
+				ri.Printf( PRINT_ALL, "readmapconfstr: string truncation for %s, expected max %d bytes.\n", valname, outsz );
 				return 0;
 			}
 			if ( ercd == 0 )
@@ -2128,10 +2221,12 @@ int qdx_readmapconfstr(const char* valname, char *out, int outsz)
 		}
 		else
 		{
-			gamename = INICONF_GLOBAL;
+			section.assign( base );
+			section.append( "." );
+			section.append( INICONF_GLOBAL );
 		}
 	}
-	return ret;
+	return 0;
 }
 
 void qdx_begin_loading_map(const char* mapname)
@@ -2153,7 +2248,7 @@ void qdx_begin_loading_map(const char* mapname)
 		namelen = strlen(name);
 	}
 
-	active_map.assign( name );
+	active_map.assign( name, namelen );
 
 	if (g_inifile.read(g_iniconf))
 	{
@@ -2185,7 +2280,7 @@ void qdx_begin_loading_map(const char* mapname)
 		}
 
 		// Load Light settings
-		qdx_lights_load( g_iniconf );
+		qdx_lights_load( g_iniconf, active_map.c_str() );
 	}
 }
 

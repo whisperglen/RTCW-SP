@@ -18,7 +18,7 @@ extern "C" void test_gamevals()
 		printf("\n");
 		for (float dist = 0; dist <= radius; dist += 2.0f)
 		{
-			float mod = 1.0f / (1.0f + scale * dist + 0.01 * dist * dist);
+			float mod = 1.0f / (1.0f + scale * dist + 0.01f * dist * dist);
 			//float mod = 1.0f / (1.0 + scale  * dist);
 			//float mod = 1.0f / (0.5f + scale * scale * dist * dist);
 			printf(" %2.2f", mod);

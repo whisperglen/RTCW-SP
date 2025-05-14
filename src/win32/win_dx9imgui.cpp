@@ -11,6 +11,7 @@ static BOOL g_initialised = FALSE;
 static BOOL g_visible = FALSE;
 static bool g_game_input_blocked = TRUE;
 static BOOL g_in_mouse_val = FALSE;
+static BOOL g_use_shortcut_keys = TRUE;
 
 static void *g_hwnd = NULL;
 static WNDPROC g_game_wndproc = NULL;
@@ -74,6 +75,7 @@ static void do_draw()
 
 		if ( ImGui::Button( "Save" ) )
 		{
+			qdx_flashlight_save();
 		}
 	}
 	if ( ImGui::CollapsingHeader( "Static Lights" ) )
@@ -82,10 +84,12 @@ static void do_draw()
 		ImGui::DragFloat( "Radiance Corona Lights", qdx_4imgui_radiance_coronas_1f(), 100, 0, 50000 );
 		if ( ImGui::Button( "Save to Global" ) )
 		{
+			qdx_radiance_save( true );
 		}
 		ImGui::SameLine();
 		if ( ImGui::Button( "Save to Map" ) )
 		{
+			qdx_radiance_save( false );
 		}
 	}
 
@@ -99,6 +103,7 @@ void qdx_imgui_init(void *hwnd, void *device)
 	{
 		g_initialised = TRUE;
 		g_hwnd = hwnd;
+		g_use_shortcut_keys = qdx_readsetting( "imgui_allow_shortcut_keys", g_use_shortcut_keys );
 
 		IMGUI_CHECKVERSION();
 		ImGui::CreateContext();
@@ -138,10 +143,13 @@ void qdx_imgui_deinit()
 
 void qdx_imgui_draw()
 {
-	inputs_t keys = get_keypressed();
-	if ( keys.imgui || (keys.alt && keys.c) )
+	if ( g_use_shortcut_keys )
 	{
-		ri.Cvar_Set( "r_showimgui", (r_showimgui->integer ? "0" : "1") );
+		inputs_t keys = get_keypressed();
+		if ( keys.imgui || (keys.alt && keys.c) )
+		{   //toggle cvar
+			ri.Cvar_Set( "r_showimgui", (r_showimgui->integer ? "0" : "1") );
+		}
 	}
 
 	if ( r_showimgui->modified )
@@ -247,26 +255,9 @@ static LRESULT CALLBACK wnd_proc_hk(HWND hWnd, UINT message_type, WPARAM wParam,
 		if ( FALSE == g_game_input_blocked )
 		{
 			//send mouse too
-			int mx, my;
-			POINT current_pos;
-
-			// find mouse movement
-			GetCursorPos( &current_pos );
-
-			mx = current_pos.x - window_center_x;
-			my = current_pos.y - window_center_y;
-
-#define MAX_MOUSEMOVE 1000
-			if ( mx > MAX_MOUSEMOVE ) mx = MAX_MOUSEMOVE;
-			if ( mx < -MAX_MOUSEMOVE ) mx = -MAX_MOUSEMOVE;
-			if ( my > MAX_MOUSEMOVE ) my = MAX_MOUSEMOVE;
-			if ( my < -MAX_MOUSEMOVE ) my = -MAX_MOUSEMOVE;
-
-			if ( mx || my ) {
-				Sys_QueEvent( 0, SE_MOUSE, mx, my, 0, NULL );
-
-				window_center_x = current_pos.x;
-				window_center_y = current_pos.y;
+			if ( io->MouseDelta.x || io->MouseDelta.y )
+			{
+				Sys_QueEvent( 0, SE_MOUSE, io->MouseDelta.x, io->MouseDelta.y, 0, NULL );
 			}
 		}
 
@@ -282,36 +273,36 @@ static LRESULT CALLBACK wnd_proc_hk(HWND hWnd, UINT message_type, WPARAM wParam,
 
 static void game_input_activated(bool active)
 {
-	if ( active )
-	{
-		int width, height;
-		RECT window_rect;
+	//if ( active )
+	//{
+	//	int width, height;
+	//	RECT window_rect;
 
-		width = GetSystemMetrics( SM_CXSCREEN );
-		height = GetSystemMetrics( SM_CYSCREEN );
+	//	width = GetSystemMetrics( SM_CXSCREEN );
+	//	height = GetSystemMetrics( SM_CYSCREEN );
 
-		GetWindowRect( HWND( g_hwnd ), &window_rect );
-		if ( window_rect.left < 0 ) {
-			window_rect.left = 0;
-		}
-		if ( window_rect.top < 0 ) {
-			window_rect.top = 0;
-		}
-		if ( window_rect.right >= width ) {
-			window_rect.right = width - 1;
-		}
-		if ( window_rect.bottom >= height - 1 ) {
-			window_rect.bottom = height - 1;
-		}
-		window_center_x = (window_rect.right + window_rect.left) / 2;
-		window_center_y = (window_rect.top + window_rect.bottom) / 2;
+	//	GetWindowRect( HWND( g_hwnd ), &window_rect );
+	//	if ( window_rect.left < 0 ) {
+	//		window_rect.left = 0;
+	//	}
+	//	if ( window_rect.top < 0 ) {
+	//		window_rect.top = 0;
+	//	}
+	//	if ( window_rect.right >= width ) {
+	//		window_rect.right = width - 1;
+	//	}
+	//	if ( window_rect.bottom >= height - 1 ) {
+	//		window_rect.bottom = height - 1;
+	//	}
+	//	window_center_x = (window_rect.right + window_rect.left) / 2;
+	//	window_center_y = (window_rect.top + window_rect.bottom) / 2;
 
-		SetCapture( HWND(g_hwnd) );
-		ClipCursor( &window_rect );
-	}
-	else
-	{
-		ReleaseCapture();
-		ClipCursor( NULL );
-	}
+	//	SetCapture( HWND(g_hwnd) );
+	//	ClipCursor( &window_rect );
+	//}
+	//else
+	//{
+	//	ReleaseCapture();
+	//	ClipCursor( NULL );
+	//}
 }

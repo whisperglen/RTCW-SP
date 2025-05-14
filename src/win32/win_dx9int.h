@@ -29,7 +29,17 @@ const char* qdx_get_active_map();
 mINI::INIStructure& qdx_get_iniconf();
 void qdx_save_iniconf();
 
-void qdx_lights_load(mINI::INIStructure &ini);
+int qdx_readsetting( const char* valname, int default );
+int qdx_readmapconf( const char* base, const char* valname );
+void* qdx_readmapconfptr( const char* base, const char* valname );
+float qdx_readmapconfflt( const char* base, const char* valname, float default );
+int qdx_readmapconfstr( const char* base, const char* valname, char *out, int outsz );
+
+void qdx_storemapconfflt( const char* base, const char* valname, float value, bool inGlobal = true );
+
+void qdx_lights_load(mINI::INIStructure &ini, const char *mapname);
+void qdx_flashlight_save();
+void qdx_radiance_save( bool inGlobal );
 
 #define NUM_FLASHLIGHT_HND 3
 float* qdx_4imgui_radiance_dynamic_1f();

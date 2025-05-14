@@ -290,22 +290,22 @@
     <CopyFileToFolders Include="win32\copy.bat">
       <Filter>Resource Files</Filter>
     </CopyFileToFolders>
-    <CopyFileToFolders Include="resources\bridge.conf">
+    <CopyFileToFolders Include="..\resources\bridge.conf">
       <Filter>Resource Files</Filter>
     </CopyFileToFolders>
-    <CopyFileToFolders Include="resources\autoexec.cfg">
+    <CopyFileToFolders Include="..\resources\autoexec.cfg">
       <Filter>Resource Files</Filter>
     </CopyFileToFolders>
-    <CopyFileToFolders Include="win32\package.bat">
+    <CopyFileToFolders Include="..\resources\package.bat">
       <Filter>Resource Files</Filter>
     </CopyFileToFolders>
-    <CopyFileToFolders Include="resources\CopyCrashDumpHere.bat">
+    <CopyFileToFolders Include="..\resources\CopyCrashDumpHere.bat">
       <Filter>Resource Files</Filter>
     </CopyFileToFolders>
-    <CopyFileToFolders Include="resources\CrashConfig.reg">
+    <CopyFileToFolders Include="..\resources\CrashConfig.reg">
       <Filter>Resource Files</Filter>
     </CopyFileToFolders>
-    <CopyFileToFolders Include="resources\wolf_customise.ini">
+    <CopyFileToFolders Include="..\resources\wolf_customise.ini">
       <Filter>Resource Files</Filter>
     </CopyFileToFolders>
   </ItemGroup>

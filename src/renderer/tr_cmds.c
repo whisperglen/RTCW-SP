@@ -467,13 +467,16 @@ void RE_BeginFrame( stereoFrame_t stereoFrame ) {
 			ri.Cvar_Set( "r_nv_fogdist_mode", "GL_EYE_RADIAL_NV" );
 		}
 	}
-
+	if ( r_rmx_dynamiclight->modified )
+	{
+		r_rmx_dynamiclight->modified = qfalse;
+		qdx_lights_clear( LIGHT_DYNAMIC );
+	}
 	if (r_rmx_coronas->modified)
 	{
 		r_rmx_coronas->modified = qfalse;
-		qdx_lights_clear(LIGHT_CORONA);
+		qdx_lights_clear( LIGHT_CORONA );
 	}
-
 	if ( r_rmx_flashlight->modified )
 	{
 		r_rmx_flashlight->modified = qfalse;

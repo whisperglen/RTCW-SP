@@ -51,6 +51,7 @@ ID_INLINE long fastftol_sse(float f) {
 	return _mm_cvt_ss2si(a);
 }
 
+#if id386
 ID_INLINE long fastftol_asm(float f) {
 	static int tmp;
 	__asm fld f
@@ -84,6 +85,7 @@ ID_INLINE void Sys_SnapVector_asm(float *v) {
 	*v = fastftol(*v);
 	*/
 }
+#endif
 
 #define FUNCTION_INLINED(NAME) \
 void finline_##NAME(int reps, int inputsz, float *inputs, double *elapsed) \
@@ -110,21 +112,27 @@ static struct function_data data_fn[] =
 	{ Sys_SnapVector,        "      snapv" },
 	{ Sys_SnapVector_rint,   " snapv_rint" },
 	{ Sys_SnapVector_sse,    "  snapv_sse" },
+#if id386
 	{ Sys_SnapVector_asm,    "  snapv_asm" },
+#endif
 	{ 0, 0 }
 };
 
 FUNCTION_INLINED(Sys_SnapVector);
 FUNCTION_INLINED(Sys_SnapVector_rint);
 FUNCTION_INLINED(Sys_SnapVector_sse);
+#if id386
 FUNCTION_INLINED(Sys_SnapVector_asm);
+#endif
 
 static struct function_data data_fn_inlined[] =
 {
 	{ finline_Sys_SnapVector,        "      inl_snapv" },
 	{ finline_Sys_SnapVector_rint,   " inl_snapv_rint" },
 	{ finline_Sys_SnapVector_sse,    "  inl_snapv_sse" },
+#if id386
 	{ finline_Sys_SnapVector_asm,    "  inl_snapv_asm" },
+#endif
 	{ 0, 0 }
 };
 
@@ -135,7 +143,7 @@ static struct function_data data_fn_inlined[] =
 
 vec3_t input[5][TEST_SIZE];
 
-C_ASSERT(ARRAY_SIZE(input) - 1 == ARRAY_SIZE(data_fn_inlined) - 1);
+C_ASSERT(ARRAY_SIZE(input) - 1 >= ARRAY_SIZE(data_fn_inlined) - 1);
 
 #define MAX_ERRORS 10
 #define REPETITIONS 1 //data is modified in place, the values are already truncated to int on repeat, although it may not matter
