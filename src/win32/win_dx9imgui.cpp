@@ -7,6 +7,12 @@ extern "C" {
 #include "backends/imgui_impl_dx9.h"
 #include "backends/imgui_impl_win32.h"
 
+enum exc_wprocnmouse_e
+{
+	WNDPROC_SET_IMGUI,
+	WNDPROC_RESTORE_WOLF
+};
+
 static BOOL g_initialised = FALSE;
 static BOOL g_visible = FALSE;
 static bool g_game_input_blocked = TRUE;
@@ -26,9 +32,11 @@ extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg
 
 extern "C" void IN_DeactivateMouse( void );
 extern "C" void Sys_QueEvent( int time, sysEventType_t type, int value, int value2, int ptrLength, void *ptr );
+extern "C" LONG WINAPI MainWndProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam );
 
 static LRESULT WINAPI wnd_proc_hk( HWND hWnd, UINT message_type, WPARAM wparam, LPARAM lparam );
 static void game_input_activated(bool active);
+static void exchange_wndproc_and_mouse( enum exc_wprocnmouse_e action );
 
 static void do_draw()
 {
@@ -36,12 +44,16 @@ static void do_draw()
 	static int counter = 0;
 
 	ImGui::Begin( "Wolf config" );                          // Create a window and append into it.
-	if ( ImGui::Checkbox( "Block Game Input", &g_game_input_blocked ) )
+	//if ( ImGui::Checkbox( "Block Game Input", &g_game_input_blocked ) )
+	//{
+	//	game_input_activated(!g_game_input_blocked);
+	//}
+	if ( ImGui::Button( "Play!" ) )
 	{
-		game_input_activated(!g_game_input_blocked);
+		exchange_wndproc_and_mouse(WNDPROC_RESTORE_WOLF);
 	}
 	ImGui::SameLine();
-	if ( ImGui::Button( "Close Config" ) )
+	if ( ImGui::Button( "Close" ) )
 	{
 		ri.Cvar_Set( "r_showimgui", "0" );
 	}
@@ -51,12 +63,12 @@ static void do_draw()
 		const float* pos = qdx_4imgui_flashlight_position_3f();
 		const float* dir = qdx_4imgui_flashlight_direction_3f();
 		ImGui::Text( "Position  %.3f %.3f %.3f", pos[0], pos[1], pos[2] );
-		ImGui::Text( "Direction %.3f %.3f %.3f", dir[0], dir[1], dir[3] );
+		ImGui::Text( "Direction %.3f %.3f %.3f", dir[0], dir[1], dir[2] );
 		ImGui::SeparatorText("Placement:");
 		float* pos_off = qdx_4imgui_flashlight_position_off_3f();
 		float* dir_off = qdx_4imgui_flashlight_direction_off_3f();
 		ImGui::DragFloat3( "Position  Offset", pos_off, 0.01, -100, 100 );
-		ImGui::DragFloat3( "Direction Offset", dir_off, 0.001, -1, 1 );
+		ImGui::DragFloat2( "Direction Offset", dir_off, 0.001, -1, 1 );
 		ImGui::SeparatorText("Spot 1");
 		ImGui::ColorEdit3( "Color##1", qdx_4imgui_flashlight_colors_3f(0), ImGuiColorEditFlags_Float );
 		ImGui::DragFloat( "Radiance##1", qdx_4imgui_flashlight_radiance_1f(0), 1, 0, 10000 );
@@ -158,21 +170,22 @@ void qdx_imgui_draw()
 
 		if ( r_showimgui->integer )
 		{
-			g_visible = TRUE;
-			g_game_wndproc = (WNDPROC)(SetWindowLongPtr(HWND(g_hwnd), GWLP_WNDPROC, LONG_PTR(wnd_proc_hk)));
-			g_in_mouse_val = in_mouse->integer;
-			if( g_in_mouse_val )
-				ri.Cvar_Set( "in_mouse", "0" );
-			IN_DeactivateMouse();
+			void *game_wndproc = (WNDPROC)(GetWindowLongPtr(HWND(g_hwnd), GWLP_WNDPROC));
+			if ( MainWndProc != game_wndproc )
+			{
+				ri.Printf( PRINT_ALL, "Cannot open Wolf config right now\n" );
+				ri.Cvar_Set( "r_showimgui", "0");
+			}
+			else
+			{
+				g_visible = TRUE;
+				exchange_wndproc_and_mouse(WNDPROC_SET_IMGUI);
+			}
 		}
 		else
 		{
 			g_visible = FALSE;
-			if( g_game_wndproc )
-				SetWindowLongPtr( HWND( g_hwnd ), GWLP_WNDPROC, LONG_PTR( g_game_wndproc ) );
-			g_game_wndproc = NULL;
-			if( g_in_mouse_val )
-				ri.Cvar_Set( "in_mouse", "1" );
+			exchange_wndproc_and_mouse(WNDPROC_RESTORE_WOLF);
 		}
 	}
 
@@ -269,6 +282,28 @@ static LRESULT CALLBACK wnd_proc_hk(HWND hWnd, UINT message_type, WPARAM wParam,
 
 	//return TRUE;
 	return DefWindowProc(hWnd, message_type, wParam, lParam);
+}
+
+static void exchange_wndproc_and_mouse( enum exc_wprocnmouse_e action )
+{
+	switch ( action )
+	{
+	case WNDPROC_SET_IMGUI:
+		g_game_wndproc = (WNDPROC)(SetWindowLongPtr(HWND(g_hwnd), GWLP_WNDPROC, LONG_PTR(wnd_proc_hk)));
+		g_in_mouse_val = in_mouse->integer;
+		if ( g_in_mouse_val )
+			ri.Cvar_Set( "in_mouse", "0" );
+		IN_DeactivateMouse();
+		break;
+	case WNDPROC_RESTORE_WOLF:
+		if( g_game_wndproc )
+			SetWindowLongPtr( HWND( g_hwnd ), GWLP_WNDPROC, LONG_PTR( g_game_wndproc ) );
+		g_game_wndproc = NULL;
+		if( g_in_mouse_val )
+			ri.Cvar_Set( "in_mouse", "1" );
+		g_in_mouse_val = 0;
+		break;
+	}
 }
 
 static void game_input_activated(bool active)
