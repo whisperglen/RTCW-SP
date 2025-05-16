@@ -2060,6 +2060,7 @@ static void iniconf_first_init()
 	{
 		g_ini_first_init = TRUE;
 		g_inifile.read( g_iniconf );
+		qdx_lights_load( g_iniconf, "");
 	}
 }
 

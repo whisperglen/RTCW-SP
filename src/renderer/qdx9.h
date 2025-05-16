@@ -218,7 +218,7 @@ enum light_type
 	LIGHT_ALL = (LIGHT_DYNAMIC|LIGHT_CORONA|LIGHT_FLASHLIGHT)
 };
 
-void qdx_light_add(int light_type, int ord, float *position, float *direction, float *color, float radius, float scale);
+void qdx_light_add(int light_type, int ord, const float *position, const float *direction, const float *color, float radius, float scale);
 void qdx_lights_clear(unsigned int light_types);
 
 typedef union surfpartition_u

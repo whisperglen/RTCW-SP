@@ -48,8 +48,8 @@ static float FLASHLIGHT_CONE_ANGLES[NUM_FLASHLIGHT_HND] = { 32.0f, 21.0f, 18.0f 
 static float FLASHLIGHT_CONE_SOFTNESS[NUM_FLASHLIGHT_HND] = { 0.05f, 0.02f, 0.02f };
 static float FLASHLIGHT_POSITION_CACHE[3] = { 0 };
 static float FLASHLIGHT_DIRECTION_CACHE[3] = { 0 };
-static float FLASHLIGHT_POSITION_OFFSET[3] = { 0 };
-static float FLASHLIGHT_DIRECTION_OFFSET[3] = { 0 };
+static float FLASHLIGHT_POSITION_OFFSET[3] = { -8, 1, -6 };
+static float FLASHLIGHT_DIRECTION_OFFSET[3] = { 0.095f, -0.08f, 0 };
 
 float* qdx_4imgui_radiance_dynamic_1f() { return &LIGHT_RADIANCE_DYNAMIC; }
 float* qdx_4imgui_radiance_coronas_1f() { return &LIGHT_RADIANCE_CORONAS; }
@@ -57,10 +57,10 @@ float* qdx_4imgui_flashlight_radiance_1f(int idx) { return &LIGHT_RADIANCE_FLASH
 float* qdx_4imgui_flashlight_colors_3f(int idx) { return &FLASHLIGHT_COLORS[idx][0]; }
 float* qdx_4imgui_flashlight_coneangles_1f(int idx) { return &FLASHLIGHT_CONE_ANGLES[idx]; }
 float* qdx_4imgui_flashlight_conesoft_1f(int idx) { return &FLASHLIGHT_CONE_SOFTNESS[idx]; }
-const float* qdx_4imgui_flashlight_position_3f() { return FLASHLIGHT_POSITION_CACHE; }
-const float* qdx_4imgui_flashlight_direction_3f() { return FLASHLIGHT_DIRECTION_CACHE; }
-float* qdx_4imgui_flashlight_position_off_3f() { return FLASHLIGHT_POSITION_OFFSET; }
-float* qdx_4imgui_flashlight_direction_off_3f() { return FLASHLIGHT_DIRECTION_OFFSET; }
+const float* qdx_4imgui_flashlight_position_3f() { return &FLASHLIGHT_POSITION_CACHE[0]; }
+const float* qdx_4imgui_flashlight_direction_3f() { return &FLASHLIGHT_DIRECTION_CACHE[0]; }
+float* qdx_4imgui_flashlight_position_off_3f() { return &FLASHLIGHT_POSITION_OFFSET[0]; }
+float* qdx_4imgui_flashlight_direction_off_3f() { return &FLASHLIGHT_DIRECTION_OFFSET[0]; }
 
 #define LIGHT_RADIANCE_KILL_REDFLARES 1.8f
 
@@ -78,6 +78,12 @@ std::vector<struct color_override_data_s> color_overrides;
 
 void qdx_flashlight_save()
 {
+	qdx_storemapconfflt( SECTION_FLASHLIGHT, "PositionOff_0", FLASHLIGHT_POSITION_OFFSET[0] );
+	qdx_storemapconfflt( SECTION_FLASHLIGHT, "PositionOff_1", FLASHLIGHT_POSITION_OFFSET[1] );
+	qdx_storemapconfflt( SECTION_FLASHLIGHT, "PositionOff_2", FLASHLIGHT_POSITION_OFFSET[2] );
+	qdx_storemapconfflt( SECTION_FLASHLIGHT, "DirectionOff_0", FLASHLIGHT_DIRECTION_OFFSET[0] );
+	qdx_storemapconfflt( SECTION_FLASHLIGHT, "DirectionOff_1", FLASHLIGHT_DIRECTION_OFFSET[1] );
+	qdx_storemapconfflt( SECTION_FLASHLIGHT, "DirectionOff_2", FLASHLIGHT_DIRECTION_OFFSET[2] );
 	qdx_storemapconfflt( SECTION_FLASHLIGHT, "Radiance_Spot_1", LIGHT_RADIANCE_FLASHLIGHT[0] );
 	qdx_storemapconfflt( SECTION_FLASHLIGHT, "Radiance_Spot_2", LIGHT_RADIANCE_FLASHLIGHT[1] );
 	qdx_storemapconfflt( SECTION_FLASHLIGHT, "Radiance_Spot_3", LIGHT_RADIANCE_FLASHLIGHT[2] );
@@ -96,12 +102,6 @@ void qdx_flashlight_save()
 	qdx_storemapconfflt( SECTION_FLASHLIGHT, "Softness_Spot_1", FLASHLIGHT_CONE_SOFTNESS[0] );
 	qdx_storemapconfflt( SECTION_FLASHLIGHT, "Softness_Spot_2", FLASHLIGHT_CONE_SOFTNESS[1] );
 	qdx_storemapconfflt( SECTION_FLASHLIGHT, "Softness_Spot_3", FLASHLIGHT_CONE_SOFTNESS[2] );
-	//qdx_storemapconfflt( SECTION_FLASHLIGHT, "PositionOff_0", FLASHLIGHT_POSITION_OFFSET[0] );
-	//qdx_storemapconfflt( SECTION_FLASHLIGHT, "PositionOff_1", FLASHLIGHT_POSITION_OFFSET[1] );
-	//qdx_storemapconfflt( SECTION_FLASHLIGHT, "PositionOff_2", FLASHLIGHT_POSITION_OFFSET[2] );
-	//qdx_storemapconfflt( SECTION_FLASHLIGHT, "DirectionOff_0", FLASHLIGHT_DIRECTION_OFFSET[0] );
-	//qdx_storemapconfflt( SECTION_FLASHLIGHT, "DirectionOff_1", FLASHLIGHT_DIRECTION_OFFSET[1] );
-	//qdx_storemapconfflt( SECTION_FLASHLIGHT, "DirectionOff_2", FLASHLIGHT_DIRECTION_OFFSET[2] );
 
 	qdx_save_iniconf();
 }
@@ -137,12 +137,12 @@ void qdx_lights_load( mINI::INIStructure &ini, const char *mapname )
 	FLASHLIGHT_CONE_SOFTNESS[0] = qdx_readmapconfflt( SECTION_FLASHLIGHT, "Softness_Spot_1", FLASHLIGHT_CONE_SOFTNESS[0] );
 	FLASHLIGHT_CONE_SOFTNESS[1] = qdx_readmapconfflt( SECTION_FLASHLIGHT, "Softness_Spot_2", FLASHLIGHT_CONE_SOFTNESS[1] );
 	FLASHLIGHT_CONE_SOFTNESS[2] = qdx_readmapconfflt( SECTION_FLASHLIGHT, "Softness_Spot_3", FLASHLIGHT_CONE_SOFTNESS[2] );
-	//FLASHLIGHT_POSITION_OFFSET[0] = qdx_readmapconfflt( SECTION_FLASHLIGHT, "PositionOff_0", FLASHLIGHT_POSITION_OFFSET[0] );
-	//FLASHLIGHT_POSITION_OFFSET[1] = qdx_readmapconfflt( SECTION_FLASHLIGHT, "PositionOff_1", FLASHLIGHT_POSITION_OFFSET[1] );
-	//FLASHLIGHT_POSITION_OFFSET[2] = qdx_readmapconfflt( SECTION_FLASHLIGHT, "PositionOff_2", FLASHLIGHT_POSITION_OFFSET[2] );
-	//FLASHLIGHT_DIRECTION_OFFSET[0] = qdx_readmapconfflt( SECTION_FLASHLIGHT, "DirectionOff_0", FLASHLIGHT_DIRECTION_OFFSET[0] );
-	//FLASHLIGHT_DIRECTION_OFFSET[1] = qdx_readmapconfflt( SECTION_FLASHLIGHT, "DirectionOff_1", FLASHLIGHT_DIRECTION_OFFSET[1] );
-	//FLASHLIGHT_DIRECTION_OFFSET[2] = qdx_readmapconfflt( SECTION_FLASHLIGHT, "DirectionOff_2", FLASHLIGHT_DIRECTION_OFFSET[2] );
+	FLASHLIGHT_POSITION_OFFSET[0] = qdx_readmapconfflt( SECTION_FLASHLIGHT, "PositionOff_0", FLASHLIGHT_POSITION_OFFSET[0] );
+	FLASHLIGHT_POSITION_OFFSET[1] = qdx_readmapconfflt( SECTION_FLASHLIGHT, "PositionOff_1", FLASHLIGHT_POSITION_OFFSET[1] );
+	FLASHLIGHT_POSITION_OFFSET[2] = qdx_readmapconfflt( SECTION_FLASHLIGHT, "PositionOff_2", FLASHLIGHT_POSITION_OFFSET[2] );
+	FLASHLIGHT_DIRECTION_OFFSET[0] = qdx_readmapconfflt( SECTION_FLASHLIGHT, "DirectionOff_0", FLASHLIGHT_DIRECTION_OFFSET[0] );
+	FLASHLIGHT_DIRECTION_OFFSET[1] = qdx_readmapconfflt( SECTION_FLASHLIGHT, "DirectionOff_1", FLASHLIGHT_DIRECTION_OFFSET[1] );
+	FLASHLIGHT_DIRECTION_OFFSET[2] = qdx_readmapconfflt( SECTION_FLASHLIGHT, "DirectionOff_2", FLASHLIGHT_DIRECTION_OFFSET[2] );
 
 	if ( ini.has( SECTION_LIGHTS_COLOR_OVERRIDE ) )
 	{
@@ -283,9 +283,9 @@ void qdx_lights_draw()
 	}
 }
 
-#define DYNAMIC_LIGHTS_USE_DX9 0
+#define DYNAMIC_LIGHTS_USE_DX9 1
 
-void qdx_light_add(int light_type, int ord, float *position, float *direction, float *color, float radius, float scale)
+void qdx_light_add(int light_type, int ord, const float *position, const float *direction, const float *color, float radius, float scale)
 {
 	remixapi_ErrorCode rercd;
 	uint64_t hash = 0;
@@ -343,18 +343,28 @@ void qdx_light_add(int light_type, int ord, float *position, float *direction, f
 			remixapi_LightInfoSphereEXT light_sphere;
 			ZeroMemory( &light_sphere, sizeof( light_sphere ) );
 
+			D3DXVECTOR3 tpos, tdir;
+			D3DXMATRIX invview, viewrot(qdx.camera);
+			viewrot._41 = 0.0;
+			viewrot._42 = 0.0;
+			viewrot._43 = 0.0;
+			D3DXMatrixInverse( &invview, NULL, (D3DXMATRIX*)&viewrot );
+			D3DXVec3TransformCoord( &tpos, (D3DXVECTOR3*)FLASHLIGHT_POSITION_OFFSET, &invview );
+			D3DXVec3TransformNormal( &tdir, (D3DXVECTOR3*)FLASHLIGHT_DIRECTION_OFFSET, &invview );
+
 			light_sphere.sType = REMIXAPI_STRUCT_TYPE_LIGHT_INFO_SPHERE_EXT;
-			light_sphere.position.x = FLASHLIGHT_POSITION_OFFSET[0] + position[0];
-			light_sphere.position.y = FLASHLIGHT_POSITION_OFFSET[1] + position[1];
-			light_sphere.position.z = FLASHLIGHT_POSITION_OFFSET[2] + position[2];
+			light_sphere.position.x = tpos.x + position[0];
+			light_sphere.position.y = tpos.y + position[1];
+			light_sphere.position.z = tpos.z + position[2];
 			light_sphere.radius = 1.0f;
 			light_sphere.volumetricRadianceScale = 1.0f;
 
 			light_sphere.shaping_hasvalue = 1;
 			{
-				light_sphere.shaping_value.direction.x = FLASHLIGHT_DIRECTION_OFFSET[0] + direction[0];
-				light_sphere.shaping_value.direction.y = FLASHLIGHT_DIRECTION_OFFSET[1] + direction[1];
-				light_sphere.shaping_value.direction.z = FLASHLIGHT_DIRECTION_OFFSET[2] + direction[2];
+				tdir.x += direction[0];
+				tdir.y += direction[1];
+				tdir.z += direction[2];
+				D3DXVec3Normalize( (D3DXVECTOR3*)&light_sphere.shaping_value.direction, &tdir );
 				light_sphere.shaping_value.coneAngleDegrees = FLASHLIGHT_CONE_ANGLES[i];
 				light_sphere.shaping_value.coneSoftness = FLASHLIGHT_CONE_SOFTNESS[i];
 				light_sphere.shaping_value.focusExponent = 0.0f;
