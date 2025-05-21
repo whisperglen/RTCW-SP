@@ -43,7 +43,11 @@ void qdx_radiance_save( bool inGlobal );
 
 #define NUM_FLASHLIGHT_HND 3
 float* qdx_4imgui_radiance_dynamic_1f();
+float* qdx_4imgui_radiance_dynamic_scale_1f();
 float* qdx_4imgui_radiance_coronas_1f();
+float* qdx_4imgui_radius_dynamic_1f();
+float* qdx_4imgui_radius_dynamic_scale_1f();
+float* qdx_4imgui_radius_coronas_1f();
 float* qdx_4imgui_flashlight_radiance_1f(int idx);
 float* qdx_4imgui_flashlight_colors_3f(int idx);
 float* qdx_4imgui_flashlight_coneangles_1f(int idx);

@@ -31,6 +31,7 @@ extern "C" cvar_t  *in_mouse;
 extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
 extern "C" void IN_DeactivateMouse( void );
+extern "C" void IN_StartupMouse(void);
 extern "C" void Sys_QueEvent( int time, sysEventType_t type, int value, int value2, int ptrLength, void *ptr );
 extern "C" LONG WINAPI MainWndProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam );
 
@@ -64,7 +65,7 @@ static void do_draw()
 		const float* dir = qdx_4imgui_flashlight_direction_3f();
 		ImGui::Text( "Position  %.3f %.3f %.3f", pos[0], pos[1], pos[2] );
 		ImGui::Text( "Direction %.3f %.3f %.3f", dir[0], dir[1], dir[2] );
-		ImGui::SeparatorText("Placement:");
+		ImGui::SeparatorText("Placement");
 		float* pos_off = qdx_4imgui_flashlight_position_off_3f();
 		float* dir_off = qdx_4imgui_flashlight_direction_off_3f();
 		ImGui::DragFloat3( "Position  Offset", pos_off, 0.01, -100, 100 );
@@ -85,27 +86,105 @@ static void do_draw()
 		ImGui::DragFloat( "Angle##3", qdx_4imgui_flashlight_coneangles_1f(2), 0.1, 0, 180 );
 		ImGui::DragFloat( "Soft##3", qdx_4imgui_flashlight_conesoft_1f(2), 0.001, 0, 1 );
 
-		if ( ImGui::Button( "Save" ) )
+		ImGui::NewLine();
+		if ( ImGui::Button( "Save Configuration" ) )
 		{
 			qdx_flashlight_save();
 		}
 	}
-	if ( ImGui::CollapsingHeader( "Static Lights" ) )
+
+	if ( ImGui::CollapsingHeader( "Lights" ) )
 	{
-		ImGui::DragFloat( "Radiance Dynamic Lights", qdx_4imgui_radiance_dynamic_1f(), 100, 0, 50000 );
-		ImGui::DragFloat( "Radiance Corona Lights", qdx_4imgui_radiance_coronas_1f(), 100, 0, 50000 );
+
+		ImGui::SeparatorText( "DynamicLight Radiance:" );
+		ImGui::Text( "Radiance = color * (BASE + intensity * SCALE)" );
+		ImGui::DragFloat( "BASE##1", qdx_4imgui_radiance_dynamic_1f(), 10, 0, 50000 );
+		ImGui::DragFloat( "SCALE##1", qdx_4imgui_radiance_dynamic_scale_1f(), 0.01, 0, 10 );
+		ImGui::Text( "Radius = RADIUS + intensity * RADIUS_SCALE" );
+		ImGui::DragFloat( "RADIUS##1", qdx_4imgui_radius_dynamic_1f(), 0.1, 0, 10 );
+		ImGui::DragFloat( "RADIUS_SCALE##1", qdx_4imgui_radius_dynamic_scale_1f(), 0.001, 0, 1 );
+		
+		ImGui::SeparatorText( "Corona Radiance:" );
+		if(ImGui::DragFloat( "BASE##2", qdx_4imgui_radiance_coronas_1f(), 10, 0, 50000 ))
+		{
+			qdx_lights_clear( LIGHT_CORONA );
+		}
+		if(ImGui::DragFloat( "RADIUS##2", qdx_4imgui_radius_coronas_1f(), 0.1, 0, 10 ))
+		{
+			qdx_lights_clear( LIGHT_CORONA );
+		}
+
+		ImGui::NewLine();
 		if ( ImGui::Button( "Save to Global" ) )
 		{
 			qdx_radiance_save( true );
 		}
 		ImGui::SameLine();
-		if ( ImGui::Button( "Save to Map" ) )
+		if ( ImGui::Button( " Save to Map " ) )
 		{
 			qdx_radiance_save( false );
 		}
 	}
 
-	ImGui::Text( "Application average %.3f ms/frame (%.1f FPS)", 1000.0f / io->Framerate, io->Framerate );
+	ImGui::NewLine();
+	if ( ImGui::Button( "Toggle Flashlight" ) )
+	{
+		ri.Cvar_Set( "r_rmx_flashlight", (r_rmx_flashlight->integer ? "0" : "1") );
+	}
+	ImGui::SameLine();
+	ImGui::Text( "Value: %s", r_rmx_flashlight->integer ? "on" : "off");
+	if ( ImGui::Button( "Toggle DynamicLight" ) )
+	{
+		ri.Cvar_Set( "r_rmx_dynamiclight", (r_rmx_dynamiclight->integer ? "0" : "1") );
+	}
+	ImGui::SameLine();
+	ImGui::Text( "Value: %s", r_rmx_dynamiclight->integer ? "on" : "off" );
+	ImGui::SameLine();
+	if ( ImGui::Button( " Toggle Coronas " ) )
+	{
+		ri.Cvar_Set( "r_rmx_coronas", (r_rmx_coronas->integer ? "0" : "1") );
+	}
+	ImGui::SameLine();
+	ImGui::Text( "Value: %s", r_rmx_coronas->integer ? "on" : "off" );
+
+	ImGui::NewLine();
+	if ( ImGui::Button( "QUIT" ) )
+	{
+		if ( g_in_mouse_val )
+		{
+			ri.Cvar_Set( "in_mouse", "1" );
+		}
+		ri.Cmd_ExecuteText(EXEC_APPEND, "quit");
+	}
+	ImGui::SameLine();
+	if ( ImGui::Button( "NOCLIP" ) )
+	{
+		ri.Cmd_ExecuteText(EXEC_APPEND, "noclip");
+	}
+	ImGui::SameLine();
+	if ( ImGui::Button( "NOTARGET" ) )
+	{
+		ri.Cmd_ExecuteText(EXEC_APPEND, "notarget");
+	}
+	ImGui::SameLine();
+	if ( ImGui::Button( "GIVE ALL" ) )
+	{
+		ri.Cmd_ExecuteText(EXEC_APPEND, "give all");
+	}
+	if ( g_in_mouse_val == 0 )
+	{
+		ImGui::SameLine();
+		if ( ImGui::Button( "FIX DA MOUSE!" ) )
+		{
+			g_in_mouse_val = 1;
+			ri.Cvar_Set( "in_mouse", "1" );
+			IN_StartupMouse();
+			ri.Cvar_Set( "in_mouse", "0" );
+		}
+	}
+
+
+	ImGui::Text( "App average %.3f ms/frame (%.1f FPS)", 1000.0f / io->Framerate, io->Framerate );
 	ImGui::End();
 }
 
@@ -231,7 +310,7 @@ static LRESULT CALLBACK wnd_proc_hk(HWND hWnd, UINT message_type, WPARAM wParam,
 
 	switch (message_type)
 	{
-	case WM_KEYUP: // always pass button up events to prevent "stuck" game keys
+	case WM_KEYUP: case WM_SYSKEYUP: // always pass button up events to prevent "stuck" game keys
 
 				   // allows user to move the game window via titlebar :>
 	case WM_NCLBUTTONDOWN: case WM_NCLBUTTONUP: case WM_NCMOUSEMOVE: case WM_NCMOUSELEAVE:
@@ -247,6 +326,8 @@ static LRESULT CALLBACK wnd_proc_hk(HWND hWnd, UINT message_type, WPARAM wParam,
 
 	case WM_GETMINMAXINFO: case WM_ENTERSIZEMOVE: case WM_EXITSIZEMOVE:
 	case WM_SIZING: case WM_MOVING: case WM_MOVE:
+
+	case WM_CLOSE: case WM_ACTIVATE:
 		pass_msg_to_game = true;
 		break;
 

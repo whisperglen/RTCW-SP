@@ -29,7 +29,8 @@ Will it work? Who knows, let's find out!
 - r_ext_texture_filter_anisotropic (default "0"): was disabled in OGL mode, it can now be set to 1,2,4,8,16 with Texture filter "trilinear" (r_textureMode "GL_LINEAR_MIPMAP_LINEAR") to allow anisotropy for texture minification filter (when textured object gets farther/smaller)
 - r_systemdll (default "0"): set only on command line; a value of "1" loads the system's d3d9.dll, and ignores any d3d9.dll present in the executable's current dir
 
-New console commands: increment/decrement can be used for integer cvars, pause will pause and unpause the rendering
+New console commands: increment/decrement can be used for integer cvars, pause will pause and unpause the rendering<br/>
+ImGui can be used to change some game configs; activate with: toggle r_showimgui / Alt+C / F8
 
 ### Included in this project:
 - Widescreen support: full credit goes to RealRTCW [https://github.com/wolfetplayer/RealRTCW] and Quake3e [https://github.com/ec-/Quake3e]

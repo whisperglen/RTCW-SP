@@ -348,7 +348,7 @@ void qdx_texobj_delete(int id)
 	}
 }
 
-static void qdx_texobj_delete_all()
+void qdx_texobj_delete_all()
 {
 	for (int idx = 0; idx < ARRAYSIZE(textures); idx++)
 	{
@@ -410,7 +410,7 @@ struct vatt_buffers
 
 static int g_used_vatt_buffers = 0;
 
-static void qdx_clear_buffers()
+void qdx_clear_buffers()
 {
 	int i = 0, j = 0;
 	for (; i < g_used_vatt_buffers; i++)
@@ -604,7 +604,7 @@ ID_INLINE DWORD abgr_to_argb(const byte *in)
 #define GVATT_TEX1ELEM(IDX) (g_vattribs.texcoord[1] + (IDX) * g_vattribs.stridetexcoords[1])
 #define GVATT_INCTEX1P(PTR) ((PTR) += g_vattribs.stridetexcoords[1])
 
-static void qdx_log_comment(const char *name, UINT vattbits, const void *ptr)
+void qdx_log_comment(const char *name, UINT vattbits, const void *ptr)
 {
 	int vattci = 0;
 	char vattc[10];
@@ -621,7 +621,7 @@ static void qdx_log_comment(const char *name, UINT vattbits, const void *ptr)
 	DX9imp_LogComment(comment);
 }
 
-static void qdx_log_matrix(const char *name, const float *mat)
+void qdx_log_matrix(const char *name, const float *mat)
 {
 	char comment[256];
 	snprintf(comment, sizeof(comment), "qdx_matrix[%s]:\n  %f %f %f %f\n  %f %f %f %f\n  %f %f %f %f\n  %f %f %f %f\n", name,
@@ -632,7 +632,7 @@ static void qdx_log_matrix(const char *name, const float *mat)
 	DX9imp_LogComment(comment);
 }
 
-static void qdx_log_dump_buffer(const char *name, const uint32_t *buffer, uint32_t size, int wide, uint32_t hashid, uint32_t hashbuf)
+void qdx_log_dump_buffer(const char *name, const uint32_t *buffer, uint32_t size, int wide, uint32_t hashid, uint32_t hashbuf)
 {
 	char comment[256];
 	snprintf(comment, sizeof(comment), "[%s] %p %d hashes: %08x %08x\n", name, buffer, size, hashid, hashbuf);
@@ -1153,7 +1153,7 @@ void qdx_vatt_assemble_and_draw0(UINT numindexes, const qdxIndex_t *indexes, con
 {
 	DWORD selected_vatt = VATTID_VERTCOL;
 	UINT stride_vatt = sizeof(vatt_vertcol_t);
-	qdxIndex_t lowindex = SHADER_MAX_INDEXES, highindex = 0, offindex = 0;
+	qdxIndex_t lowindex = SHADER_MAX_INDEXES, highindex = 0;
 	UINT selectionsize = 0;
 	UINT hash = 0;
 
@@ -1355,7 +1355,7 @@ void qdx_vatt_assemble_and_draw0a(UINT numindexes, const qdxIndex_t *indexes, co
 {
 	DWORD selected_vatt = VATTID_VERTCOL;
 	UINT stride_vatt = sizeof(vatt_vertcol_t);
-	qdxIndex_t lowindex = SHADER_MAX_INDEXES, highindex = 0, offindex = 0;
+	qdxIndex_t lowindex = SHADER_MAX_INDEXES, highindex = 0;
 	UINT selectionsize = 0;
 	UINT hash = 0;
 
@@ -2261,11 +2261,11 @@ void qdx_begin_loading_map(const char* mapname)
 			snprintf( section, sizeof( section ), "rtxconf.%.*s", namelen, name );
 			if ( g_iniconf.has( section ) )
 			{
-				opts = &g_iniconf.get( section );
+				opts = &g_iniconf[ section ];
 			}
 			else
 			{
-				opts = &g_iniconf.get( "rtxconf.default" );
+				opts = &g_iniconf[ "rtxconf.default" ];
 			}
 
 			for ( auto it = opts->begin(); it != opts->end(); it++ )
