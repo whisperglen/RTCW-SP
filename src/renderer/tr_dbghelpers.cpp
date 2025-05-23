@@ -13,8 +13,12 @@ extern "C" {
 #include <Windows.h>
 #include <WinUser.h>
 
+#define MAX_HELPER_VALUES 10
+
 static std::map<std::string, int> occurences;
 static std::vector<std::string> ordered_calls;
+
+static int helper_values[MAX_HELPER_VALUES] = { 0 };
 
 inputs_t prevstate = { 0 };
 inputs_t prevstate_upd = { 0 };
@@ -166,4 +170,15 @@ extern "C" void functions_dump()
 
 		file.close();
 	}
+}
+
+extern "C" int* helper_value( int index )
+{
+	static int dummyval = 0x1000;
+	int* ret = &dummyval;
+	if ( index < MAX_HELPER_VALUES )
+	{
+		ret = &helper_values[index];
+	}
+	return ret;
 }
