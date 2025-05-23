@@ -1309,6 +1309,18 @@ void RB_StageIteratorGeneric( void ) {
 		GPUimp_LogComment( va( "--- RB_StageIteratorGeneric( %s ) ---\n", tess.shader->name ) );
 	}
 
+	if ( r_generichelper->integer )
+	{
+		if ( (0 == strcmp( tess.shader->name, "textures/assault/machine_cl01" )) || (0 == strncmp( tess.shader->name, "textures/sfx/fan", strlen("textures/sfx/fan")) ) )
+		{
+			ri.Printf( 0, "" );
+		}
+		else
+		{
+			return;
+		}
+	}
+
 	// set GL fog
 	SetIteratorFog();
 

@@ -1,0 +1,3 @@
+props: celldoor, flags, signs, breakables type 1 MOD_BRUSH
+body type 3 MOD_MDS
+weapon, ammo, health, head, cages, chairs type 4 MOD_MDC

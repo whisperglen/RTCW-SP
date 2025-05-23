@@ -14,6 +14,15 @@ extern "C"
 #include <string>
 #include <map>
 
+enum r_logfiletypes_e
+{
+	RLOGFILE_TEXT = 1,
+	RLOGFILE_VERTEX = 1 << 1,
+	RLOGFILE_TEXTURE = 1 << 2,
+	RLOGFILE_MATRIX = 1 << 3,
+	RLOGFILE_VATTSET = 1 << 4,
+};
+
 static void iniconf_first_init();
 
 struct qdx_matrixes
@@ -370,7 +379,7 @@ void qdx_texobj_apply(int id, int sampler)
 	else
 		sampler_id = sampler;
 
-	if(r_logFile->integer)
+	if(r_logFile->integer && (r_logFileTypes->integer & RLOGFILE_TEXTURE))
 		qdx_log_comment(__FUNCTION__, (sampler == 0 ? VATT_TEX0 : VATT_TEX1), opt.obj);
 
 	if (qdx.device)
@@ -704,7 +713,7 @@ void qdx_vatt_set2d(BOOL state)
 
 void qdx_vatt_attach_texture(int texid, int samplernum)
 {
-	if (r_logFile->integer)
+	if (r_logFile->integer && (r_logFileTypes->integer & RLOGFILE_VATTSET))
 		qdx_log_comment(__FUNCTION__, (samplernum == 0 ? VATT_TEX0 : VATT_TEX1), (const void*)texid);
 
 	if (0 <= samplernum && samplernum <= 1)
@@ -719,7 +728,7 @@ void qdx_vatt_attach_texture(int texid, int samplernum)
 
 void qdx_set_global_color(DWORD color)
 {
-	if (r_logFile->integer)
+	if (r_logFile->integer && (r_logFileTypes->integer & RLOGFILE_VATTSET))
 		qdx_log_comment(__FUNCTION__, 0, (const void*)color);
 
 	qdx.crt_color = color;
@@ -727,7 +736,7 @@ void qdx_set_global_color(DWORD color)
 
 void qdx_vatt_enable_buffer(vatt_param_t param)
 {
-	if (r_logFile->integer)
+	if (r_logFile->integer && (r_logFileTypes->integer & RLOGFILE_VATTSET))
 		qdx_log_comment(__FUNCTION__, param, NULL);
 
 	g_vattribs.active_vatts |= param;
@@ -735,7 +744,7 @@ void qdx_vatt_enable_buffer(vatt_param_t param)
 
 void qdx_vatt_disable_buffer(vatt_param_t param)
 {
-	if (r_logFile->integer)
+	if (r_logFile->integer && (r_logFileTypes->integer & RLOGFILE_VATTSET))
 		qdx_log_comment(__FUNCTION__, param, NULL);
 
 	g_vattribs.active_vatts &= ~param;
@@ -743,7 +752,7 @@ void qdx_vatt_disable_buffer(vatt_param_t param)
 
 void qdx_vatt_lock_buffers(int num_elements)
 {
-	if (r_logFile->integer)
+	if (r_logFile->integer && (r_logFileTypes->integer & RLOGFILE_VATTSET))
 		qdx_log_comment(__FUNCTION__, g_vattribs.active_vatts, (void*)num_elements);
 
 	g_vattribs.locked_vatts = g_vattribs.active_vatts;
@@ -751,7 +760,7 @@ void qdx_vatt_lock_buffers(int num_elements)
 
 void qdx_vatt_unlock_buffers()
 {
-	if (r_logFile->integer)
+	if (r_logFile->integer && (r_logFileTypes->integer & RLOGFILE_VATTSET))
 		qdx_log_comment(__FUNCTION__, g_vattribs.locked_vatts, (void*)g_vattribs.active_vatts);
 
 	g_vattribs.locked_vatts = 0;
@@ -791,7 +800,7 @@ int qdx_vattparam_to_index(vatt_param_t param)
 
 void qdx_vatt_set_buffer(vatt_param_t param, const void *buffer, UINT elems, UINT stride)
 {
-	if (r_logFile->integer)
+	if (r_logFile->integer && (r_logFileTypes->integer & RLOGFILE_VATTSET))
 		qdx_log_comment(__FUNCTION__, param, buffer);
 
 	switch (param)
@@ -905,7 +914,7 @@ void qdx_vatt_assemble_and_draw(UINT numindexes, const qdxIndex_t *indexes, cons
 	UINT hash = 0;
 	int ercd;
 
-	if (r_logFile->integer)
+	if (r_logFile->integer && (r_logFileTypes->integer & RLOGFILE_VERTEX))
 		qdx_log_comment(__FUNCTION__, g_vattribs.active_vatts, (const void*)numindexes);
 
 	if (0 == numindexes || 0 == (g_vattribs.active_vatts & VATT_VERTEX) /*|| 0 == (g_vattribs.active_vatts & (VATT_TEX0|VATT_TEX1))*/)
@@ -1040,7 +1049,7 @@ void qdx_vatt_assemble_and_draw(UINT numindexes, const qdxIndex_t *indexes, cons
 
 	if (skip_upload)
 	{
-		if (r_logFile->integer)
+		if (r_logFile->integer && (r_logFileTypes->integer & RLOGFILE_VERTEX))
 			DX9imp_LogComment(">>>>>>>>>> HASHES MATCH <<<<<<<<<<\n");
 	}
 	else
@@ -1060,7 +1069,7 @@ void qdx_vatt_assemble_and_draw(UINT numindexes, const qdxIndex_t *indexes, cons
 			{
 				pInd[i] = indexes[i] - offindex;
 			}
-			if (r_logFile->integer)
+			if (r_logFile->integer && (r_logFileTypes->integer & RLOGFILE_VERTEX))
 				qdx_log_dump_buffer("index", pInd, numindexes, 16, hash, ihash);
 
 			i_buffer->Unlock();
@@ -1112,7 +1121,7 @@ void qdx_vatt_assemble_and_draw(UINT numindexes, const qdxIndex_t *indexes, cons
 		}
 
 		qassert(vpos == selectionsize);
-		if (r_logFile->integer)
+		if (r_logFile->integer && (r_logFileTypes->integer & RLOGFILE_VERTEX))
 			qdx_log_dump_buffer("vertex", (const uint32_t*)pVert, selectionsize * stride_vatt / sizeof(uint32_t), stride_vatt / sizeof(uint32_t), hash, vhash);
 
 		v_buffer->Unlock();
@@ -1157,7 +1166,7 @@ void qdx_vatt_assemble_and_draw0(UINT numindexes, const qdxIndex_t *indexes, con
 	UINT selectionsize = 0;
 	UINT hash = 0;
 
-	if (r_logFile->integer)
+	if (r_logFile->integer && (r_logFileTypes->integer & RLOGFILE_VERTEX))
 		qdx_log_comment(__FUNCTION__, g_vattribs.active_vatts, (const void*)numindexes);
 
 	if (0 == (g_vattribs.active_vatts & VATT_VERTEX))
@@ -1359,7 +1368,7 @@ void qdx_vatt_assemble_and_draw0a(UINT numindexes, const qdxIndex_t *indexes, co
 	UINT selectionsize = 0;
 	UINT hash = 0;
 
-	if (r_logFile->integer)
+	if (r_logFile->integer && (r_logFileTypes->integer & RLOGFILE_VERTEX))
 		qdx_log_comment(__FUNCTION__, g_vattribs.active_vatts, (const void*)numindexes);
 
 	if (0 == (g_vattribs.active_vatts & VATT_VERTEX))
@@ -1970,7 +1979,7 @@ void qdx_matrix_apply(void)
 	qdx.device->SetTransform(D3DTS_VIEW, &qdx_mats.view);
 	qdx.device->SetTransform(D3DTS_PROJECTION, &qdx_mats.proj);
 
-	if (0 && r_logFile->integer)
+	if (r_logFile->integer && (r_logFileTypes->integer & RLOGFILE_MATRIX))
 	{
 		qdx_log_matrix("world", (float*)qdx_mats.world.m);
 		qdx_log_matrix("view", (float*)qdx_mats.view.m);

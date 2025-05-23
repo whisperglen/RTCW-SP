@@ -183,6 +183,11 @@ static void do_draw()
 		}
 	}
 
+	ImGui::NewLine();
+	int* ent_typ = helper_value( 0 );
+	ImGui::SliderInt( "Model type", ent_typ, -1, 4 );
+	ImGui::Text( "Num entities: %d", tr.refdef.num_entities );
+	ImGui::NewLine();
 
 	ImGui::Text( "App average %.3f ms/frame (%.1f FPS)", 1000.0f / io->Framerate, io->Framerate );
 	ImGui::End();
@@ -252,8 +257,17 @@ void qdx_imgui_draw()
 			void *game_wndproc = (WNDPROC)(GetWindowLongPtr(HWND(g_hwnd), GWLP_WNDPROC));
 			if ( MainWndProc != game_wndproc )
 			{
-				ri.Printf( PRINT_ALL, "Cannot open Wolf config right now\n" );
-				ri.Cvar_Set( "r_showimgui", "0");
+				if ( 0 )
+				{
+					ri.Printf( PRINT_ALL, "Cannot open Wolf config right now\n" );
+					ri.Cvar_Set( "r_showimgui", "0" );
+				}
+				else
+				{ //activate imgui anyway
+					ri.Printf( PRINT_ALL, "Oopsie unexpected MainWndProc, buckle-in\n" );
+					g_visible = TRUE;
+					exchange_wndproc_and_mouse( WNDPROC_SET_IMGUI );
+				}
 			}
 			else
 			{

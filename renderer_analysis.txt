@@ -1,0 +1,1167 @@
+Rebuild started...
+1>------ Rebuild All started: Project: renderer, Configuration: Release Win32 ------
+1>Build started 20-Feb-25 20:49:45.
+1>Target _PrepareForClean:
+1>  Deleting file ".\Release\renderer.tlog\renderer.lastbuildstate".
+1>Target CoreClean:
+1>  Deleting file "D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\Release\renderer.lib".
+1>  Deleting file "D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\Release\renderer.lib.lastcodeanalysissucceeded".
+1>  Deleting file "D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\Release\NativeCodeAnalysis.read.1.tlog".
+1>Target PrepareForBuild:
+1>  C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Microsoft\VC\v160\Microsoft.CppBuild.targets(513,5): warning MSB8028: The intermediate directory (.\Release\) contains files shared from another project (renderer_dx9.vcxproj).  This can lead to incorrect clean and rebuild behavior.
+1>Done building target "PrepareForBuild" in project "renderer.vcxproj".
+1>Target InitializeBuildStatus:
+1>  Creating ".\Release\renderer.tlog\unsuccessfulbuild" because "AlwaysCreate" was specified.
+1>Target ClCompile:
+1>  ahangles.c
+1>  ahglobal.c
+1>  ahglyph.c
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ahglyph.c(301,25): warning C4456: declaration of 'limit' hides previous local declaration
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ahglyph.c(225,14): message : see declaration of 'limit'
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ahglyph.c(598,25): warning C4456: declaration of 'min_point' hides previous local declaration
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ahglyph.c(451,16): message : see declaration of 'min_point'
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ahglyph.c(599,25): warning C4456: declaration of 'max_point' hides previous local declaration
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ahglyph.c(452,16): message : see declaration of 'max_point'
+1>  ahhint.c
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ahhint.c(553,23): warning C4456: declaration of 'before' hides previous local declaration
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ahhint.c(498,14): message : see declaration of 'before'
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ahhint.c(554,23): warning C4456: declaration of 'after' hides previous local declaration
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ahhint.c(499,14): message : see declaration of 'after'
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ahhint.c(645,13): warning C4456: declaration of 'u' hides previous local declaration
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ahhint.c(631,9): message : see declaration of 'u'
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ahhint.c(1218,36): warning C4244: '=': conversion from 'FT_UInt' to 'short', possible loss of data
+1>  ahmodule.c
+1>  ahoptim.c
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ahoptim.c(713,18): warning C4456: declaration of 'stem' hides previous local declaration
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ahoptim.c(676,12): message : see declaration of 'stem'
+1>  ftcalc.c
+1>  ftdebug.c
+1>  ftextend.c
+1>  ftglyph.c
+1>  ftgrays.c
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ftgrays.c(1327,23): warning C4244: '+=': conversion from 'int' to 'unsigned short', possible loss of data
+1>  ftinit.c
+1>  ftlist.c
+1>  ftmm.c
+1>  ftnames.c
+1>  ftobjs.c
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ftobjs.c(597,48): warning C4244: '+=': conversion from 'FT_UInt' to 'short', possible loss of data
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ftobjs.c(631,31): warning C4244: '=': conversion from 'FT_UInt' to 'short', possible loss of data
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ftobjs.c(632,33): warning C4244: '=': conversion from 'FT_UInt' to 'short', possible loss of data
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ftobjs.c(2039,31): warning C4244: '=': conversion from 'FT_UInt' to 'FT_UShort', possible loss of data
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ftobjs.c(2040,32): warning C4244: '=': conversion from 'FT_UInt' to 'FT_UShort', possible loss of data
+1>  ftoutln.c
+1>  ftraster.c
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ftraster.c(1080,18): warning C4244: '=': conversion from 'Long' to 'Short', possible loss of data
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ftraster.c(2635,43): warning C4244: '=': conversion from 'Long' to 'Short', possible loss of data
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ftraster.c(2666,31): warning C4244: '=': conversion from 'Long' to 'UShort', possible loss of data
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ftraster.c(2785,14): warning C4456: declaration of 'Q' hides previous local declaration
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ftraster.c(2607,14): message : see declaration of 'Q'
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ftraster.c(2785,17): warning C4456: declaration of 'P' hides previous local declaration
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ftraster.c(2607,11): message : see declaration of 'P'
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ftraster.c(2800,14): warning C4456: declaration of 'Q' hides previous local declaration
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ftraster.c(2607,14): message : see declaration of 'Q'
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ftraster.c(2800,18): warning C4456: declaration of 'P' hides previous local declaration
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ftraster.c(2607,11): message : see declaration of 'P'
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ftraster.c(2956,47): warning C4244: '=': conversion from 'int' to 'Short', possible loss of data
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ftraster.c(2958,32): warning C4244: '=': conversion from 'int' to 'UShort', possible loss of data
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ftraster.c(2974,49): warning C4244: '=': conversion from 'int' to 'Short', possible loss of data
+1>  ftrend1.c
+1>  ftsmooth.c
+1>  Running Code Analysis for C/C++...
+1>  Generating Code...
+1>  Compiling...
+1>  ftstream.c
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ftstream.c(696,15): warning C4456: declaration of 'p' hides previous local declaration
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ftstream.c(646,13): message : see declaration of 'p'
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ftstream.c(719,15): warning C4456: declaration of 'p' hides previous local declaration
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ftstream.c(646,13): message : see declaration of 'p'
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ftstream.c(745,15): warning C4456: declaration of 'p' hides previous local declaration
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ftstream.c(646,13): message : see declaration of 'p'
+1>  ftsystem.c
+1>  sfdriver.c
+1>  sfobjs.c
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\sfobjs.c(385,40): warning C4244: '=': conversion from 'FT_Int' to 'FT_UShort', possible loss of data
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\sfobjs.c(386,40): warning C4244: '=': conversion from 'FT_Int' to 'FT_UShort', possible loss of data
+1>  ttcmap.c
+1>  ttdriver.c
+1>  ttgload.c
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttgload.c(178,57): warning C4244: '=': conversion from 'FT_UInt' to 'FT_UShort', possible loss of data
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttgload.c(179,61): warning C4244: '=': conversion from 'FT_UInt' to 'FT_Short', possible loss of data
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttgload.c(201,18): warning C4100: 'glyph_index': unreferenced formal parameter
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttgload.c(395,32): warning C4244: '=': conversion from 'FT_Int' to 'short', possible loss of data
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttgload.c(396,34): warning C4244: '=': conversion from 'FT_Int' to 'short', possible loss of data
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttgload.c(998,37): warning C4244: '=': conversion from 'FT_UInt' to 'FT_UShort', possible loss of data
+1>  ttinterp.c
+1>  ttload.c
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(166,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(167,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(168,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(169,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(176,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(177,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(449,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(450,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(451,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(452,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(453,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(454,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(455,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(456,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(457,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(458,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(459,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(460,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(461,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(462,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(463,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(464,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(465,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(466,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(467,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(519,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(520,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(521,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(522,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(523,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(524,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(525,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(526,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(527,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(528,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(529,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(530,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(531,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(532,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(533,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(749,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(750,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(751,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(752,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(753,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(754,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(755,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(756,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(757,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(758,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(759,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(760,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(761,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(762,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(763,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(764,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(765,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(845,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(846,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(847,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(854,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(855,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(856,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(857,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(858,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(859,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(1038,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(1039,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(1046,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(1047,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(1048,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(1147,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(1148,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(1149,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(1150,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(1151,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(1152,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(1153,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(1154,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(1155,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(1156,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(1157,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(1158,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(1159,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(1160,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(1161,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(1162,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(1163,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(1164,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(1165,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(1166,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(1167,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(1168,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(1169,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(1170,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(1171,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(1172,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(1173,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(1174,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(1175,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(1176,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(1177,3): warning C4305: 'type cast': truncation from 'FT_Char *' to 'FT_UShort'
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(1178,3): warning C4305: 'type cast': truncation from 'FT_Char *' to 'FT_UShort'
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(1179,3): warning C4305: 'type cast': truncation from 'FT_Char *' to 'FT_UShort'
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(1180,3): warning C4305: 'type cast': truncation from 'FT_Char *' to 'FT_UShort'
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(1182,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(1183,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(1184,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(1185,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(1186,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(1187,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(1188,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(1189,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(1196,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(1197,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(1204,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(1205,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(1206,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(1207,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(1208,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(1280,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(1281,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(1282,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(1283,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(1284,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(1285,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(1286,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(1287,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(1288,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(1333,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(1334,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(1335,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(1336,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(1337,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(1338,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(1339,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(1340,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(1341,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(1342,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(1343,3): warning C4305: 'type cast': truncation from 'FT_Char *' to 'FT_UShort'
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(1344,3): warning C4305: 'type cast': truncation from 'FT_Char *' to 'FT_UShort'
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(1345,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(1346,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>  ttobjs.c
+1>  ttpload.c
+1>  ttpost.c
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttpost.c(250,36): warning C4244: '=': conversion from 'FT_Int' to 'FT_UShort', possible loss of data
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttpost.c(251,35): warning C4244: '=': conversion from 'FT_Int' to 'FT_UShort', possible loss of data
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttpost.c(324,33): warning C4244: '=': conversion from 'FT_Int' to 'FT_UShort', possible loss of data
+1>  ttsbit.c
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttsbit.c(168,19): warning C4244: '-=': conversion from 'FT_Int' to 'FT_Byte', possible loss of data
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttsbit.c(184,2): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttsbit.c(185,2): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttsbit.c(187,2): warning C4305: 'type cast': truncation from 'FT_Char *' to 'FT_UShort'
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttsbit.c(188,2): warning C4305: 'type cast': truncation from 'FT_Char *' to 'FT_UShort'
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttsbit.c(189,2): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttsbit.c(191,2): warning C4305: 'type cast': truncation from 'FT_Char *' to 'FT_UShort'
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttsbit.c(192,2): warning C4305: 'type cast': truncation from 'FT_Char *' to 'FT_UShort'
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttsbit.c(193,2): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttsbit.c(398,3): warning C4305: 'type cast': truncation from 'FT_Char *' to 'FT_UShort'
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttsbit.c(399,3): warning C4305: 'type cast': truncation from 'FT_Char *' to 'FT_UShort'
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttsbit.c(400,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttsbit.c(402,3): warning C4305: 'type cast': truncation from 'FT_Char *' to 'FT_UShort'
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttsbit.c(403,3): warning C4305: 'type cast': truncation from 'FT_Char *' to 'FT_UShort'
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttsbit.c(404,3): warning C4305: 'type cast': truncation from 'FT_Char *' to 'FT_UShort'
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttsbit.c(406,3): warning C4305: 'type cast': truncation from 'FT_Char *' to 'FT_UShort'
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttsbit.c(407,3): warning C4305: 'type cast': truncation from 'FT_Char *' to 'FT_UShort'
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttsbit.c(408,3): warning C4305: 'type cast': truncation from 'FT_Char *' to 'FT_UShort'
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttsbit.c(409,3): warning C4305: 'type cast': truncation from 'FT_Char *' to 'FT_UShort'
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttsbit.c(410,3): warning C4305: 'type cast': truncation from 'FT_Char *' to 'FT_UShort'
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttsbit.c(411,3): warning C4305: 'type cast': truncation from 'FT_Char *' to 'FT_UShort'
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttsbit.c(418,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttsbit.c(420,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttsbit.c(421,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttsbit.c(428,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttsbit.c(429,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttsbit.c(430,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttsbit.c(431,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttsbit.c(432,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttsbit.c(433,3): warning C4305: 'type cast': truncation from 'FT_Char *' to 'FT_UShort'
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttsbit.c(664,1): warning C4244: 'initializing': conversion from 'FT_UInt' to 'FT_UShort', possible loss of data
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttsbit.c(834,4): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttsbit.c(835,4): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttsbit.c(836,4): warning C4305: 'type cast': truncation from 'FT_Char *' to 'FT_UShort'
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttsbit.c(837,4): warning C4305: 'type cast': truncation from 'FT_Char *' to 'FT_UShort'
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttsbit.c(838,4): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttsbit.c(962,34): warning C4244: '-=': conversion from 'FT_Int' to 'FT_Byte', possible loss of data
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttsbit.c(963,34): warning C4244: '-=': conversion from 'FT_Int' to 'FT_Char', possible loss of data
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttsbit.c(964,34): warning C4244: '-=': conversion from 'FT_Int' to 'FT_Char', possible loss of data
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttsbit.c(995,28): warning C4244: '-=': conversion from 'FT_Int' to 'FT_Byte', possible loss of data
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttsbit.c(1435,40): warning C4244: '=': conversion from 'int' to 'FT_Char', possible loss of data
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttsbit.c(1436,45): warning C4244: '=': conversion from 'int' to 'FT_Byte', possible loss of data
+1>  jcapimin.c
+1>  jccoefct.c
+1>  jccolor.c
+1>  jcdctmgr.c
+1>  jchuff.c
+1>  jcinit.c
+1>  jcmainct.c
+1>  Running Code Analysis for C/C++...
+1>  Generating Code...
+1>  Compiling...
+1>  jcmarker.c
+1>  jcmaster.c
+1>  jcomapi.c
+1>  jcparam.c
+1>  jcphuff.c
+1>  jcprepct.c
+1>  jcsample.c
+1>  jctrans.c
+1>  jdapimin.c
+1>  jdapistd.c
+1>  jdatadst.c
+1>  jdatasrc.c
+1>  jdcoefct.c
+1>  jdcolor.c
+1>  jddctmgr.c
+1>  jdhuff.c
+1>  jdinput.c
+1>  jdmainct.c
+1>  jdmarker.c
+1>  jdmaster.c
+1>  Running Code Analysis for C/C++...
+1>  Generating Code...
+1>  Compiling...
+1>  jdpostct.c
+1>  jdsample.c
+1>  jdtrans.c
+1>  jerror.c
+1>  C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\shared\basetsd.h(77,34): warning C4142: 'INT32': benign redefinition of type
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\jpeg-6\jmorecfg.h(152): message : see declaration of 'INT32'
+1>  jfdctflt.c
+1>  jidctflt.c
+1>  jmemmgr.c
+1>  jmemnobs.c
+1>  C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\shared\basetsd.h(77,34): warning C4142: 'INT32': benign redefinition of type
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\jpeg-6\jmorecfg.h(152): message : see declaration of 'INT32'
+1>  jutils.c
+1>  win_qgl_dummy.c
+1>  hash_32.c
+1>  hash_32a.c
+1>  hash_64.c
+1>  hash_64a.c
+1>  tr_animation.c
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\tr_animation.c(143,23): warning C4459: declaration of 'oldFrame' hides global declaration
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\tr_animation.c(65,25): message : see declaration of 'oldFrame'
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\tr_animation.c(144,18): warning C4459: declaration of 'frameSize' hides global declaration
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\tr_animation.c(66,12): message : see declaration of 'frameSize'
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\tr_animation.c(241,22): warning C4459: declaration of 'lodScale' hides global declaration
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\tr_animation.c(74,25): message : see declaration of 'lodScale'
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\tr_animation.c(416,104): warning C4459: declaration of 'tr' hides global declaration
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\tr_local.h(1064,20): message : see declaration of 'tr'
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\tr_animation.c(428,119): warning C4459: declaration of 'tr' hides global declaration
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\tr_local.h(1064,20): message : see declaration of 'tr'
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\tr_animation.c(434,123): warning C4459: declaration of 'tr' hides global declaration
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\tr_local.h(1064,20): message : see declaration of 'tr'
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\tr_animation.c(440,126): warning C4459: declaration of 'tr' hides global declaration
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\tr_local.h(1064,20): message : see declaration of 'tr'
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\tr_animation.c(446,122): warning C4459: declaration of 'tr' hides global declaration
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\tr_local.h(1064,20): message : see declaration of 'tr'
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\tr_animation.c(464,65): warning C4459: declaration of 'angles' hides global declaration
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\tr_animation.c(69,15): message : see declaration of 'angles'
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\tr_animation.c(477,79): warning C4459: declaration of 'vec' hides global declaration
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\tr_animation.c(71,15): message : see declaration of 'vec'
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\tr_animation.c(527,125): warning C4459: declaration of 't' hides global declaration
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\tr_animation.c(81,15): message : see declaration of 't'
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\tr_animation.c(581,71): warning C4459: declaration of 't' hides global declaration
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\tr_animation.c(81,15): message : see declaration of 't'
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\tr_animation.c(601,105): warning C4459: declaration of 't' hides global declaration
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\tr_animation.c(81,15): message : see declaration of 't'
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\tr_animation.c(616,130): warning C4459: declaration of 't' hides global declaration
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\tr_animation.c(81,15): message : see declaration of 't'
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\tr_animation.c(1000,19): warning C4459: declaration of 'boneRefs' hides global declaration
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\tr_animation.c(52,26): message : see declaration of 'boneRefs'
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\tr_animation.c(1257,14): warning C4456: declaration of 'i' hides previous local declaration
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\tr_animation.c(1177,6): message : see declaration of 'i'
+1>  tr_backend.c
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\tr_backend.c(1048,23): warning C4389: '==': signed/unsigned mismatch
+1>  tr_bsp.c
+1>  tr_cmds.c
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\tr_cmds.c(260,30): warning C4459: declaration of 'colorWhite' hides global declaration
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\game\q_shared.h(448,15): message : see declaration of 'colorWhite'
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\tr_cmds.c(324,30): warning C4459: declaration of 'colorWhite' hides global declaration
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\game\q_shared.h(448,15): message : see declaration of 'colorWhite'
+1>  tr_cmesh.c
+1>  tr_curve.c
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\tr_curve.c(399,15): warning C4456: declaration of 'dir' hides previous local declaration
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\tr_curve.c(372,6): message : see declaration of 'dir'
+1>  Running Code Analysis for C/C++...
+1>  Generating Code...
+1>  Compiling...
+1>  tr_flares.c
+1>  tr_font.c
+1>  tr_image.c
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\jpeg-6\jmorecfg.h(152,19): warning C4142: 'INT32': benign redefinition of type
+1>  C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\shared\basetsd.h(77): message : see declaration of 'INT32'
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\tr_image.c(1093,26): warning C4389: '!=': signed/unsigned mismatch
+1>  tr_init.c
+1>  tr_light.c
+1>  tr_main.c
+1>  tr_marks.c
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\tr_marks.c(681,23): warning C4456: declaration of 'texCoordScale' hides previous local declaration
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\tr_marks.c(500,8): message : see declaration of 'texCoordScale'
+1>  tr_mesh.c
+1>  tr_model.c
+1>  tr_noise.c
+1>  tr_scene.c
+1>  tr_shade.c
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\tr_shade.c(96,26): warning C4389: '==': signed/unsigned mismatch
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\tr_shade.c(96,59): warning C4389: '==': signed/unsigned mismatch
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\tr_shade.c(122,19): warning C4389: '==': signed/unsigned mismatch
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\tr_shade.c(122,52): warning C4389: '==': signed/unsigned mismatch
+1>  tr_shader.c
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\tr_shader.c(2830,21): warning C4459: declaration of 'shader' hides global declaration
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\tr_shader.c(38,17): message : see declaration of 'shader'
+1>  tr_shade_calc.c
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\tr_shade_calc.c(565,38): warning C4389: '==': signed/unsigned mismatch
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\tr_shade_calc.c(566,42): warning C4389: '==': signed/unsigned mismatch
+1>  tr_shadows.c
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\tr_shadows.c(55,49): warning C4459: declaration of 'facing' hides global declaration
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\tr_shadows.c(53,12): message : see declaration of 'facing'
+1>  tr_sky.c
+1>  tr_surface.c
+1>  tr_world.c
+1>  Running Code Analysis for C/C++...
+1>  Generating Code...
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\tr_image.c(3577): warning C4706: assignment within conditional expression
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\tr_image.c(2082): warning C4706: assignment within conditional expression
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\tr_image.c(3742): warning C4706: assignment within conditional expression
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\tr_model.c(2127): warning C4706: assignment within conditional expression
+1>  win_dx9imp.cpp
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\win32\win_dx9imp.cpp(2884,2): warning C4063: case '48' is not a valid value for switch of enum 'vatt_param'
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\qdx9.h(100): message : see declaration of 'vatt_param'
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\win32\win_dx9imp.cpp(3173,3): warning C4389: '==': signed/unsigned mismatch
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\win32\win_dx9imp.cpp(3354,26): warning C4389: '==': signed/unsigned mismatch
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\win32\win_dx9imp.cpp(3354,59): warning C4389: '==': signed/unsigned mismatch
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\win32\win_dx9imp.cpp(3378,19): warning C4389: '==': signed/unsigned mismatch
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\win32\win_dx9imp.cpp(3378,52): warning C4389: '==': signed/unsigned mismatch
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\win32\win_dx9imp.cpp(3215,59): warning C4189: 'offindex': local variable is initialized but not referenced
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\win32\win_dx9imp.cpp(3546,26): warning C4389: '==': signed/unsigned mismatch
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\win32\win_dx9imp.cpp(3546,59): warning C4389: '==': signed/unsigned mismatch
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\win32\win_dx9imp.cpp(3574,19): warning C4389: '==': signed/unsigned mismatch
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\win32\win_dx9imp.cpp(3574,52): warning C4389: '==': signed/unsigned mismatch
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\win32\win_dx9imp.cpp(3417,59): warning C4189: 'offindex': local variable is initialized but not referenced
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\win32\win_dx9imp.cpp(3969,2): warning C4063: case '256' is not a valid value for switch of enum '_D3DTRANSFORMSTATETYPE'
+1>  C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\shared\d3d9types.h(330): message : see declaration of '_D3DTRANSFORMSTATETYPE'
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\win32\win_dx9imp.cpp(3985,2): warning C4063: case '256' is not a valid value for switch of enum '_D3DTRANSFORMSTATETYPE'
+1>  C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\shared\d3d9types.h(330): message : see declaration of '_D3DTRANSFORMSTATETYPE'
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\win32\win_dx9imp.cpp(4001,2): warning C4063: case '256' is not a valid value for switch of enum '_D3DTRANSFORMSTATETYPE'
+1>  C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\shared\d3d9types.h(330): message : see declaration of '_D3DTRANSFORMSTATETYPE'
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\win32\win_dx9imp.cpp(4019,2): warning C4063: case '256' is not a valid value for switch of enum '_D3DTRANSFORMSTATETYPE'
+1>  C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\shared\d3d9types.h(330): message : see declaration of '_D3DTRANSFORMSTATETYPE'
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\win32\win_dx9imp.cpp(4037): warning C4238: nonstandard extension used: class rvalue used as lvalue
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\win32\win_dx9imp.cpp(4037,67): warning C4238: nonstandard extension used: class rvalue used as lvalue
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\win32\win_dx9imp.cpp(4225,7): warning C4189: 'found': local variable is initialized but not referenced
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\win32\win_dx9imp.cpp(4223,11): warning C4189: 'hashclr': local variable is initialized but not referenced
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\win32\win_dx9imp.cpp(432,13): warning C4505: 'GLW_CreatePFD': unreferenced function with internal linkage has been removed
+1>  D:\workspace\code\wolfenstein\RTCW-SP\src\win32\win_dx9imp.cpp(605,12): warning C4505: 'GLW_MakeContext': unreferenced function with internal linkage has been removed
+1>  BC.cpp
+1>  DirectXTexCompress.cpp
+1>  helpers.cpp
+1>  Running Code Analysis for C/C++...
+1>  Generating Code...
+1>Done building target "ClCompile" in project "renderer.vcxproj".
+1>Target WriteAnalysisResultManifest:
+1>  Deleting file ".\Release\CodeAnalysisResultManifest.txt".
+1>Target Lib:
+1>  Copying file from "D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\Release\renderer.pdb" to "D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\Release\renderer.pdb".
+1>  renderer.vcxproj -> D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\Release\renderer.lib
+Target RunNativeCodeAnalysis:
+  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ahglyph.c(527): warning C28182: Dereferencing NULL pointer. 'segment->first' contains the same NULL value as 'point' did. See line 462 for an earlier location where this can occur
+  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ahglyph.c(585): warning C6011: Dereferencing NULL pointer 'point'. See line 512 for an earlier location where this can occur
+  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ahhint.c(268): warning C28182: Dereferencing NULL pointer. 'edge' contains the same NULL value as 'anchor' did. See line 225 for an earlier location where this can occur
+  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ahhint.c(582): warning C6011: Dereferencing NULL pointer 'before'. 
+  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ahhint.c(1300): warning C6011: Dereferencing NULL pointer 'face_globals'. 
+  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ahhint.c(1339): warning C6011: Dereferencing NULL pointer '((face))->autohint.data'. 
+  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ftgrays.c(1980): warning C28182: Dereferencing NULL pointer. 'rast' contains the same NULL value as 'raster' did. 
+  D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\sfobjs.c(536): warning C6011: Dereferencing NULL pointer 'sfnt'. 
+  D:\workspace\code\wolfenstein\RTCW-SP\src\jpeg-6\jccoefct.c(194): warning C6385: Reading invalid data from 'coef->MCU_buffer':  the readable size is '40' bytes, but '-4' bytes may be read.
+  D:\workspace\code\wolfenstein\RTCW-SP\src\jpeg-6\jccolor.c(97): warning C26451: Arithmetic overflow: Using operator '<<' on a 4 byte value and then casting the result to a 8 byte value. Cast the value to the wider type before calling operator '<<' to avoid overflow (io.2).
+  D:\workspace\code\wolfenstein\RTCW-SP\src\jpeg-6\jccolor.c(98): warning C26451: Arithmetic overflow: Using operator '<<' on a 4 byte value and then casting the result to a 8 byte value. Cast the value to the wider type before calling operator '<<' to avoid overflow (io.2).
+  D:\workspace\code\wolfenstein\RTCW-SP\src\jpeg-6\jccolor.c(99): warning C26451: Arithmetic overflow: Using operator '<<' on a 4 byte value and then casting the result to a 8 byte value. Cast the value to the wider type before calling operator '<<' to avoid overflow (io.2).
+  D:\workspace\code\wolfenstein\RTCW-SP\src\jpeg-6\jccolor.c(106): warning C26451: Arithmetic overflow: Using operator '<<' on a 4 byte value and then casting the result to a 8 byte value. Cast the value to the wider type before calling operator '<<' to avoid overflow (io.2).
+  D:\workspace\code\wolfenstein\RTCW-SP\src\jpeg-6\jcdctmgr.c(72): warning C6385: Reading invalid data from 'cinfo->quant_tbl_ptrs':  the readable size is '16' bytes, but 'qtblno' bytes may be read.
+  D:\workspace\code\wolfenstein\RTCW-SP\src\jpeg-6\jcdctmgr.c(149): warning C6386: Buffer overrun while writing to 'fdct->float_divisors':  the writable size is '16' bytes, but 'qtblno' bytes might be written.
+  D:\workspace\code\wolfenstein\RTCW-SP\src\jpeg-6\jcdctmgr.c(148): warning C6385: Reading invalid data from 'fdct->float_divisors':  the readable size is '16' bytes, but 'qtblno' bytes may be read.
+  D:\workspace\code\wolfenstein\RTCW-SP\src\jpeg-6\jcdctmgr.c(157): warning C28182: Dereferencing NULL pointer. 'qtbl' contains the same NULL value as 'cinfo->quant_tbl_ptrs[qtblno]' did. 
+  D:\workspace\code\wolfenstein\RTCW-SP\src\jpeg-6\jchuff.c(152): warning C6387: 'entropy->ac_count_ptrs[actbl]' could be '0':  this does not adhere to the specification for the function 'memset'. 
+  D:\workspace\code\wolfenstein\RTCW-SP\src\jpeg-6\jchuff.c(159): warning C6385: Reading invalid data from 'cinfo->ac_huff_tbl_ptrs':  the readable size is '16' bytes, but 'actbl' bytes may be read.
+  D:\workspace\code\wolfenstein\RTCW-SP\src\jpeg-6\jchuff.c(157): warning C6385: Reading invalid data from 'cinfo->dc_huff_tbl_ptrs':  the readable size is '16' bytes, but 'dctbl' bytes may be read.
+  D:\workspace\code\wolfenstein\RTCW-SP\src\jpeg-6\jchuff.c(141): warning C6385: Reading invalid data from 'entropy->dc_count_ptrs':  the readable size is '16' bytes, but 'dctbl' bytes may be read.
+  D:\workspace\code\wolfenstein\RTCW-SP\src\jpeg-6\jchuff.c(142): warning C6386: Buffer overrun while writing to 'entropy->dc_count_ptrs':  the writable size is '16' bytes, but 'dctbl' bytes might be written.
+  D:\workspace\code\wolfenstein\RTCW-SP\src\jpeg-6\jchuff.c(146): warning C6387: 'entropy->dc_count_ptrs[dctbl]' could be '0':  this does not adhere to the specification for the function 'memset'. 
+  D:\workspace\code\wolfenstein\RTCW-SP\src\jpeg-6\jchuff.c(147): warning C6385: Reading invalid data from 'entropy->ac_count_ptrs':  the readable size is '16' bytes, but 'actbl' bytes may be read.
+  D:\workspace\code\wolfenstein\RTCW-SP\src\jpeg-6\jchuff.c(148): warning C6386: Buffer overrun while writing to 'entropy->ac_count_ptrs':  the writable size is '16' bytes, but 'actbl' bytes might be written.
+  D:\workspace\code\wolfenstein\RTCW-SP\src\jpeg-6\jcmarker.c(144): warning C6011: Dereferencing NULL pointer 'qtbl'. 
+  D:\workspace\code\wolfenstein\RTCW-SP\src\jpeg-6\jcmarker.c(187): warning C6011: Dereferencing NULL pointer 'htbl'. 
+  D:\workspace\code\wolfenstein\RTCW-SP\src\jpeg-6\jcmaster.c(238): warning C6385: Reading invalid data from 'component_sent':  the readable size is '10' bytes, but 'thisi' bytes may be read.
+  D:\workspace\code\wolfenstein\RTCW-SP\src\jpeg-6\jcmaster.c(238): warning C6001: Using uninitialized memory 'component_sent'.
+  D:\workspace\code\wolfenstein\RTCW-SP\src\jpeg-6\jcmaster.c(241): warning C6386: Buffer overrun while writing to 'component_sent':  the writable size is '10' bytes, but 'thisi' bytes might be written.
+  D:\workspace\code\wolfenstein\RTCW-SP\src\jpeg-6\jcphuff.c(178): warning C6387: 'entropy->count_ptrs[tbl]' could be '0':  this does not adhere to the specification for the function 'memset'. 
+  D:\workspace\code\wolfenstein\RTCW-SP\src\jpeg-6\jcphuff.c(183): warning C6385: Reading invalid data from 'cinfo->dc_huff_tbl_ptrs':  the readable size is '16' bytes, but 'tbl' bytes may be read.
+  D:\workspace\code\wolfenstein\RTCW-SP\src\jpeg-6\jcphuff.c(186): warning C6385: Reading invalid data from 'cinfo->ac_huff_tbl_ptrs':  the readable size is '16' bytes, but 'tbl' bytes may be read.
+  D:\workspace\code\wolfenstein\RTCW-SP\src\jpeg-6\jcphuff.c(173): warning C6385: Reading invalid data from 'entropy->count_ptrs':  the readable size is '16' bytes, but 'tbl' bytes may be read.
+  D:\workspace\code\wolfenstein\RTCW-SP\src\jpeg-6\jcphuff.c(174): warning C6386: Buffer overrun while writing to 'entropy->count_ptrs':  the writable size is '16' bytes, but 'tbl' bytes might be written.
+  D:\workspace\code\wolfenstein\RTCW-SP\src\jpeg-6\jctrans.c(123): warning C6385: Reading invalid data from 'srcinfo->quant_tbl_ptrs':  the readable size is '16' bytes, but 'tblno' bytes may be read.
+  D:\workspace\code\wolfenstein\RTCW-SP\src\jpeg-6\jctrans.c(127): warning C28182: Dereferencing NULL pointer. 'slot_quant' contains the same NULL value as 'srcinfo->quant_tbl_ptrs[tblno]' did. 
+  D:\workspace\code\wolfenstein\RTCW-SP\src\jpeg-6\jctrans.c(317): warning C6385: Reading invalid data from 'MCU_buffer':  the readable size is '40' bytes, but '-4' bytes may be read.
+  D:\workspace\code\wolfenstein\RTCW-SP\src\jpeg-6\jdcolor.c(94): warning C26451: Arithmetic overflow: Using operator '<<' on a 4 byte value and then casting the result to a 8 byte value. Cast the value to the wider type before calling operator '<<' to avoid overflow (io.2).
+  D:\workspace\code\wolfenstein\RTCW-SP\src\jpeg-6\jdcolor.c(97): warning C26451: Arithmetic overflow: Using operator '<<' on a 4 byte value and then casting the result to a 8 byte value. Cast the value to the wider type before calling operator '<<' to avoid overflow (io.2).
+  D:\workspace\code\wolfenstein\RTCW-SP\src\jpeg-6\jdhuff.c(106): warning C6385: Reading invalid data from 'cinfo->dc_huff_tbl_ptrs':  the readable size is '16' bytes, but 'dctbl' bytes may be read.
+  D:\workspace\code\wolfenstein\RTCW-SP\src\jpeg-6\jdhuff.c(108): warning C6385: Reading invalid data from 'cinfo->ac_huff_tbl_ptrs':  the readable size is '16' bytes, but 'actbl' bytes may be read.
+  D:\workspace\code\wolfenstein\RTCW-SP\src\jpeg-6\jdhuff.c(383): warning C26453: Arithmetic overflow: Left shift of a negative signed number is undefined behavior (io.4).
+  D:\workspace\code\wolfenstein\RTCW-SP\src\jpeg-6\jdhuff.c(383): warning C26453: Arithmetic overflow: Left shift of a negative signed number is undefined behavior (io.4).
+  D:\workspace\code\wolfenstein\RTCW-SP\src\jpeg-6\jdhuff.c(383): warning C26453: Arithmetic overflow: Left shift of a negative signed number is undefined behavior (io.4).
+  D:\workspace\code\wolfenstein\RTCW-SP\src\jpeg-6\jdhuff.c(383): warning C26453: Arithmetic overflow: Left shift of a negative signed number is undefined behavior (io.4).
+  D:\workspace\code\wolfenstein\RTCW-SP\src\jpeg-6\jdhuff.c(384): warning C26453: Arithmetic overflow: Left shift of a negative signed number is undefined behavior (io.4).
+  D:\workspace\code\wolfenstein\RTCW-SP\src\jpeg-6\jdhuff.c(384): warning C26453: Arithmetic overflow: Left shift of a negative signed number is undefined behavior (io.4).
+  D:\workspace\code\wolfenstein\RTCW-SP\src\jpeg-6\jdhuff.c(384): warning C26453: Arithmetic overflow: Left shift of a negative signed number is undefined behavior (io.4).
+  D:\workspace\code\wolfenstein\RTCW-SP\src\jpeg-6\jdhuff.c(384): warning C26453: Arithmetic overflow: Left shift of a negative signed number is undefined behavior (io.4).
+  D:\workspace\code\wolfenstein\RTCW-SP\src\jpeg-6\jdhuff.c(385): warning C26453: Arithmetic overflow: Left shift of a negative signed number is undefined behavior (io.4).
+  D:\workspace\code\wolfenstein\RTCW-SP\src\jpeg-6\jdhuff.c(385): warning C26453: Arithmetic overflow: Left shift of a negative signed number is undefined behavior (io.4).
+  D:\workspace\code\wolfenstein\RTCW-SP\src\jpeg-6\jdhuff.c(385): warning C26453: Arithmetic overflow: Left shift of a negative signed number is undefined behavior (io.4).
+  D:\workspace\code\wolfenstein\RTCW-SP\src\jpeg-6\jdhuff.c(385): warning C26453: Arithmetic overflow: Left shift of a negative signed number is undefined behavior (io.4).
+  D:\workspace\code\wolfenstein\RTCW-SP\src\jpeg-6\jdhuff.c(386): warning C26453: Arithmetic overflow: Left shift of a negative signed number is undefined behavior (io.4).
+  D:\workspace\code\wolfenstein\RTCW-SP\src\jpeg-6\jdhuff.c(386): warning C26453: Arithmetic overflow: Left shift of a negative signed number is undefined behavior (io.4).
+  D:\workspace\code\wolfenstein\RTCW-SP\src\jpeg-6\jdhuff.c(386): warning C26453: Arithmetic overflow: Left shift of a negative signed number is undefined behavior (io.4).
+  D:\workspace\code\wolfenstein\RTCW-SP\src\jpeg-6\jdinput.c(252): warning C28183: 'qtbl' could be '0', and is a copy of the value found in 'compptr->quant_table':  this does not adhere to the specification for the function 'memcpy'. 
+  D:\workspace\code\wolfenstein\RTCW-SP\src\jpeg-6\jdinput.c(252): warning C6387: 'cinfo->quant_tbl_ptrs[qtblno]' could be '0':  this does not adhere to the specification for the function 'memcpy'. 
+  D:\workspace\code\wolfenstein\RTCW-SP\src\jpeg-6\jdinput.c(252): warning C6385: Reading invalid data from 'cinfo->quant_tbl_ptrs':  the readable size is '16' bytes, but 'qtblno' bytes may be read.
+  D:\workspace\code\wolfenstein\RTCW-SP\src\jpeg-6\jdmarker.c(476): warning C6386: Buffer overrun while writing to 'cinfo->arith_dc_L':  the writable size is '16' bytes, but 'index' bytes might be written.
+  D:\workspace\code\wolfenstein\RTCW-SP\src\jpeg-6\jdmarker.c(474): warning C6386: Buffer overrun while writing to 'cinfo->arith_ac_K':  the writable size is '16' bytes, but '17' bytes might be written.
+  D:\workspace\code\wolfenstein\RTCW-SP\src\jpeg-6\jdmarker.c(478): warning C6385: Reading invalid data from 'cinfo->arith_dc_L':  the readable size is '16' bytes, but 'index' bytes may be read.
+  D:\workspace\code\wolfenstein\RTCW-SP\src\jpeg-6\jdmarker.c(477): warning C6386: Buffer overrun while writing to 'cinfo->arith_dc_U':  the writable size is '16' bytes, but 'index' bytes might be written.
+  D:\workspace\code\wolfenstein\RTCW-SP\src\jpeg-6\jdmarker.c(580): warning C6386: Buffer overrun while writing to 'cinfo->quant_tbl_ptrs':  the writable size is '16' bytes, but 'n' bytes might be written.
+  D:\workspace\code\wolfenstein\RTCW-SP\src\jpeg-6\jdmarker.c(579): warning C6385: Reading invalid data from 'cinfo->quant_tbl_ptrs':  the readable size is '16' bytes, but 'n' bytes may be read.
+  D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\dx9sdk\include\d3dx9math.inl(1587): warning C26451: Arithmetic overflow: Using operator '+' on a 4 byte value and then casting the result to a 8 byte value. Cast the value to the wider type before calling operator '+' to avoid overflow (io.2).
+  D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\dx9sdk\include\d3dx9math.inl(1587): warning C26451: Arithmetic overflow: Using operator '*' on a 4 byte value and then casting the result to a 8 byte value. Cast the value to the wider type before calling operator '*' to avoid overflow (io.2).
+  D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\dx9sdk\include\d3dx9math.inl(1719): warning C26451: Arithmetic overflow: Using operator '+' on a 4 byte value and then casting the result to a 8 byte value. Cast the value to the wider type before calling operator '+' to avoid overflow (io.2).
+  D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\dx9sdk\include\d3dx9math.inl(1719): warning C26451: Arithmetic overflow: Using operator '+' on a 4 byte value and then casting the result to a 8 byte value. Cast the value to the wider type before calling operator '+' to avoid overflow (io.2).
+  D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\dx9sdk\include\d3dx9math.inl(1719): warning C26451: Arithmetic overflow: Using operator '*' on a 4 byte value and then casting the result to a 8 byte value. Cast the value to the wider type before calling operator '*' to avoid overflow (io.2).
+  D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\dx9sdk\include\d3dx9math.inl(1864): warning C26451: Arithmetic overflow: Using operator '+' on a 4 byte value and then casting the result to a 8 byte value. Cast the value to the wider type before calling operator '+' to avoid overflow (io.2).
+  D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\dx9sdk\include\d3dx9math.inl(1864): warning C26451: Arithmetic overflow: Using operator '+' on a 4 byte value and then casting the result to a 8 byte value. Cast the value to the wider type before calling operator '+' to avoid overflow (io.2).
+  D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\dx9sdk\include\d3dx9math.inl(1864): warning C26451: Arithmetic overflow: Using operator '+' on a 4 byte value and then casting the result to a 8 byte value. Cast the value to the wider type before calling operator '+' to avoid overflow (io.2).
+  D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\dx9sdk\include\d3dx9math.inl(1864): warning C26451: Arithmetic overflow: Using operator '*' on a 4 byte value and then casting the result to a 8 byte value. Cast the value to the wider type before calling operator '*' to avoid overflow (io.2).
+  D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\dx9sdk\include\d3dx9math.inl(2034): warning C26451: Arithmetic overflow: Using operator '+' on a 4 byte value and then casting the result to a 8 byte value. Cast the value to the wider type before calling operator '+' to avoid overflow (io.2).
+  D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\dx9sdk\include\d3dx9math.inl(2034): warning C26451: Arithmetic overflow: Using operator '+' on a 4 byte value and then casting the result to a 8 byte value. Cast the value to the wider type before calling operator '+' to avoid overflow (io.2).
+  D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\dx9sdk\include\d3dx9math.inl(2034): warning C26451: Arithmetic overflow: Using operator '+' on a 4 byte value and then casting the result to a 8 byte value. Cast the value to the wider type before calling operator '+' to avoid overflow (io.2).
+  D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\dx9sdk\include\d3dx9math.inl(2034): warning C26451: Arithmetic overflow: Using operator '*' on a 4 byte value and then casting the result to a 8 byte value. Cast the value to the wider type before calling operator '*' to avoid overflow (io.2).
+  D:\workspace\code\wolfenstein\RTCW-SP\src\jpeg-6\jmemmgr.c(294): warning C6385: Reading invalid data from 'extra_pool_slop':  the readable size is '8' bytes, but 'pool_id' bytes may be read.
+  D:\workspace\code\wolfenstein\RTCW-SP\src\jpeg-6\jmemmgr.c(292): warning C6385: Reading invalid data from 'first_pool_slop':  the readable size is '8' bytes, but 'pool_id' bytes may be read.
+  D:\workspace\code\wolfenstein\RTCW-SP\src\jpeg-6\jmemmgr.c(278): warning C6385: Reading invalid data from 'mem->small_list':  the readable size is '8' bytes, but 'pool_id' bytes may be read.
+  D:\workspace\code\wolfenstein\RTCW-SP\src\jpeg-6\jmemmgr.c(317): warning C6386: Buffer overrun while writing to 'mem->small_list':  the writable size is '8' bytes, but 'pool_id' bytes might be written.
+  D:\workspace\code\wolfenstein\RTCW-SP\src\jpeg-6\jmemmgr.c(378): warning C6011: Dereferencing NULL pointer 'hdr_ptr'. 
+  D:\workspace\code\wolfenstein\RTCW-SP\src\jpeg-6\jmemmgr.c(378): warning C6385: Reading invalid data from 'mem->large_list':  the readable size is '8' bytes, but 'pool_id' bytes may be read.
+  D:\workspace\code\wolfenstein\RTCW-SP\src\jpeg-6\jmemmgr.c(384): warning C6386: Buffer overrun while writing to 'mem->large_list':  the writable size is '8' bytes, but 'pool_id' bytes might be written.
+  D:\workspace\code\wolfenstein\RTCW-SP\src\jpeg-6\jmemmgr.c(842): warning C6011: Dereferencing NULL pointer 'ptr->mem_buffer'. 
+  D:\workspace\code\wolfenstein\RTCW-SP\src\jpeg-6\jmemmgr.c(933): warning C6011: Dereferencing NULL pointer 'ptr->mem_buffer'. 
+  D:\workspace\code\wolfenstein\RTCW-SP\src\jpeg-6\jmemmgr.c(1094): warning C6011: Dereferencing NULL pointer 'mem'. 
+  D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\dx9sdk\include\d3dx9math.h(59): warning C26495: Variable 'D3DXFLOAT16::value' is uninitialized. Always initialize a member variable (type.6).
+  D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\dx9sdk\include\d3dx9math.h(91): warning C26495: Variable 'D3DXVECTOR2::y' is uninitialized. Always initialize a member variable (type.6).
+  D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\dx9sdk\include\d3dx9math.h(240): warning C26495: Variable 'D3DXVECTOR4::y' is uninitialized. Always initialize a member variable (type.6).
+  D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\dx9sdk\include\d3dx9math.h(429): warning C26495: Variable 'D3DXQUATERNION::w' is uninitialized. Always initialize a member variable (type.6).
+  D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\dx9sdk\include\d3dx9math.h(475): warning C26495: Variable 'D3DXPLANE::d' is uninitialized. Always initialize a member variable (type.6).
+  D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\dx9sdk\include\d3dx9math.h(516): warning C26495: Variable 'D3DXCOLOR::a' is uninitialized. Always initialize a member variable (type.6).
+  D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\dx9sdk\include\d3dx9math.inl(26): warning C26495: Variable 'D3DXFLOAT16::value' is uninitialized. Always initialize a member variable (type.6).
+  D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\dx9sdk\include\d3dx9math.inl(77): warning C26495: Variable 'D3DXVECTOR2::y' is uninitialized. Always initialize a member variable (type.6).
+  D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\dx9sdk\include\d3dx9math.inl(517): warning C26495: Variable 'D3DXVECTOR4::y' is uninitialized. Always initialize a member variable (type.6).
+  D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\dx9sdk\include\d3dx9math.inl(1068): warning C26495: Variable 'D3DXQUATERNION::w' is uninitialized. Always initialize a member variable (type.6).
+  D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\dx9sdk\include\d3dx9math.inl(1241): warning C26495: Variable 'D3DXPLANE::d' is uninitialized. Always initialize a member variable (type.6).
+  D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\dx9sdk\include\d3dx9math.inl(1376): warning C26495: Variable 'D3DXCOLOR::a' is uninitialized. Always initialize a member variable (type.6).
+  D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\remix\remix_c.h(666): warning C26812: The enum type 'remixapi_ErrorCode' is unscoped. Prefer 'enum class' over 'enum' (Enum.3).
+  D:\workspace\code\wolfenstein\RTCW-SP\src\win32\win_dx9imp.cpp(129): warning C26812: The enum type 'qboolean' is unscoped. Prefer 'enum class' over 'enum' (Enum.3).
+  D:\workspace\code\wolfenstein\RTCW-SP\src\win32\win_dx9imp.cpp(232): warning C6386: Buffer overrun while writing to 'm':  the writable size is 'sizeof(D3DDISPLAYMODE)*((1+nummodes))' bytes, but '16' bytes might be written.
+  D:\workspace\code\wolfenstein\RTCW-SP\src\win32\win_dx9imp.cpp(159): warning C26812: The enum type 'rserr_t' is unscoped. Prefer 'enum class' over 'enum' (Enum.3).
+  D:\workspace\code\wolfenstein\RTCW-SP\src\win32\win_dx9imp.cpp(898): warning C6387: 'g_wv.hWnd' could be '0':  this does not adhere to the specification for the function 'UpdateWindow'. See line 897 for an earlier location where this can occur
+  D:\workspace\code\wolfenstein\RTCW-SP\src\win32\win_dx9imp.cpp(897): warning C6387: 'g_wv.hWnd' could be '0':  this does not adhere to the specification for the function 'ShowWindow'. 
+  D:\workspace\code\wolfenstein\RTCW-SP\src\win32\win_dx9imp.cpp(914): warning C6387: 'g_wv.hWnd' could be '0':  this does not adhere to the specification for the function 'SetForegroundWindow'. See line 897 for an earlier location where this can occur
+  D:\workspace\code\wolfenstein\RTCW-SP\src\win32\win_dx9imp.cpp(908): warning C6387: 'g_wv.hWnd' could be '0':  this does not adhere to the specification for the function 'DestroyWindow'. See line 897 for an earlier location where this can occur
+  D:\workspace\code\wolfenstein\RTCW-SP\src\win32\win_dx9imp.cpp(1130): warning C6001: Using uninitialized memory 'devmode'.
+  D:\workspace\code\wolfenstein\RTCW-SP\src\win32\win_dx9imp.cpp(1706): warning C6031: Return value ignored: 'sscanf'.
+  D:\workspace\code\wolfenstein\RTCW-SP\src\win32\win_dx9imp.cpp(1709): warning C6031: Return value ignored: 'sscanf'.
+  D:\workspace\code\wolfenstein\RTCW-SP\src\win32\win_dx9imp.cpp(2354): warning C26812: The enum type 'qdx_texparam' is unscoped. Prefer 'enum class' over 'enum' (Enum.3).
+  D:\workspace\code\wolfenstein\RTCW-SP\src\win32\win_dx9imp.cpp(2436): warning C26812: The enum type 'vatt_param' is unscoped. Prefer 'enum class' over 'enum' (Enum.3).
+  D:\workspace\code\wolfenstein\RTCW-SP\src\win32\win_dx9imp.cpp(3610): warning C6011: Dereferencing NULL pointer 'drawbuf'. 
+  D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\DirectXTex\DirectXTex.h(187): warning C26812: The enum type 'DirectX::TEX_ALPHA_MODE' is unscoped. Prefer 'enum class' over 'enum' (Enum.3).
+  D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\DirectXTex\DirectXTex.h(191): warning C26812: The enum type 'DirectX::TEX_DIMENSION' is unscoped. Prefer 'enum class' over 'enum' (Enum.3).
+  D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\DirectXTex\DirectXTex.inl(17): warning C26812: The enum type 'DirectX::CP_FLAGS' is unscoped. Prefer 'enum class' over 'enum' (Enum.3).
+  D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\DirectXTex\DirectXTex.inl(18): warning C26812: The enum type 'DirectX::DDS_FLAGS' is unscoped. Prefer 'enum class' over 'enum' (Enum.3).
+  D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\DirectXTex\DirectXTex.inl(19): warning C26812: The enum type 'DirectX::TGA_FLAGS' is unscoped. Prefer 'enum class' over 'enum' (Enum.3).
+  D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\DirectXTex\DirectXTex.inl(20): warning C26812: The enum type 'DirectX::WIC_FLAGS' is unscoped. Prefer 'enum class' over 'enum' (Enum.3).
+  D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\DirectXTex\DirectXTex.inl(21): warning C26812: The enum type 'DirectX::TEX_FR_FLAGS' is unscoped. Prefer 'enum class' over 'enum' (Enum.3).
+  D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\DirectXTex\DirectXTex.inl(22): warning C26812: The enum type 'DirectX::TEX_FILTER_FLAGS' is unscoped. Prefer 'enum class' over 'enum' (Enum.3).
+  D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\DirectXTex\DirectXTex.inl(23): warning C26812: The enum type 'DirectX::TEX_PMALPHA_FLAGS' is unscoped. Prefer 'enum class' over 'enum' (Enum.3).
+  D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\DirectXTex\DirectXTex.inl(24): warning C26812: The enum type 'DirectX::TEX_COMPRESS_FLAGS' is unscoped. Prefer 'enum class' over 'enum' (Enum.3).
+  D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\DirectXTex\DirectXTex.inl(25): warning C26812: The enum type 'DirectX::CNMAP_FLAGS' is unscoped. Prefer 'enum class' over 'enum' (Enum.3).
+  D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\DirectXTex\DirectXTex.inl(26): warning C26812: The enum type 'DirectX::CMSE_FLAGS' is unscoped. Prefer 'enum class' over 'enum' (Enum.3).
+  D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\DirectXTex\DirectXTex.inl(27): warning C26812: The enum type 'DirectX::CREATETEX_FLAGS' is unscoped. Prefer 'enum class' over 'enum' (Enum.3).
+  D:\workspace\code\wolfenstein\RTCW-SP\src\win32\win_qgl_dummy.c(3329): warning C6031: Return value ignored: 'asctime'.
+  D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\tr_backend.c(437): warning C6386: Buffer overrun while writing to 'mat.m[0]':  the writable size is '16' bytes, but '64' bytes might be written.
+  D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\tr_backend.c(894): warning C26451: Arithmetic overflow: Using operator '+' on a 4 byte value and then casting the result to a 8 byte value. Cast the value to the wider type before calling operator '+' to avoid overflow (io.2).
+  D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\tr_backend.c(1076): warning C6011: Dereferencing NULL pointer 'shader'. 
+  D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\tr_backend.c(1631): warning C6386: Buffer overrun while writing to 'qdx.camera.m[0]':  the writable size is '16' bytes, but '64' bytes might be written.
+  D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\tr_bsp.c(2116): warning C6031: Return value ignored: 'sscanf'.
+  D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\tr_bsp.c(2208): warning C28182: Dereferencing NULL pointer. 'header' contains the same NULL value as 'buffer' did. 
+  D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\tr_curve.c(312): warning C6387: 'grid->widthLodError' could be '0':  this does not adhere to the specification for the function 'memcpy'. 
+  D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\tr_curve.c(315): warning C6387: 'grid->heightLodError' could be '0':  this does not adhere to the specification for the function 'memcpy'. 
+  D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\tr_flares.c(405): warning C26451: Arithmetic overflow: Using operator '*' on a 4 byte value and then casting the result to a 8 byte value. Cast the value to the wider type before calling operator '*' to avoid overflow (io.2).
+  D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\tr_image.c(536): warning C26451: Arithmetic overflow: Using operator '-' on a 4 byte value and then casting the result to a 8 byte value. Cast the value to the wider type before calling operator '-' to avoid overflow (io.2).
+  D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\tr_image.c(536): warning C26451: Arithmetic overflow: Using operator '-' on a 4 byte value and then casting the result to a 8 byte value. Cast the value to the wider type before calling operator '-' to avoid overflow (io.2).
+  D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\tr_image.c(536): warning C26451: Arithmetic overflow: Using operator '-' on a 4 byte value and then casting the result to a 8 byte value. Cast the value to the wider type before calling operator '-' to avoid overflow (io.2).
+  D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\tr_image.c(536): warning C26451: Arithmetic overflow: Using operator '-' on a 4 byte value and then casting the result to a 8 byte value. Cast the value to the wider type before calling operator '-' to avoid overflow (io.2).
+  D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\tr_image.c(540): warning C26451: Arithmetic overflow: Using operator '-' on a 4 byte value and then casting the result to a 8 byte value. Cast the value to the wider type before calling operator '-' to avoid overflow (io.2).
+  D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\tr_image.c(540): warning C26451: Arithmetic overflow: Using operator '-' on a 4 byte value and then casting the result to a 8 byte value. Cast the value to the wider type before calling operator '-' to avoid overflow (io.2).
+  D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\tr_image.c(540): warning C26451: Arithmetic overflow: Using operator '-' on a 4 byte value and then casting the result to a 8 byte value. Cast the value to the wider type before calling operator '-' to avoid overflow (io.2).
+  D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\tr_image.c(540): warning C26451: Arithmetic overflow: Using operator '-' on a 4 byte value and then casting the result to a 8 byte value. Cast the value to the wider type before calling operator '-' to avoid overflow (io.2).
+  D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\tr_image.c(544): warning C26451: Arithmetic overflow: Using operator '-' on a 4 byte value and then casting the result to a 8 byte value. Cast the value to the wider type before calling operator '-' to avoid overflow (io.2).
+  D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\tr_image.c(544): warning C26451: Arithmetic overflow: Using operator '-' on a 4 byte value and then casting the result to a 8 byte value. Cast the value to the wider type before calling operator '-' to avoid overflow (io.2).
+  D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\tr_image.c(544): warning C26451: Arithmetic overflow: Using operator '-' on a 4 byte value and then casting the result to a 8 byte value. Cast the value to the wider type before calling operator '-' to avoid overflow (io.2).
+  D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\tr_image.c(544): warning C26451: Arithmetic overflow: Using operator '-' on a 4 byte value and then casting the result to a 8 byte value. Cast the value to the wider type before calling operator '-' to avoid overflow (io.2).
+  D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\tr_image.c(548): warning C26451: Arithmetic overflow: Using operator '-' on a 4 byte value and then casting the result to a 8 byte value. Cast the value to the wider type before calling operator '-' to avoid overflow (io.2).
+  D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\tr_image.c(548): warning C26451: Arithmetic overflow: Using operator '-' on a 4 byte value and then casting the result to a 8 byte value. Cast the value to the wider type before calling operator '-' to avoid overflow (io.2).
+  D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\tr_image.c(548): warning C26451: Arithmetic overflow: Using operator '-' on a 4 byte value and then casting the result to a 8 byte value. Cast the value to the wider type before calling operator '-' to avoid overflow (io.2).
+  D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\tr_image.c(548): warning C26451: Arithmetic overflow: Using operator '-' on a 4 byte value and then casting the result to a 8 byte value. Cast the value to the wider type before calling operator '-' to avoid overflow (io.2).
+  D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\tr_image.c(930): warning C6386: Buffer overrun while writing to 'tr.images':  the writable size is '8192' bytes, but 'tr.numImages' bytes might be written.
+  D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\tr_image.c(3379): warning C6387: 'temppic' could be '0':  this does not adhere to the specification for the function 'memcpy'. 
+  D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\tr_image.c(3496): warning C6386: Buffer overrun while writing to 'tr.images':  the writable size is '8192' bytes, but 'tr.numImages' bytes might be written.
+  D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\tr_image.c(3746): warning C6201: Index '3' is out of valid index range '0' to '2' for possibly stack allocated buffer 'parms'.
+  D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\tr_image.c(3748): warning C6201: Index '3' is out of valid index range '0' to '2' for possibly stack allocated buffer 'parms'.
+  D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\tr_image.c(3748): warning C6385: Reading invalid data from 'parms':  the readable size is '12' bytes, but '16' bytes may be read.
+  D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\tr_init.c(473): warning C6385: Reading invalid data from 'buffer':  the readable size is '_Old_3`18' bytes, but '19' bytes may be read.
+  D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\tr_main.c(608): warning C6386: Buffer overrun while writing to 'qdx.world.m[0]':  the writable size is '16' bytes, but '64' bytes might be written.
+  D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\tr_main.c(1124): warning C26451: Arithmetic overflow: Using operator '*' on a 4 byte value and then casting the result to a 8 byte value. Cast the value to the wider type before calling operator '*' to avoid overflow (io.2).
+  D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\tr_marks.c(85): warning C6001: Using uninitialized memory 'sides'.
+  D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\tr_marks.c(86): warning C6001: Using uninitialized memory 'dists'.
+  D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\tr_marks.c(775): warning C26451: Arithmetic overflow: Using operator '*' on a 4 byte value and then casting the result to a 8 byte value. Cast the value to the wider type before calling operator '*' to avoid overflow (io.2).
+  D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\tr_marks.c(775): warning C26451: Arithmetic overflow: Using operator '+' on a 4 byte value and then casting the result to a 8 byte value. Cast the value to the wider type before calling operator '+' to avoid overflow (io.2).
+  D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\tr_marks.c(776): warning C26451: Arithmetic overflow: Using operator '*' on a 4 byte value and then casting the result to a 8 byte value. Cast the value to the wider type before calling operator '*' to avoid overflow (io.2).
+  D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\tr_marks.c(776): warning C26451: Arithmetic overflow: Using operator '+' on a 4 byte value and then casting the result to a 8 byte value. Cast the value to the wider type before calling operator '+' to avoid overflow (io.2).
+  D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\tr_model.c(341): warning C26451: Arithmetic overflow: Using operator '-' on a 4 byte value and then casting the result to a 8 byte value. Cast the value to the wider type before calling operator '-' to avoid overflow (io.2).
+  D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\tr_model.c(1823): warning C6250: Calling 'VirtualFree' without the MEM_RELEASE flag might free memory but not address descriptors (VADs).  This causes address space leaks.
+  D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\tr_model.c(1823): warning C6387: 'membase' could be '0':  this does not adhere to the specification for the function 'VirtualFree'. 
+  D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\tr_shader.c(2585): warning C6385: Reading invalid data from 'tr.lightmaps':  the readable size is '1024' bytes, but 'shader.lightmapIndex' bytes may be read.
+  D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\tr_shader.c(2999): warning C6387: 'buffers[i]' could be '0':  this does not adhere to the specification for the function 'strcat'. 
+  D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\tr_shade_calc.c(547): warning C6011: Dereferencing NULL pointer 'mid[1]'. 
+  D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\tr_shade_calc.c(575): warning C6011: Dereferencing NULL pointer 'mid[j]'. See line 547 for an earlier location where this can occur
+  D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\tr_shade_calc.c(916): warning C26451: Arithmetic overflow: Using operator '-' on a 4 byte value and then casting the result to a 8 byte value. Cast the value to the wider type before calling operator '-' to avoid overflow (io.2).
+  D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\tr_shade_calc.c(1021): warning C26451: Arithmetic overflow: Using operator '+' on a 4 byte value and then casting the result to a 8 byte value. Cast the value to the wider type before calling operator '+' to avoid overflow (io.2).
+  D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\tr_sky.c(495): warning C26451: Arithmetic overflow: Using operator '*' on a 4 byte value and then casting the result to a 8 byte value. Cast the value to the wider type before calling operator '*' to avoid overflow (io.2).
+  D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\tr_sky.c(496): warning C26451: Arithmetic overflow: Using operator '*' on a 4 byte value and then casting the result to a 8 byte value. Cast the value to the wider type before calling operator '*' to avoid overflow (io.2).
+  D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\tr_sky.c(497): warning C26451: Arithmetic overflow: Using operator '*' on a 4 byte value and then casting the result to a 8 byte value. Cast the value to the wider type before calling operator '*' to avoid overflow (io.2).
+  D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\tr_sky.c(498): warning C26451: Arithmetic overflow: Using operator '*' on a 4 byte value and then casting the result to a 8 byte value. Cast the value to the wider type before calling operator '*' to avoid overflow (io.2).
+  D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\tr_sky.c(565): warning C26451: Arithmetic overflow: Using operator '*' on a 4 byte value and then casting the result to a 8 byte value. Cast the value to the wider type before calling operator '*' to avoid overflow (io.2).
+  D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\tr_sky.c(566): warning C26451: Arithmetic overflow: Using operator '*' on a 4 byte value and then casting the result to a 8 byte value. Cast the value to the wider type before calling operator '*' to avoid overflow (io.2).
+  D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\tr_sky.c(567): warning C26451: Arithmetic overflow: Using operator '*' on a 4 byte value and then casting the result to a 8 byte value. Cast the value to the wider type before calling operator '*' to avoid overflow (io.2).
+  D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\tr_sky.c(568): warning C26451: Arithmetic overflow: Using operator '*' on a 4 byte value and then casting the result to a 8 byte value. Cast the value to the wider type before calling operator '*' to avoid overflow (io.2).
+  D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\tr_sky.c(708): warning C26451: Arithmetic overflow: Using operator '*' on a 4 byte value and then casting the result to a 8 byte value. Cast the value to the wider type before calling operator '*' to avoid overflow (io.2).
+  D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\tr_sky.c(709): warning C26451: Arithmetic overflow: Using operator '*' on a 4 byte value and then casting the result to a 8 byte value. Cast the value to the wider type before calling operator '*' to avoid overflow (io.2).
+  D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\tr_sky.c(710): warning C26451: Arithmetic overflow: Using operator '*' on a 4 byte value and then casting the result to a 8 byte value. Cast the value to the wider type before calling operator '*' to avoid overflow (io.2).
+  D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\tr_sky.c(711): warning C26451: Arithmetic overflow: Using operator '*' on a 4 byte value and then casting the result to a 8 byte value. Cast the value to the wider type before calling operator '*' to avoid overflow (io.2).
+  D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\tr_sky.c(835): warning C26451: Arithmetic overflow: Using operator '+' on a 4 byte value and then casting the result to a 8 byte value. Cast the value to the wider type before calling operator '+' to avoid overflow (io.2).
+  D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\tr_sky.c(834): warning C26451: Arithmetic overflow: Using operator '+' on a 4 byte value and then casting the result to a 8 byte value. Cast the value to the wider type before calling operator '+' to avoid overflow (io.2).
+  D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\tr_sky.c(833): warning C26451: Arithmetic overflow: Using operator '+' on a 4 byte value and then casting the result to a 8 byte value. Cast the value to the wider type before calling operator '+' to avoid overflow (io.2).
+  D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\tr_sky.c(832): warning C26451: Arithmetic overflow: Using operator '+' on a 4 byte value and then casting the result to a 8 byte value. Cast the value to the wider type before calling operator '+' to avoid overflow (io.2).
+  D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\tr_sky.c(831): warning C26451: Arithmetic overflow: Using operator '+' on a 4 byte value and then casting the result to a 8 byte value. Cast the value to the wider type before calling operator '+' to avoid overflow (io.2).
+  D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\tr_sky.c(830): warning C26451: Arithmetic overflow: Using operator '+' on a 4 byte value and then casting the result to a 8 byte value. Cast the value to the wider type before calling operator '+' to avoid overflow (io.2).
+  D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\tr_sky.c(830): warning C26451: Arithmetic overflow: Using operator '*' on a 4 byte value and then casting the result to a 8 byte value. Cast the value to the wider type before calling operator '*' to avoid overflow (io.2).
+  D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\tr_sky.c(830): warning C26451: Arithmetic overflow: Using operator '*' on a 4 byte value and then casting the result to a 8 byte value. Cast the value to the wider type before calling operator '*' to avoid overflow (io.2).
+  D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\tr_sky.c(829): warning C26451: Arithmetic overflow: Using operator '*' on a 4 byte value and then casting the result to a 8 byte value. Cast the value to the wider type before calling operator '*' to avoid overflow (io.2).
+  D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\tr_sky.c(829): warning C26451: Arithmetic overflow: Using operator '*' on a 4 byte value and then casting the result to a 8 byte value. Cast the value to the wider type before calling operator '*' to avoid overflow (io.2).
+  D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\tr_world.c(581): warning C6011: Dereferencing NULL pointer 'tr.world'. 
+  D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\tr_world.c(605): warning C6011: Dereferencing NULL pointer 'tr.world'. 
+1>Done building target "RunNativeCodeAnalysis" in project "renderer.vcxproj".
+1>Target FinalizeBuildStatus:
+1>  Deleting file ".\Release\renderer.tlog\unsuccessfulbuild".
+1>  Touching ".\Release\renderer.tlog\renderer.lastbuildstate".
+1>
+1>Done building project "renderer.vcxproj".
+1>
+1>Build succeeded.
+1>
+1>C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Microsoft\VC\v160\Microsoft.CppBuild.targets(513,5): warning MSB8028: The intermediate directory (.\Release\) contains files shared from another project (renderer_dx9.vcxproj).  This can lead to incorrect clean and rebuild behavior.
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ahglyph.c(301,25): warning C4456: declaration of 'limit' hides previous local declaration
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ahglyph.c(598,25): warning C4456: declaration of 'min_point' hides previous local declaration
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ahglyph.c(599,25): warning C4456: declaration of 'max_point' hides previous local declaration
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ahhint.c(553,23): warning C4456: declaration of 'before' hides previous local declaration
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ahhint.c(554,23): warning C4456: declaration of 'after' hides previous local declaration
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ahhint.c(645,13): warning C4456: declaration of 'u' hides previous local declaration
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ahhint.c(1218,36): warning C4244: '=': conversion from 'FT_UInt' to 'short', possible loss of data
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ahoptim.c(713,18): warning C4456: declaration of 'stem' hides previous local declaration
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ftgrays.c(1327,23): warning C4244: '+=': conversion from 'int' to 'unsigned short', possible loss of data
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ftobjs.c(597,48): warning C4244: '+=': conversion from 'FT_UInt' to 'short', possible loss of data
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ftobjs.c(631,31): warning C4244: '=': conversion from 'FT_UInt' to 'short', possible loss of data
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ftobjs.c(632,33): warning C4244: '=': conversion from 'FT_UInt' to 'short', possible loss of data
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ftobjs.c(2039,31): warning C4244: '=': conversion from 'FT_UInt' to 'FT_UShort', possible loss of data
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ftobjs.c(2040,32): warning C4244: '=': conversion from 'FT_UInt' to 'FT_UShort', possible loss of data
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ftraster.c(1080,18): warning C4244: '=': conversion from 'Long' to 'Short', possible loss of data
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ftraster.c(2635,43): warning C4244: '=': conversion from 'Long' to 'Short', possible loss of data
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ftraster.c(2666,31): warning C4244: '=': conversion from 'Long' to 'UShort', possible loss of data
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ftraster.c(2785,14): warning C4456: declaration of 'Q' hides previous local declaration
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ftraster.c(2785,17): warning C4456: declaration of 'P' hides previous local declaration
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ftraster.c(2800,14): warning C4456: declaration of 'Q' hides previous local declaration
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ftraster.c(2800,18): warning C4456: declaration of 'P' hides previous local declaration
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ftraster.c(2956,47): warning C4244: '=': conversion from 'int' to 'Short', possible loss of data
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ftraster.c(2958,32): warning C4244: '=': conversion from 'int' to 'UShort', possible loss of data
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ftraster.c(2974,49): warning C4244: '=': conversion from 'int' to 'Short', possible loss of data
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ftstream.c(696,15): warning C4456: declaration of 'p' hides previous local declaration
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ftstream.c(719,15): warning C4456: declaration of 'p' hides previous local declaration
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ftstream.c(745,15): warning C4456: declaration of 'p' hides previous local declaration
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\sfobjs.c(385,40): warning C4244: '=': conversion from 'FT_Int' to 'FT_UShort', possible loss of data
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\sfobjs.c(386,40): warning C4244: '=': conversion from 'FT_Int' to 'FT_UShort', possible loss of data
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttgload.c(178,57): warning C4244: '=': conversion from 'FT_UInt' to 'FT_UShort', possible loss of data
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttgload.c(179,61): warning C4244: '=': conversion from 'FT_UInt' to 'FT_Short', possible loss of data
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttgload.c(201,18): warning C4100: 'glyph_index': unreferenced formal parameter
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttgload.c(395,32): warning C4244: '=': conversion from 'FT_Int' to 'short', possible loss of data
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttgload.c(396,34): warning C4244: '=': conversion from 'FT_Int' to 'short', possible loss of data
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttgload.c(998,37): warning C4244: '=': conversion from 'FT_UInt' to 'FT_UShort', possible loss of data
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(166,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(167,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(168,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(169,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(176,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(177,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(449,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(450,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(451,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(452,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(453,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(454,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(455,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(456,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(457,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(458,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(459,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(460,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(461,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(462,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(463,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(464,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(465,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(466,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(467,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(519,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(520,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(521,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(522,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(523,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(524,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(525,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(526,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(527,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(528,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(529,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(530,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(531,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(532,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(533,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(749,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(750,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(751,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(752,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(753,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(754,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(755,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(756,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(757,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(758,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(759,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(760,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(761,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(762,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(763,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(764,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(765,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(845,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(846,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(847,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(854,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(855,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(856,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(857,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(858,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(859,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(1038,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(1039,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(1046,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(1047,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(1048,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(1147,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(1148,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(1149,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(1150,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(1151,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(1152,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(1153,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(1154,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(1155,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(1156,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(1157,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(1158,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(1159,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(1160,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(1161,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(1162,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(1163,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(1164,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(1165,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(1166,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(1167,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(1168,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(1169,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(1170,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(1171,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(1172,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(1173,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(1174,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(1175,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(1176,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(1177,3): warning C4305: 'type cast': truncation from 'FT_Char *' to 'FT_UShort'
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(1178,3): warning C4305: 'type cast': truncation from 'FT_Char *' to 'FT_UShort'
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(1179,3): warning C4305: 'type cast': truncation from 'FT_Char *' to 'FT_UShort'
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(1180,3): warning C4305: 'type cast': truncation from 'FT_Char *' to 'FT_UShort'
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(1182,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(1183,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(1184,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(1185,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(1186,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(1187,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(1188,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(1189,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(1196,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(1197,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(1204,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(1205,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(1206,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(1207,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(1208,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(1280,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(1281,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(1282,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(1283,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(1284,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(1285,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(1286,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(1287,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(1288,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(1333,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(1334,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(1335,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(1336,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(1337,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(1338,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(1339,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(1340,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(1341,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(1342,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(1343,3): warning C4305: 'type cast': truncation from 'FT_Char *' to 'FT_UShort'
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(1344,3): warning C4305: 'type cast': truncation from 'FT_Char *' to 'FT_UShort'
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(1345,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttload.c(1346,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttpost.c(250,36): warning C4244: '=': conversion from 'FT_Int' to 'FT_UShort', possible loss of data
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttpost.c(251,35): warning C4244: '=': conversion from 'FT_Int' to 'FT_UShort', possible loss of data
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttpost.c(324,33): warning C4244: '=': conversion from 'FT_Int' to 'FT_UShort', possible loss of data
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttsbit.c(168,19): warning C4244: '-=': conversion from 'FT_Int' to 'FT_Byte', possible loss of data
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttsbit.c(184,2): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttsbit.c(185,2): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttsbit.c(187,2): warning C4305: 'type cast': truncation from 'FT_Char *' to 'FT_UShort'
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttsbit.c(188,2): warning C4305: 'type cast': truncation from 'FT_Char *' to 'FT_UShort'
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttsbit.c(189,2): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttsbit.c(191,2): warning C4305: 'type cast': truncation from 'FT_Char *' to 'FT_UShort'
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttsbit.c(192,2): warning C4305: 'type cast': truncation from 'FT_Char *' to 'FT_UShort'
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttsbit.c(193,2): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttsbit.c(398,3): warning C4305: 'type cast': truncation from 'FT_Char *' to 'FT_UShort'
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttsbit.c(399,3): warning C4305: 'type cast': truncation from 'FT_Char *' to 'FT_UShort'
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttsbit.c(400,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttsbit.c(402,3): warning C4305: 'type cast': truncation from 'FT_Char *' to 'FT_UShort'
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttsbit.c(403,3): warning C4305: 'type cast': truncation from 'FT_Char *' to 'FT_UShort'
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttsbit.c(404,3): warning C4305: 'type cast': truncation from 'FT_Char *' to 'FT_UShort'
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttsbit.c(406,3): warning C4305: 'type cast': truncation from 'FT_Char *' to 'FT_UShort'
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttsbit.c(407,3): warning C4305: 'type cast': truncation from 'FT_Char *' to 'FT_UShort'
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttsbit.c(408,3): warning C4305: 'type cast': truncation from 'FT_Char *' to 'FT_UShort'
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttsbit.c(409,3): warning C4305: 'type cast': truncation from 'FT_Char *' to 'FT_UShort'
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttsbit.c(410,3): warning C4305: 'type cast': truncation from 'FT_Char *' to 'FT_UShort'
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttsbit.c(411,3): warning C4305: 'type cast': truncation from 'FT_Char *' to 'FT_UShort'
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttsbit.c(418,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttsbit.c(420,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttsbit.c(421,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttsbit.c(428,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttsbit.c(429,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttsbit.c(430,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttsbit.c(431,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttsbit.c(432,3): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttsbit.c(433,3): warning C4305: 'type cast': truncation from 'FT_Char *' to 'FT_UShort'
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttsbit.c(664,1): warning C4244: 'initializing': conversion from 'FT_UInt' to 'FT_UShort', possible loss of data
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttsbit.c(834,4): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttsbit.c(835,4): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttsbit.c(836,4): warning C4305: 'type cast': truncation from 'FT_Char *' to 'FT_UShort'
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttsbit.c(837,4): warning C4305: 'type cast': truncation from 'FT_Char *' to 'FT_UShort'
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttsbit.c(838,4): warning C4305: 'type cast': truncation from 'char *' to 'FT_UShort'
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttsbit.c(962,34): warning C4244: '-=': conversion from 'FT_Int' to 'FT_Byte', possible loss of data
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttsbit.c(963,34): warning C4244: '-=': conversion from 'FT_Int' to 'FT_Char', possible loss of data
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttsbit.c(964,34): warning C4244: '-=': conversion from 'FT_Int' to 'FT_Char', possible loss of data
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttsbit.c(995,28): warning C4244: '-=': conversion from 'FT_Int' to 'FT_Byte', possible loss of data
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttsbit.c(1435,40): warning C4244: '=': conversion from 'int' to 'FT_Char', possible loss of data
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ttsbit.c(1436,45): warning C4244: '=': conversion from 'int' to 'FT_Byte', possible loss of data
+1>C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\shared\basetsd.h(77,34): warning C4142: 'INT32': benign redefinition of type
+1>C:\Program Files (x86)\Windows Kits\10\Include\10.0.22621.0\shared\basetsd.h(77,34): warning C4142: 'INT32': benign redefinition of type
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\tr_animation.c(143,23): warning C4459: declaration of 'oldFrame' hides global declaration
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\tr_animation.c(144,18): warning C4459: declaration of 'frameSize' hides global declaration
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\tr_animation.c(241,22): warning C4459: declaration of 'lodScale' hides global declaration
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\tr_animation.c(416,104): warning C4459: declaration of 'tr' hides global declaration
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\tr_animation.c(428,119): warning C4459: declaration of 'tr' hides global declaration
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\tr_animation.c(434,123): warning C4459: declaration of 'tr' hides global declaration
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\tr_animation.c(440,126): warning C4459: declaration of 'tr' hides global declaration
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\tr_animation.c(446,122): warning C4459: declaration of 'tr' hides global declaration
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\tr_animation.c(464,65): warning C4459: declaration of 'angles' hides global declaration
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\tr_animation.c(477,79): warning C4459: declaration of 'vec' hides global declaration
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\tr_animation.c(527,125): warning C4459: declaration of 't' hides global declaration
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\tr_animation.c(581,71): warning C4459: declaration of 't' hides global declaration
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\tr_animation.c(601,105): warning C4459: declaration of 't' hides global declaration
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\tr_animation.c(616,130): warning C4459: declaration of 't' hides global declaration
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\tr_animation.c(1000,19): warning C4459: declaration of 'boneRefs' hides global declaration
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\tr_animation.c(1257,14): warning C4456: declaration of 'i' hides previous local declaration
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\tr_backend.c(1048,23): warning C4389: '==': signed/unsigned mismatch
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\tr_cmds.c(260,30): warning C4459: declaration of 'colorWhite' hides global declaration
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\tr_cmds.c(324,30): warning C4459: declaration of 'colorWhite' hides global declaration
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\tr_curve.c(399,15): warning C4456: declaration of 'dir' hides previous local declaration
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\jpeg-6\jmorecfg.h(152,19): warning C4142: 'INT32': benign redefinition of type
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\tr_image.c(1093,26): warning C4389: '!=': signed/unsigned mismatch
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\tr_marks.c(681,23): warning C4456: declaration of 'texCoordScale' hides previous local declaration
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\tr_shade.c(96,26): warning C4389: '==': signed/unsigned mismatch
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\tr_shade.c(96,59): warning C4389: '==': signed/unsigned mismatch
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\tr_shade.c(122,19): warning C4389: '==': signed/unsigned mismatch
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\tr_shade.c(122,52): warning C4389: '==': signed/unsigned mismatch
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\tr_shader.c(2830,21): warning C4459: declaration of 'shader' hides global declaration
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\tr_shade_calc.c(565,38): warning C4389: '==': signed/unsigned mismatch
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\tr_shade_calc.c(566,42): warning C4389: '==': signed/unsigned mismatch
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\tr_shadows.c(55,49): warning C4459: declaration of 'facing' hides global declaration
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\tr_image.c(3577): warning C4706: assignment within conditional expression
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\tr_image.c(2082): warning C4706: assignment within conditional expression
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\tr_image.c(3742): warning C4706: assignment within conditional expression
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\tr_model.c(2127): warning C4706: assignment within conditional expression
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\win32\win_dx9imp.cpp(2884,2): warning C4063: case '48' is not a valid value for switch of enum 'vatt_param'
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\win32\win_dx9imp.cpp(3173,3): warning C4389: '==': signed/unsigned mismatch
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\win32\win_dx9imp.cpp(3354,26): warning C4389: '==': signed/unsigned mismatch
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\win32\win_dx9imp.cpp(3354,59): warning C4389: '==': signed/unsigned mismatch
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\win32\win_dx9imp.cpp(3378,19): warning C4389: '==': signed/unsigned mismatch
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\win32\win_dx9imp.cpp(3378,52): warning C4389: '==': signed/unsigned mismatch
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\win32\win_dx9imp.cpp(3215,59): warning C4189: 'offindex': local variable is initialized but not referenced
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\win32\win_dx9imp.cpp(3546,26): warning C4389: '==': signed/unsigned mismatch
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\win32\win_dx9imp.cpp(3546,59): warning C4389: '==': signed/unsigned mismatch
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\win32\win_dx9imp.cpp(3574,19): warning C4389: '==': signed/unsigned mismatch
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\win32\win_dx9imp.cpp(3574,52): warning C4389: '==': signed/unsigned mismatch
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\win32\win_dx9imp.cpp(3417,59): warning C4189: 'offindex': local variable is initialized but not referenced
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\win32\win_dx9imp.cpp(3969,2): warning C4063: case '256' is not a valid value for switch of enum '_D3DTRANSFORMSTATETYPE'
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\win32\win_dx9imp.cpp(3985,2): warning C4063: case '256' is not a valid value for switch of enum '_D3DTRANSFORMSTATETYPE'
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\win32\win_dx9imp.cpp(4001,2): warning C4063: case '256' is not a valid value for switch of enum '_D3DTRANSFORMSTATETYPE'
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\win32\win_dx9imp.cpp(4019,2): warning C4063: case '256' is not a valid value for switch of enum '_D3DTRANSFORMSTATETYPE'
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\win32\win_dx9imp.cpp(4037): warning C4238: nonstandard extension used: class rvalue used as lvalue
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\win32\win_dx9imp.cpp(4037,67): warning C4238: nonstandard extension used: class rvalue used as lvalue
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\win32\win_dx9imp.cpp(4225,7): warning C4189: 'found': local variable is initialized but not referenced
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\win32\win_dx9imp.cpp(4223,11): warning C4189: 'hashclr': local variable is initialized but not referenced
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\win32\win_dx9imp.cpp(432,13): warning C4505: 'GLW_CreatePFD': unreferenced function with internal linkage has been removed
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\win32\win_dx9imp.cpp(605,12): warning C4505: 'GLW_MakeContext': unreferenced function with internal linkage has been removed
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ahglyph.c(527): warning C28182: Dereferencing NULL pointer. 'segment->first' contains the same NULL value as 'point' did. See line 462 for an earlier location where this can occur
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ahglyph.c(585): warning C6011: Dereferencing NULL pointer 'point'. See line 512 for an earlier location where this can occur
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ahhint.c(268): warning C28182: Dereferencing NULL pointer. 'edge' contains the same NULL value as 'anchor' did. See line 225 for an earlier location where this can occur
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ahhint.c(582): warning C6011: Dereferencing NULL pointer 'before'. 
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ahhint.c(1300): warning C6011: Dereferencing NULL pointer 'face_globals'. 
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ahhint.c(1339): warning C6011: Dereferencing NULL pointer '((face))->autohint.data'. 
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\ftgrays.c(1980): warning C28182: Dereferencing NULL pointer. 'rast' contains the same NULL value as 'raster' did. 
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\ft2\sfobjs.c(536): warning C6011: Dereferencing NULL pointer 'sfnt'. 
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\jpeg-6\jccoefct.c(194): warning C6385: Reading invalid data from 'coef->MCU_buffer':  the readable size is '40' bytes, but '-4' bytes may be read.
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\jpeg-6\jccolor.c(97): warning C26451: Arithmetic overflow: Using operator '<<' on a 4 byte value and then casting the result to a 8 byte value. Cast the value to the wider type before calling operator '<<' to avoid overflow (io.2).
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\jpeg-6\jccolor.c(98): warning C26451: Arithmetic overflow: Using operator '<<' on a 4 byte value and then casting the result to a 8 byte value. Cast the value to the wider type before calling operator '<<' to avoid overflow (io.2).
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\jpeg-6\jccolor.c(99): warning C26451: Arithmetic overflow: Using operator '<<' on a 4 byte value and then casting the result to a 8 byte value. Cast the value to the wider type before calling operator '<<' to avoid overflow (io.2).
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\jpeg-6\jccolor.c(106): warning C26451: Arithmetic overflow: Using operator '<<' on a 4 byte value and then casting the result to a 8 byte value. Cast the value to the wider type before calling operator '<<' to avoid overflow (io.2).
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\jpeg-6\jcdctmgr.c(72): warning C6385: Reading invalid data from 'cinfo->quant_tbl_ptrs':  the readable size is '16' bytes, but 'qtblno' bytes may be read.
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\jpeg-6\jcdctmgr.c(149): warning C6386: Buffer overrun while writing to 'fdct->float_divisors':  the writable size is '16' bytes, but 'qtblno' bytes might be written.
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\jpeg-6\jcdctmgr.c(148): warning C6385: Reading invalid data from 'fdct->float_divisors':  the readable size is '16' bytes, but 'qtblno' bytes may be read.
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\jpeg-6\jcdctmgr.c(157): warning C28182: Dereferencing NULL pointer. 'qtbl' contains the same NULL value as 'cinfo->quant_tbl_ptrs[qtblno]' did. 
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\jpeg-6\jchuff.c(152): warning C6387: 'entropy->ac_count_ptrs[actbl]' could be '0':  this does not adhere to the specification for the function 'memset'. 
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\jpeg-6\jchuff.c(159): warning C6385: Reading invalid data from 'cinfo->ac_huff_tbl_ptrs':  the readable size is '16' bytes, but 'actbl' bytes may be read.
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\jpeg-6\jchuff.c(157): warning C6385: Reading invalid data from 'cinfo->dc_huff_tbl_ptrs':  the readable size is '16' bytes, but 'dctbl' bytes may be read.
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\jpeg-6\jchuff.c(141): warning C6385: Reading invalid data from 'entropy->dc_count_ptrs':  the readable size is '16' bytes, but 'dctbl' bytes may be read.
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\jpeg-6\jchuff.c(142): warning C6386: Buffer overrun while writing to 'entropy->dc_count_ptrs':  the writable size is '16' bytes, but 'dctbl' bytes might be written.
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\jpeg-6\jchuff.c(146): warning C6387: 'entropy->dc_count_ptrs[dctbl]' could be '0':  this does not adhere to the specification for the function 'memset'. 
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\jpeg-6\jchuff.c(147): warning C6385: Reading invalid data from 'entropy->ac_count_ptrs':  the readable size is '16' bytes, but 'actbl' bytes may be read.
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\jpeg-6\jchuff.c(148): warning C6386: Buffer overrun while writing to 'entropy->ac_count_ptrs':  the writable size is '16' bytes, but 'actbl' bytes might be written.
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\jpeg-6\jcmarker.c(144): warning C6011: Dereferencing NULL pointer 'qtbl'. 
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\jpeg-6\jcmarker.c(187): warning C6011: Dereferencing NULL pointer 'htbl'. 
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\jpeg-6\jcmaster.c(238): warning C6385: Reading invalid data from 'component_sent':  the readable size is '10' bytes, but 'thisi' bytes may be read.
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\jpeg-6\jcmaster.c(238): warning C6001: Using uninitialized memory 'component_sent'.
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\jpeg-6\jcmaster.c(241): warning C6386: Buffer overrun while writing to 'component_sent':  the writable size is '10' bytes, but 'thisi' bytes might be written.
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\jpeg-6\jcphuff.c(178): warning C6387: 'entropy->count_ptrs[tbl]' could be '0':  this does not adhere to the specification for the function 'memset'. 
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\jpeg-6\jcphuff.c(183): warning C6385: Reading invalid data from 'cinfo->dc_huff_tbl_ptrs':  the readable size is '16' bytes, but 'tbl' bytes may be read.
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\jpeg-6\jcphuff.c(186): warning C6385: Reading invalid data from 'cinfo->ac_huff_tbl_ptrs':  the readable size is '16' bytes, but 'tbl' bytes may be read.
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\jpeg-6\jcphuff.c(173): warning C6385: Reading invalid data from 'entropy->count_ptrs':  the readable size is '16' bytes, but 'tbl' bytes may be read.
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\jpeg-6\jcphuff.c(174): warning C6386: Buffer overrun while writing to 'entropy->count_ptrs':  the writable size is '16' bytes, but 'tbl' bytes might be written.
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\jpeg-6\jctrans.c(123): warning C6385: Reading invalid data from 'srcinfo->quant_tbl_ptrs':  the readable size is '16' bytes, but 'tblno' bytes may be read.
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\jpeg-6\jctrans.c(127): warning C28182: Dereferencing NULL pointer. 'slot_quant' contains the same NULL value as 'srcinfo->quant_tbl_ptrs[tblno]' did. 
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\jpeg-6\jctrans.c(317): warning C6385: Reading invalid data from 'MCU_buffer':  the readable size is '40' bytes, but '-4' bytes may be read.
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\jpeg-6\jdcolor.c(94): warning C26451: Arithmetic overflow: Using operator '<<' on a 4 byte value and then casting the result to a 8 byte value. Cast the value to the wider type before calling operator '<<' to avoid overflow (io.2).
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\jpeg-6\jdcolor.c(97): warning C26451: Arithmetic overflow: Using operator '<<' on a 4 byte value and then casting the result to a 8 byte value. Cast the value to the wider type before calling operator '<<' to avoid overflow (io.2).
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\jpeg-6\jdhuff.c(106): warning C6385: Reading invalid data from 'cinfo->dc_huff_tbl_ptrs':  the readable size is '16' bytes, but 'dctbl' bytes may be read.
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\jpeg-6\jdhuff.c(108): warning C6385: Reading invalid data from 'cinfo->ac_huff_tbl_ptrs':  the readable size is '16' bytes, but 'actbl' bytes may be read.
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\jpeg-6\jdhuff.c(383): warning C26453: Arithmetic overflow: Left shift of a negative signed number is undefined behavior (io.4).
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\jpeg-6\jdhuff.c(383): warning C26453: Arithmetic overflow: Left shift of a negative signed number is undefined behavior (io.4).
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\jpeg-6\jdhuff.c(383): warning C26453: Arithmetic overflow: Left shift of a negative signed number is undefined behavior (io.4).
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\jpeg-6\jdhuff.c(383): warning C26453: Arithmetic overflow: Left shift of a negative signed number is undefined behavior (io.4).
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\jpeg-6\jdhuff.c(384): warning C26453: Arithmetic overflow: Left shift of a negative signed number is undefined behavior (io.4).
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\jpeg-6\jdhuff.c(384): warning C26453: Arithmetic overflow: Left shift of a negative signed number is undefined behavior (io.4).
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\jpeg-6\jdhuff.c(384): warning C26453: Arithmetic overflow: Left shift of a negative signed number is undefined behavior (io.4).
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\jpeg-6\jdhuff.c(384): warning C26453: Arithmetic overflow: Left shift of a negative signed number is undefined behavior (io.4).
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\jpeg-6\jdhuff.c(385): warning C26453: Arithmetic overflow: Left shift of a negative signed number is undefined behavior (io.4).
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\jpeg-6\jdhuff.c(385): warning C26453: Arithmetic overflow: Left shift of a negative signed number is undefined behavior (io.4).
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\jpeg-6\jdhuff.c(385): warning C26453: Arithmetic overflow: Left shift of a negative signed number is undefined behavior (io.4).
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\jpeg-6\jdhuff.c(385): warning C26453: Arithmetic overflow: Left shift of a negative signed number is undefined behavior (io.4).
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\jpeg-6\jdhuff.c(386): warning C26453: Arithmetic overflow: Left shift of a negative signed number is undefined behavior (io.4).
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\jpeg-6\jdhuff.c(386): warning C26453: Arithmetic overflow: Left shift of a negative signed number is undefined behavior (io.4).
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\jpeg-6\jdhuff.c(386): warning C26453: Arithmetic overflow: Left shift of a negative signed number is undefined behavior (io.4).
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\jpeg-6\jdinput.c(252): warning C28183: 'qtbl' could be '0', and is a copy of the value found in 'compptr->quant_table':  this does not adhere to the specification for the function 'memcpy'. 
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\jpeg-6\jdinput.c(252): warning C6387: 'cinfo->quant_tbl_ptrs[qtblno]' could be '0':  this does not adhere to the specification for the function 'memcpy'. 
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\jpeg-6\jdinput.c(252): warning C6385: Reading invalid data from 'cinfo->quant_tbl_ptrs':  the readable size is '16' bytes, but 'qtblno' bytes may be read.
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\jpeg-6\jdmarker.c(476): warning C6386: Buffer overrun while writing to 'cinfo->arith_dc_L':  the writable size is '16' bytes, but 'index' bytes might be written.
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\jpeg-6\jdmarker.c(474): warning C6386: Buffer overrun while writing to 'cinfo->arith_ac_K':  the writable size is '16' bytes, but '17' bytes might be written.
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\jpeg-6\jdmarker.c(478): warning C6385: Reading invalid data from 'cinfo->arith_dc_L':  the readable size is '16' bytes, but 'index' bytes may be read.
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\jpeg-6\jdmarker.c(477): warning C6386: Buffer overrun while writing to 'cinfo->arith_dc_U':  the writable size is '16' bytes, but 'index' bytes might be written.
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\jpeg-6\jdmarker.c(580): warning C6386: Buffer overrun while writing to 'cinfo->quant_tbl_ptrs':  the writable size is '16' bytes, but 'n' bytes might be written.
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\jpeg-6\jdmarker.c(579): warning C6385: Reading invalid data from 'cinfo->quant_tbl_ptrs':  the readable size is '16' bytes, but 'n' bytes may be read.
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\dx9sdk\include\d3dx9math.inl(1587): warning C26451: Arithmetic overflow: Using operator '+' on a 4 byte value and then casting the result to a 8 byte value. Cast the value to the wider type before calling operator '+' to avoid overflow (io.2).
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\dx9sdk\include\d3dx9math.inl(1587): warning C26451: Arithmetic overflow: Using operator '*' on a 4 byte value and then casting the result to a 8 byte value. Cast the value to the wider type before calling operator '*' to avoid overflow (io.2).
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\dx9sdk\include\d3dx9math.inl(1719): warning C26451: Arithmetic overflow: Using operator '+' on a 4 byte value and then casting the result to a 8 byte value. Cast the value to the wider type before calling operator '+' to avoid overflow (io.2).
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\dx9sdk\include\d3dx9math.inl(1719): warning C26451: Arithmetic overflow: Using operator '+' on a 4 byte value and then casting the result to a 8 byte value. Cast the value to the wider type before calling operator '+' to avoid overflow (io.2).
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\dx9sdk\include\d3dx9math.inl(1719): warning C26451: Arithmetic overflow: Using operator '*' on a 4 byte value and then casting the result to a 8 byte value. Cast the value to the wider type before calling operator '*' to avoid overflow (io.2).
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\dx9sdk\include\d3dx9math.inl(1864): warning C26451: Arithmetic overflow: Using operator '+' on a 4 byte value and then casting the result to a 8 byte value. Cast the value to the wider type before calling operator '+' to avoid overflow (io.2).
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\dx9sdk\include\d3dx9math.inl(1864): warning C26451: Arithmetic overflow: Using operator '+' on a 4 byte value and then casting the result to a 8 byte value. Cast the value to the wider type before calling operator '+' to avoid overflow (io.2).
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\dx9sdk\include\d3dx9math.inl(1864): warning C26451: Arithmetic overflow: Using operator '+' on a 4 byte value and then casting the result to a 8 byte value. Cast the value to the wider type before calling operator '+' to avoid overflow (io.2).
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\dx9sdk\include\d3dx9math.inl(1864): warning C26451: Arithmetic overflow: Using operator '*' on a 4 byte value and then casting the result to a 8 byte value. Cast the value to the wider type before calling operator '*' to avoid overflow (io.2).
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\dx9sdk\include\d3dx9math.inl(2034): warning C26451: Arithmetic overflow: Using operator '+' on a 4 byte value and then casting the result to a 8 byte value. Cast the value to the wider type before calling operator '+' to avoid overflow (io.2).
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\dx9sdk\include\d3dx9math.inl(2034): warning C26451: Arithmetic overflow: Using operator '+' on a 4 byte value and then casting the result to a 8 byte value. Cast the value to the wider type before calling operator '+' to avoid overflow (io.2).
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\dx9sdk\include\d3dx9math.inl(2034): warning C26451: Arithmetic overflow: Using operator '+' on a 4 byte value and then casting the result to a 8 byte value. Cast the value to the wider type before calling operator '+' to avoid overflow (io.2).
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\dx9sdk\include\d3dx9math.inl(2034): warning C26451: Arithmetic overflow: Using operator '*' on a 4 byte value and then casting the result to a 8 byte value. Cast the value to the wider type before calling operator '*' to avoid overflow (io.2).
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\jpeg-6\jmemmgr.c(294): warning C6385: Reading invalid data from 'extra_pool_slop':  the readable size is '8' bytes, but 'pool_id' bytes may be read.
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\jpeg-6\jmemmgr.c(292): warning C6385: Reading invalid data from 'first_pool_slop':  the readable size is '8' bytes, but 'pool_id' bytes may be read.
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\jpeg-6\jmemmgr.c(278): warning C6385: Reading invalid data from 'mem->small_list':  the readable size is '8' bytes, but 'pool_id' bytes may be read.
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\jpeg-6\jmemmgr.c(317): warning C6386: Buffer overrun while writing to 'mem->small_list':  the writable size is '8' bytes, but 'pool_id' bytes might be written.
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\jpeg-6\jmemmgr.c(378): warning C6011: Dereferencing NULL pointer 'hdr_ptr'. 
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\jpeg-6\jmemmgr.c(378): warning C6385: Reading invalid data from 'mem->large_list':  the readable size is '8' bytes, but 'pool_id' bytes may be read.
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\jpeg-6\jmemmgr.c(384): warning C6386: Buffer overrun while writing to 'mem->large_list':  the writable size is '8' bytes, but 'pool_id' bytes might be written.
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\jpeg-6\jmemmgr.c(842): warning C6011: Dereferencing NULL pointer 'ptr->mem_buffer'. 
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\jpeg-6\jmemmgr.c(933): warning C6011: Dereferencing NULL pointer 'ptr->mem_buffer'. 
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\jpeg-6\jmemmgr.c(1094): warning C6011: Dereferencing NULL pointer 'mem'. 
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\dx9sdk\include\d3dx9math.h(59): warning C26495: Variable 'D3DXFLOAT16::value' is uninitialized. Always initialize a member variable (type.6).
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\dx9sdk\include\d3dx9math.h(91): warning C26495: Variable 'D3DXVECTOR2::y' is uninitialized. Always initialize a member variable (type.6).
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\dx9sdk\include\d3dx9math.h(240): warning C26495: Variable 'D3DXVECTOR4::y' is uninitialized. Always initialize a member variable (type.6).
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\dx9sdk\include\d3dx9math.h(429): warning C26495: Variable 'D3DXQUATERNION::w' is uninitialized. Always initialize a member variable (type.6).
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\dx9sdk\include\d3dx9math.h(475): warning C26495: Variable 'D3DXPLANE::d' is uninitialized. Always initialize a member variable (type.6).
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\dx9sdk\include\d3dx9math.h(516): warning C26495: Variable 'D3DXCOLOR::a' is uninitialized. Always initialize a member variable (type.6).
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\dx9sdk\include\d3dx9math.inl(26): warning C26495: Variable 'D3DXFLOAT16::value' is uninitialized. Always initialize a member variable (type.6).
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\dx9sdk\include\d3dx9math.inl(77): warning C26495: Variable 'D3DXVECTOR2::y' is uninitialized. Always initialize a member variable (type.6).
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\dx9sdk\include\d3dx9math.inl(517): warning C26495: Variable 'D3DXVECTOR4::y' is uninitialized. Always initialize a member variable (type.6).
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\dx9sdk\include\d3dx9math.inl(1068): warning C26495: Variable 'D3DXQUATERNION::w' is uninitialized. Always initialize a member variable (type.6).
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\dx9sdk\include\d3dx9math.inl(1241): warning C26495: Variable 'D3DXPLANE::d' is uninitialized. Always initialize a member variable (type.6).
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\dx9sdk\include\d3dx9math.inl(1376): warning C26495: Variable 'D3DXCOLOR::a' is uninitialized. Always initialize a member variable (type.6).
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\remix\remix_c.h(666): warning C26812: The enum type 'remixapi_ErrorCode' is unscoped. Prefer 'enum class' over 'enum' (Enum.3).
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\win32\win_dx9imp.cpp(129): warning C26812: The enum type 'qboolean' is unscoped. Prefer 'enum class' over 'enum' (Enum.3).
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\win32\win_dx9imp.cpp(232): warning C6386: Buffer overrun while writing to 'm':  the writable size is 'sizeof(D3DDISPLAYMODE)*((1+nummodes))' bytes, but '16' bytes might be written.
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\win32\win_dx9imp.cpp(159): warning C26812: The enum type 'rserr_t' is unscoped. Prefer 'enum class' over 'enum' (Enum.3).
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\win32\win_dx9imp.cpp(898): warning C6387: 'g_wv.hWnd' could be '0':  this does not adhere to the specification for the function 'UpdateWindow'. See line 897 for an earlier location where this can occur
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\win32\win_dx9imp.cpp(897): warning C6387: 'g_wv.hWnd' could be '0':  this does not adhere to the specification for the function 'ShowWindow'. 
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\win32\win_dx9imp.cpp(914): warning C6387: 'g_wv.hWnd' could be '0':  this does not adhere to the specification for the function 'SetForegroundWindow'. See line 897 for an earlier location where this can occur
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\win32\win_dx9imp.cpp(908): warning C6387: 'g_wv.hWnd' could be '0':  this does not adhere to the specification for the function 'DestroyWindow'. See line 897 for an earlier location where this can occur
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\win32\win_dx9imp.cpp(1130): warning C6001: Using uninitialized memory 'devmode'.
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\win32\win_dx9imp.cpp(1706): warning C6031: Return value ignored: 'sscanf'.
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\win32\win_dx9imp.cpp(1709): warning C6031: Return value ignored: 'sscanf'.
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\win32\win_dx9imp.cpp(2354): warning C26812: The enum type 'qdx_texparam' is unscoped. Prefer 'enum class' over 'enum' (Enum.3).
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\win32\win_dx9imp.cpp(2436): warning C26812: The enum type 'vatt_param' is unscoped. Prefer 'enum class' over 'enum' (Enum.3).
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\win32\win_dx9imp.cpp(3610): warning C6011: Dereferencing NULL pointer 'drawbuf'. 
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\DirectXTex\DirectXTex.h(187): warning C26812: The enum type 'DirectX::TEX_ALPHA_MODE' is unscoped. Prefer 'enum class' over 'enum' (Enum.3).
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\DirectXTex\DirectXTex.h(191): warning C26812: The enum type 'DirectX::TEX_DIMENSION' is unscoped. Prefer 'enum class' over 'enum' (Enum.3).
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\DirectXTex\DirectXTex.inl(17): warning C26812: The enum type 'DirectX::CP_FLAGS' is unscoped. Prefer 'enum class' over 'enum' (Enum.3).
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\DirectXTex\DirectXTex.inl(18): warning C26812: The enum type 'DirectX::DDS_FLAGS' is unscoped. Prefer 'enum class' over 'enum' (Enum.3).
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\DirectXTex\DirectXTex.inl(19): warning C26812: The enum type 'DirectX::TGA_FLAGS' is unscoped. Prefer 'enum class' over 'enum' (Enum.3).
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\DirectXTex\DirectXTex.inl(20): warning C26812: The enum type 'DirectX::WIC_FLAGS' is unscoped. Prefer 'enum class' over 'enum' (Enum.3).
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\DirectXTex\DirectXTex.inl(21): warning C26812: The enum type 'DirectX::TEX_FR_FLAGS' is unscoped. Prefer 'enum class' over 'enum' (Enum.3).
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\DirectXTex\DirectXTex.inl(22): warning C26812: The enum type 'DirectX::TEX_FILTER_FLAGS' is unscoped. Prefer 'enum class' over 'enum' (Enum.3).
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\DirectXTex\DirectXTex.inl(23): warning C26812: The enum type 'DirectX::TEX_PMALPHA_FLAGS' is unscoped. Prefer 'enum class' over 'enum' (Enum.3).
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\DirectXTex\DirectXTex.inl(24): warning C26812: The enum type 'DirectX::TEX_COMPRESS_FLAGS' is unscoped. Prefer 'enum class' over 'enum' (Enum.3).
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\DirectXTex\DirectXTex.inl(25): warning C26812: The enum type 'DirectX::CNMAP_FLAGS' is unscoped. Prefer 'enum class' over 'enum' (Enum.3).
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\DirectXTex\DirectXTex.inl(26): warning C26812: The enum type 'DirectX::CMSE_FLAGS' is unscoped. Prefer 'enum class' over 'enum' (Enum.3).
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\DirectXTex\DirectXTex.inl(27): warning C26812: The enum type 'DirectX::CREATETEX_FLAGS' is unscoped. Prefer 'enum class' over 'enum' (Enum.3).
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\win32\win_qgl_dummy.c(3329): warning C6031: Return value ignored: 'asctime'.
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\tr_backend.c(437): warning C6386: Buffer overrun while writing to 'mat.m[0]':  the writable size is '16' bytes, but '64' bytes might be written.
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\tr_backend.c(894): warning C26451: Arithmetic overflow: Using operator '+' on a 4 byte value and then casting the result to a 8 byte value. Cast the value to the wider type before calling operator '+' to avoid overflow (io.2).
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\tr_backend.c(1076): warning C6011: Dereferencing NULL pointer 'shader'. 
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\tr_backend.c(1631): warning C6386: Buffer overrun while writing to 'qdx.camera.m[0]':  the writable size is '16' bytes, but '64' bytes might be written.
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\tr_bsp.c(2116): warning C6031: Return value ignored: 'sscanf'.
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\tr_bsp.c(2208): warning C28182: Dereferencing NULL pointer. 'header' contains the same NULL value as 'buffer' did. 
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\tr_curve.c(312): warning C6387: 'grid->widthLodError' could be '0':  this does not adhere to the specification for the function 'memcpy'. 
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\tr_curve.c(315): warning C6387: 'grid->heightLodError' could be '0':  this does not adhere to the specification for the function 'memcpy'. 
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\tr_flares.c(405): warning C26451: Arithmetic overflow: Using operator '*' on a 4 byte value and then casting the result to a 8 byte value. Cast the value to the wider type before calling operator '*' to avoid overflow (io.2).
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\tr_image.c(536): warning C26451: Arithmetic overflow: Using operator '-' on a 4 byte value and then casting the result to a 8 byte value. Cast the value to the wider type before calling operator '-' to avoid overflow (io.2).
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\tr_image.c(536): warning C26451: Arithmetic overflow: Using operator '-' on a 4 byte value and then casting the result to a 8 byte value. Cast the value to the wider type before calling operator '-' to avoid overflow (io.2).
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\tr_image.c(536): warning C26451: Arithmetic overflow: Using operator '-' on a 4 byte value and then casting the result to a 8 byte value. Cast the value to the wider type before calling operator '-' to avoid overflow (io.2).
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\tr_image.c(536): warning C26451: Arithmetic overflow: Using operator '-' on a 4 byte value and then casting the result to a 8 byte value. Cast the value to the wider type before calling operator '-' to avoid overflow (io.2).
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\tr_image.c(540): warning C26451: Arithmetic overflow: Using operator '-' on a 4 byte value and then casting the result to a 8 byte value. Cast the value to the wider type before calling operator '-' to avoid overflow (io.2).
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\tr_image.c(540): warning C26451: Arithmetic overflow: Using operator '-' on a 4 byte value and then casting the result to a 8 byte value. Cast the value to the wider type before calling operator '-' to avoid overflow (io.2).
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\tr_image.c(540): warning C26451: Arithmetic overflow: Using operator '-' on a 4 byte value and then casting the result to a 8 byte value. Cast the value to the wider type before calling operator '-' to avoid overflow (io.2).
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\tr_image.c(540): warning C26451: Arithmetic overflow: Using operator '-' on a 4 byte value and then casting the result to a 8 byte value. Cast the value to the wider type before calling operator '-' to avoid overflow (io.2).
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\tr_image.c(544): warning C26451: Arithmetic overflow: Using operator '-' on a 4 byte value and then casting the result to a 8 byte value. Cast the value to the wider type before calling operator '-' to avoid overflow (io.2).
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\tr_image.c(544): warning C26451: Arithmetic overflow: Using operator '-' on a 4 byte value and then casting the result to a 8 byte value. Cast the value to the wider type before calling operator '-' to avoid overflow (io.2).
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\tr_image.c(544): warning C26451: Arithmetic overflow: Using operator '-' on a 4 byte value and then casting the result to a 8 byte value. Cast the value to the wider type before calling operator '-' to avoid overflow (io.2).
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\tr_image.c(544): warning C26451: Arithmetic overflow: Using operator '-' on a 4 byte value and then casting the result to a 8 byte value. Cast the value to the wider type before calling operator '-' to avoid overflow (io.2).
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\tr_image.c(548): warning C26451: Arithmetic overflow: Using operator '-' on a 4 byte value and then casting the result to a 8 byte value. Cast the value to the wider type before calling operator '-' to avoid overflow (io.2).
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\tr_image.c(548): warning C26451: Arithmetic overflow: Using operator '-' on a 4 byte value and then casting the result to a 8 byte value. Cast the value to the wider type before calling operator '-' to avoid overflow (io.2).
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\tr_image.c(548): warning C26451: Arithmetic overflow: Using operator '-' on a 4 byte value and then casting the result to a 8 byte value. Cast the value to the wider type before calling operator '-' to avoid overflow (io.2).
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\tr_image.c(548): warning C26451: Arithmetic overflow: Using operator '-' on a 4 byte value and then casting the result to a 8 byte value. Cast the value to the wider type before calling operator '-' to avoid overflow (io.2).
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\tr_image.c(930): warning C6386: Buffer overrun while writing to 'tr.images':  the writable size is '8192' bytes, but 'tr.numImages' bytes might be written.
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\tr_image.c(3379): warning C6387: 'temppic' could be '0':  this does not adhere to the specification for the function 'memcpy'. 
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\tr_image.c(3496): warning C6386: Buffer overrun while writing to 'tr.images':  the writable size is '8192' bytes, but 'tr.numImages' bytes might be written.
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\tr_image.c(3746): warning C6201: Index '3' is out of valid index range '0' to '2' for possibly stack allocated buffer 'parms'.
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\tr_image.c(3748): warning C6201: Index '3' is out of valid index range '0' to '2' for possibly stack allocated buffer 'parms'.
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\tr_image.c(3748): warning C6385: Reading invalid data from 'parms':  the readable size is '12' bytes, but '16' bytes may be read.
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\tr_init.c(473): warning C6385: Reading invalid data from 'buffer':  the readable size is '_Old_3`18' bytes, but '19' bytes may be read.
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\tr_main.c(608): warning C6386: Buffer overrun while writing to 'qdx.world.m[0]':  the writable size is '16' bytes, but '64' bytes might be written.
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\tr_main.c(1124): warning C26451: Arithmetic overflow: Using operator '*' on a 4 byte value and then casting the result to a 8 byte value. Cast the value to the wider type before calling operator '*' to avoid overflow (io.2).
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\tr_marks.c(85): warning C6001: Using uninitialized memory 'sides'.
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\tr_marks.c(86): warning C6001: Using uninitialized memory 'dists'.
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\tr_marks.c(775): warning C26451: Arithmetic overflow: Using operator '*' on a 4 byte value and then casting the result to a 8 byte value. Cast the value to the wider type before calling operator '*' to avoid overflow (io.2).
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\tr_marks.c(775): warning C26451: Arithmetic overflow: Using operator '+' on a 4 byte value and then casting the result to a 8 byte value. Cast the value to the wider type before calling operator '+' to avoid overflow (io.2).
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\tr_marks.c(776): warning C26451: Arithmetic overflow: Using operator '*' on a 4 byte value and then casting the result to a 8 byte value. Cast the value to the wider type before calling operator '*' to avoid overflow (io.2).
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\tr_marks.c(776): warning C26451: Arithmetic overflow: Using operator '+' on a 4 byte value and then casting the result to a 8 byte value. Cast the value to the wider type before calling operator '+' to avoid overflow (io.2).
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\tr_model.c(341): warning C26451: Arithmetic overflow: Using operator '-' on a 4 byte value and then casting the result to a 8 byte value. Cast the value to the wider type before calling operator '-' to avoid overflow (io.2).
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\tr_model.c(1823): warning C6250: Calling 'VirtualFree' without the MEM_RELEASE flag might free memory but not address descriptors (VADs).  This causes address space leaks.
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\tr_model.c(1823): warning C6387: 'membase' could be '0':  this does not adhere to the specification for the function 'VirtualFree'. 
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\tr_shader.c(2585): warning C6385: Reading invalid data from 'tr.lightmaps':  the readable size is '1024' bytes, but 'shader.lightmapIndex' bytes may be read.
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\tr_shader.c(2999): warning C6387: 'buffers[i]' could be '0':  this does not adhere to the specification for the function 'strcat'. 
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\tr_shade_calc.c(547): warning C6011: Dereferencing NULL pointer 'mid[1]'. 
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\tr_shade_calc.c(575): warning C6011: Dereferencing NULL pointer 'mid[j]'. See line 547 for an earlier location where this can occur
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\tr_shade_calc.c(916): warning C26451: Arithmetic overflow: Using operator '-' on a 4 byte value and then casting the result to a 8 byte value. Cast the value to the wider type before calling operator '-' to avoid overflow (io.2).
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\tr_shade_calc.c(1021): warning C26451: Arithmetic overflow: Using operator '+' on a 4 byte value and then casting the result to a 8 byte value. Cast the value to the wider type before calling operator '+' to avoid overflow (io.2).
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\tr_sky.c(495): warning C26451: Arithmetic overflow: Using operator '*' on a 4 byte value and then casting the result to a 8 byte value. Cast the value to the wider type before calling operator '*' to avoid overflow (io.2).
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\tr_sky.c(496): warning C26451: Arithmetic overflow: Using operator '*' on a 4 byte value and then casting the result to a 8 byte value. Cast the value to the wider type before calling operator '*' to avoid overflow (io.2).
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\tr_sky.c(497): warning C26451: Arithmetic overflow: Using operator '*' on a 4 byte value and then casting the result to a 8 byte value. Cast the value to the wider type before calling operator '*' to avoid overflow (io.2).
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\tr_sky.c(498): warning C26451: Arithmetic overflow: Using operator '*' on a 4 byte value and then casting the result to a 8 byte value. Cast the value to the wider type before calling operator '*' to avoid overflow (io.2).
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\tr_sky.c(565): warning C26451: Arithmetic overflow: Using operator '*' on a 4 byte value and then casting the result to a 8 byte value. Cast the value to the wider type before calling operator '*' to avoid overflow (io.2).
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\tr_sky.c(566): warning C26451: Arithmetic overflow: Using operator '*' on a 4 byte value and then casting the result to a 8 byte value. Cast the value to the wider type before calling operator '*' to avoid overflow (io.2).
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\tr_sky.c(567): warning C26451: Arithmetic overflow: Using operator '*' on a 4 byte value and then casting the result to a 8 byte value. Cast the value to the wider type before calling operator '*' to avoid overflow (io.2).
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\tr_sky.c(568): warning C26451: Arithmetic overflow: Using operator '*' on a 4 byte value and then casting the result to a 8 byte value. Cast the value to the wider type before calling operator '*' to avoid overflow (io.2).
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\tr_sky.c(708): warning C26451: Arithmetic overflow: Using operator '*' on a 4 byte value and then casting the result to a 8 byte value. Cast the value to the wider type before calling operator '*' to avoid overflow (io.2).
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\tr_sky.c(709): warning C26451: Arithmetic overflow: Using operator '*' on a 4 byte value and then casting the result to a 8 byte value. Cast the value to the wider type before calling operator '*' to avoid overflow (io.2).
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\tr_sky.c(710): warning C26451: Arithmetic overflow: Using operator '*' on a 4 byte value and then casting the result to a 8 byte value. Cast the value to the wider type before calling operator '*' to avoid overflow (io.2).
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\tr_sky.c(711): warning C26451: Arithmetic overflow: Using operator '*' on a 4 byte value and then casting the result to a 8 byte value. Cast the value to the wider type before calling operator '*' to avoid overflow (io.2).
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\tr_sky.c(835): warning C26451: Arithmetic overflow: Using operator '+' on a 4 byte value and then casting the result to a 8 byte value. Cast the value to the wider type before calling operator '+' to avoid overflow (io.2).
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\tr_sky.c(834): warning C26451: Arithmetic overflow: Using operator '+' on a 4 byte value and then casting the result to a 8 byte value. Cast the value to the wider type before calling operator '+' to avoid overflow (io.2).
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\tr_sky.c(833): warning C26451: Arithmetic overflow: Using operator '+' on a 4 byte value and then casting the result to a 8 byte value. Cast the value to the wider type before calling operator '+' to avoid overflow (io.2).
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\tr_sky.c(832): warning C26451: Arithmetic overflow: Using operator '+' on a 4 byte value and then casting the result to a 8 byte value. Cast the value to the wider type before calling operator '+' to avoid overflow (io.2).
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\tr_sky.c(831): warning C26451: Arithmetic overflow: Using operator '+' on a 4 byte value and then casting the result to a 8 byte value. Cast the value to the wider type before calling operator '+' to avoid overflow (io.2).
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\tr_sky.c(830): warning C26451: Arithmetic overflow: Using operator '+' on a 4 byte value and then casting the result to a 8 byte value. Cast the value to the wider type before calling operator '+' to avoid overflow (io.2).
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\tr_sky.c(830): warning C26451: Arithmetic overflow: Using operator '*' on a 4 byte value and then casting the result to a 8 byte value. Cast the value to the wider type before calling operator '*' to avoid overflow (io.2).
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\tr_sky.c(830): warning C26451: Arithmetic overflow: Using operator '*' on a 4 byte value and then casting the result to a 8 byte value. Cast the value to the wider type before calling operator '*' to avoid overflow (io.2).
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\tr_sky.c(829): warning C26451: Arithmetic overflow: Using operator '*' on a 4 byte value and then casting the result to a 8 byte value. Cast the value to the wider type before calling operator '*' to avoid overflow (io.2).
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\tr_sky.c(829): warning C26451: Arithmetic overflow: Using operator '*' on a 4 byte value and then casting the result to a 8 byte value. Cast the value to the wider type before calling operator '*' to avoid overflow (io.2).
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\tr_world.c(581): warning C6011: Dereferencing NULL pointer 'tr.world'. 
+1>D:\workspace\code\wolfenstein\RTCW-SP\src\renderer\tr_world.c(605): warning C6011: Dereferencing NULL pointer 'tr.world'. 
+1>    485 Warning(s)
+1>    0 Error(s)
+1>
+1>Time Elapsed 00:01:29.17
+========== Rebuild All: 1 succeeded, 0 failed, 0 skipped ==========

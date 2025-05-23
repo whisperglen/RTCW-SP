@@ -1797,6 +1797,10 @@ void R_AddEntitySurfaces(void) {
 				// GR - not tessellated
 				R_AddDrawSurf(&entitySurface, tr.defaultShader, 0, 0, ATI_TESS_NONE);
 			} else {
+				if ( helper_value_equals( 0, tr.currentModel->type ) )
+				{
+					continue;
+				}
 				switch (tr.currentModel->type) {
 				case MOD_MESH:
 					R_AddMD3Surfaces(ent);

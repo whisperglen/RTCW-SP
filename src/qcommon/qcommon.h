@@ -1097,4 +1097,10 @@ typedef union inputs
 inputs_t get_keypressed();
 void keypress_frame_ended();
 
+int* helper_value( int index );
+inline int helper_value_equals( int index, int check )
+{
+	return (check == *helper_value(index));
+}
+
 #endif // _QCOMMON_H_
