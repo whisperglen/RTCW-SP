@@ -333,6 +333,12 @@ void R_AddMDCSurfaces( trRefEntity_t *ent ) {
 		ent->e.oldframe = 0;
 	}
 
+	if ( r_nomeshanim->integer )
+	{
+		ent->e.frame = 0;
+		ent->e.oldframe = 0;
+	}
+
 	//
 	// compute LOD
 	//

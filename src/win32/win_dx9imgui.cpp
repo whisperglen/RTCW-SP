@@ -147,6 +147,14 @@ static void do_draw()
 	ImGui::SameLine();
 	ImGui::Text( "Value: %s", r_rmx_coronas->integer ? "on" : "off" );
 
+	if ( ImGui::Button( " MeshAnim " ) )
+	{
+		ri.Cvar_Set( "r_nomeshanim", (r_nomeshanim->integer ? "0" : "1") );
+	}
+	ImGui::SameLine();
+	ImGui::Text( "Value: %s", r_nomeshanim->integer == 0 ? "on" : "off" );
+	
+
 	ImGui::NewLine();
 	if ( ImGui::Button( "QUIT" ) )
 	{
@@ -182,7 +190,6 @@ static void do_draw()
 			ri.Cvar_Set( "in_mouse", "0" );
 		}
 	}
-
 
 	ImGui::Text( "App average %.3f ms/frame (%.1f FPS)", 1000.0f / io->Framerate, io->Framerate );
 	ImGui::End();
@@ -252,8 +259,17 @@ void qdx_imgui_draw()
 			void *game_wndproc = (WNDPROC)(GetWindowLongPtr(HWND(g_hwnd), GWLP_WNDPROC));
 			if ( MainWndProc != game_wndproc )
 			{
-				ri.Printf( PRINT_ALL, "Cannot open Wolf config right now\n" );
-				ri.Cvar_Set( "r_showimgui", "0");
+				if ( 0 )
+				{
+					ri.Printf( PRINT_ALL, "Cannot open Wolf config right now\n" );
+					ri.Cvar_Set( "r_showimgui", "0" );
+				}
+				else
+				{ //activate imgui anyway
+					ri.Printf( PRINT_ALL, "Unexpected MainWndProc, replacing anyway\n" );
+					g_visible = TRUE;
+					exchange_wndproc_and_mouse( WNDPROC_SET_IMGUI );
+				}
 			}
 			else
 			{

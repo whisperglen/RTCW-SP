@@ -1237,6 +1237,7 @@ extern cvar_t  *r_highQualityVideo;
 extern cvar_t  *r_generichelper;
 extern cvar_t  *r_getcenterxyz;
 extern cvar_t  *r_showimgui;
+extern cvar_t  *r_nomeshanim;
 
 extern cvar_t  *r_rmx_coronas;
 extern cvar_t  *r_rmx_dynamiclight;
