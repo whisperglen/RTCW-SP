@@ -15,9 +15,11 @@ enum exc_wprocnmouse_e
 
 static BOOL g_initialised = FALSE;
 static BOOL g_visible = FALSE;
-static bool g_game_input_blocked = TRUE;
 static BOOL g_in_mouse_val = FALSE;
 static BOOL g_use_shortcut_keys = TRUE;
+static BOOL g_debug_controls = FALSE;
+static ImVec2 g_mouse_click_pos;
+static BOOL g_mouse_click_new = FALSE;
 
 static void *g_hwnd = NULL;
 static WNDPROC g_game_wndproc = NULL;
@@ -36,7 +38,6 @@ extern "C" void Sys_QueEvent( int time, sysEventType_t type, int value, int valu
 extern "C" LONG WINAPI MainWndProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam );
 
 static LRESULT WINAPI wnd_proc_hk( HWND hWnd, UINT message_type, WPARAM wparam, LPARAM lparam );
-static void game_input_activated(bool active);
 static void exchange_wndproc_and_mouse( enum exc_wprocnmouse_e action );
 
 static void do_draw()
@@ -45,10 +46,7 @@ static void do_draw()
 	static int counter = 0;
 
 	ImGui::Begin( "Wolf config" );                          // Create a window and append into it.
-	//if ( ImGui::Checkbox( "Block Game Input", &g_game_input_blocked ) )
-	//{
-	//	game_input_activated(!g_game_input_blocked);
-	//}
+
 	if ( ImGui::Button( "Play!" ) )
 	{
 		exchange_wndproc_and_mouse(WNDPROC_RESTORE_WOLF);
@@ -75,16 +73,19 @@ static void do_draw()
 		ImGui::DragFloat( "Radiance##1", qdx_4imgui_flashlight_radiance_1f(0), 1, 0, 10000 );
 		ImGui::DragFloat( "Angle##1", qdx_4imgui_flashlight_coneangles_1f(0), 0.1, 0, 180 );
 		ImGui::DragFloat( "Soft##1", qdx_4imgui_flashlight_conesoft_1f(0), 0.001, 0, 1 );
+		ImGui::DragFloat( "Volumetric##1", qdx_4imgui_flashlight_volumetric_1f(0), 0.1, 0, 10 );
 		ImGui::SeparatorText("Spot 2");
 		ImGui::ColorEdit3( "Color##2", qdx_4imgui_flashlight_colors_3f(1), ImGuiColorEditFlags_Float );
 		ImGui::DragFloat( "Radiance##2", qdx_4imgui_flashlight_radiance_1f(1), 1, 0, 10000 );
 		ImGui::DragFloat( "Angle##2", qdx_4imgui_flashlight_coneangles_1f(1), 0.1, 0, 180 );
 		ImGui::DragFloat( "Soft##2", qdx_4imgui_flashlight_conesoft_1f(1), 0.001, 0, 1 );
+		ImGui::DragFloat( "Volumetric##2", qdx_4imgui_flashlight_volumetric_1f(1), 0.1, 0, 10 );
 		ImGui::SeparatorText("Spot 3");
 		ImGui::ColorEdit3( "Color##3", qdx_4imgui_flashlight_colors_3f(2), ImGuiColorEditFlags_Float );
 		ImGui::DragFloat( "Radiance##3", qdx_4imgui_flashlight_radiance_1f(2), 1, 0, 10000 );
 		ImGui::DragFloat( "Angle##3", qdx_4imgui_flashlight_coneangles_1f(2), 0.1, 0, 180 );
 		ImGui::DragFloat( "Soft##3", qdx_4imgui_flashlight_conesoft_1f(2), 0.001, 0, 1 );
+		ImGui::DragFloat( "Volumetric##3", qdx_4imgui_flashlight_volumetric_1f(2), 0.1, 0, 10 );
 
 		ImGui::NewLine();
 		if ( ImGui::Button( "Save Configuration" ) )
@@ -93,7 +94,7 @@ static void do_draw()
 		}
 	}
 
-	if ( ImGui::CollapsingHeader( "Lights" ) )
+	if ( ImGui::CollapsingHeader( "Lights Global Config" ) )
 	{
 
 		ImGui::SeparatorText( "DynamicLight Radiance:" );
@@ -102,7 +103,7 @@ static void do_draw()
 		ImGui::DragFloat( "SCALE##1", qdx_4imgui_radiance_dynamic_scale_1f(), 0.01, 0, 10 );
 		ImGui::Text( "Radius = RADIUS + intensity * RADIUS_SCALE" );
 		ImGui::DragFloat( "RADIUS##1", qdx_4imgui_radius_dynamic_1f(), 0.1, 0, 10 );
-		ImGui::DragFloat( "RADIUS_SCALE##1", qdx_4imgui_radius_dynamic_scale_1f(), 0.001, 0, 1 );
+		ImGui::DragFloat( "RADIUS_SCALE##1", qdx_4imgui_radius_dynamic_scale_1f(), 0.0005, 0, 1 );
 		
 		ImGui::SeparatorText( "Corona Radiance:" );
 		if(ImGui::DragFloat( "BASE##2", qdx_4imgui_radiance_coronas_1f(), 10, 0, 50000 ))
@@ -125,43 +126,144 @@ static void do_draw()
 			qdx_radiance_save( false );
 		}
 	}
+	
+	if ( ImGui::CollapsingHeader( "Light Override" ) )
+	{
+		static int light_type = 0;
+		const light_type_e map_light_type[] = { LIGHT_DYNAMIC, LIGHT_CORONA };
+		static int32_t selected_index = 0;
+		static bool flash_it = false;
+		uint64_comp_t idval;
+		static light_override_t* ovr = NULL;
+		static float original_color[3] = { 0 };
 
-	ImGui::NewLine();
-	if ( ImGui::Button( "Toggle Flashlight" ) )
+#define FLASH_IT() if(ovr) { flash_it = 1; original_color[0] = ovr->color[0]; original_color[1] = ovr->color[1]; original_color[2] = ovr->color[2]; }
+#define UNFLASH_IT() if(ovr) { flash_it = 0; ovr->color[0] = original_color[0]; ovr->color[1] = original_color[1]; ovr->color[2] = original_color[2]; }
+
+		if ( 0 == qdx_4imgui_light_picking_count() )
+		{
+			ovr = NULL;
+		}
+
+		ImGui::Text( "Hint: Select type, then Scan for closest lights" );
+		if ( ImGui::Combo( "##11", &light_type, "Scan DynamicLights\0Scan Coronas\0\0" ) )
+		{
+			//require a Scan after this changes
+			UNFLASH_IT();
+			qdx_4imgui_light_picking_clear();
+			ovr = NULL;
+		}
+		if ( ImGui::Button( " Scan " ) )
+		{
+			selected_index = 0;
+			UNFLASH_IT();
+			qdx_light_scan_closest_lights(map_light_type[light_type]);
+			ovr = qdx_4imgui_light_get_override( qdx_4imgui_light_picking_id( selected_index ), map_light_type[light_type] );
+		}
+		ImGui::SameLine();
+		if ( ImGui::Checkbox( "Flash-it", &flash_it ) )
+		{   //value changed
+			if ( ovr == NULL )
+			{   //don't allow it
+				flash_it = 0;
+			}
+			else
+			{
+				if ( flash_it ) { FLASH_IT(); }
+				else { UNFLASH_IT(); }
+			}
+		}
+		/* Do the flashing here */
+		if ( ovr && flash_it )
+		{
+			float xval = sinf( ri.Milliseconds()/100.0f );
+			xval += 1.0f;
+			xval *= 0.5f;
+			ovr->color[0] = xval;
+			ovr->color[1] = xval;
+			ovr->color[2] = xval;
+			ovr->updated = 1;
+		}
+		idval.ll = qdx_4imgui_light_picking_id( selected_index );
+		ImGui::Text( "Active ID: 0x%x%x", idval.u32[1], idval.u32[0] );
+
+		/* Controls are active if light was found and we are not flashing-it */
+		if ( qdx_4imgui_light_picking_count() && flash_it == 0 )
+		{
+			if ( ImGui::SliderInt( "Closest", &selected_index, 0, qdx_4imgui_light_picking_count() - 1 ) )
+			{
+				ovr = qdx_4imgui_light_get_override( qdx_4imgui_light_picking_id( selected_index ), map_light_type[light_type] );
+			}
+			if ( ovr )
+			{
+				if ( ImGui::DragFloat3( "Position  Offset##10", ovr->position_offset, 0.1, -100, 100 ) ) ovr->updated = 1;
+				if ( ImGui::ColorEdit3( "Color##10", ovr->color, ImGuiColorEditFlags_Float ) ) ovr->updated = 1;
+				if ( ImGui::DragFloat( "RADIANCE##10", &ovr->radiance_base, 10, 0, 50000 ) ) ovr->updated = 1;
+				if ( light_type == 0 )
+				{
+					if ( ImGui::DragFloat( "RADIANCE_SCALE##10", &ovr->radiance_scale, 0.1, 0, 10 ) ) ovr->updated = 1;
+				}
+				else
+				{
+					ImGui::NewLine();
+				}
+				if ( ImGui::DragFloat( "RADIUS##10", &ovr->radius_base, 0.1, 0, 10 ) ) ovr->updated = 1;
+				if ( light_type == 0 )
+				{
+					if ( ImGui::DragFloat( "RADIUS_SCALE##10", &ovr->radius_scale, 0.0005, 0, 1 ) ) ovr->updated = 1;
+				}
+				else
+				{
+					ImGui::NewLine();
+				}
+
+				if ( ImGui::DragFloat( "VOLUMETRIC_SCALE", &ovr->volumetric_scale, 0.1, 0, 10 ) ) ovr->updated = 1;
+				if ( ImGui::Button( " Save " ) )
+				{
+					qdx_light_override_save( ovr );
+				}
+				ImGui::SameLine();
+				if ( ImGui::Button( " Reset " ) )
+				{
+					qdx_4imgui_light_clear_override( idval.ll );
+					ovr = qdx_4imgui_light_get_override( qdx_4imgui_light_picking_id( selected_index ), map_light_type[light_type] );
+				}
+			}
+		}
+	}
+
+	/*==========================
+	 * Togglers
+	 *==========================*/
+	ImGui::NewLine(); ImVec2 toggle_sz( 150, 0 );
+	if ( ImGui::Button( "Toggle Flashlight", toggle_sz ) )
 	{
 		ri.Cvar_Set( "r_rmx_flashlight", (r_rmx_flashlight->integer ? "0" : "1") );
 	}
 	ImGui::SameLine();
 	ImGui::Text( "Value: %s", r_rmx_flashlight->integer ? "on" : "off");
-	if ( ImGui::Button( "Toggle DynamicLight" ) )
+	if ( ImGui::Button( "Toggle DynamicLight", toggle_sz ) )
 	{
 		ri.Cvar_Set( "r_rmx_dynamiclight", (r_rmx_dynamiclight->integer ? "0" : "1") );
 	}
 	ImGui::SameLine();
 	ImGui::Text( "Value: %s", r_rmx_dynamiclight->integer ? "on" : "off" );
-	ImGui::SameLine();
-	if ( ImGui::Button( " Toggle Coronas " ) )
+	//ImGui::SameLine();
+	if ( ImGui::Button( "Toggle Coronas", toggle_sz ) )
 	{
 		ri.Cvar_Set( "r_rmx_coronas", (r_rmx_coronas->integer ? "0" : "1") );
 	}
 	ImGui::SameLine();
 	ImGui::Text( "Value: %s", r_rmx_coronas->integer ? "on" : "off" );
-
-	if ( ImGui::Button( " MeshAnim " ) )
-	{
-		ri.Cvar_Set( "r_nomeshanim", (r_nomeshanim->integer ? "0" : "1") );
-	}
-	ImGui::SameLine();
-	ImGui::Text( "Value: %s", r_nomeshanim->integer == 0 ? "on" : "off" );
 	
-
+	/*==========================
+	* Quick Actions
+	*==========================*/
 	ImGui::NewLine();
 	if ( ImGui::Button( "QUIT" ) )
 	{
-		if ( g_in_mouse_val )
-		{
-			ri.Cvar_Set( "in_mouse", "1" );
-		}
+		g_visible = FALSE;
+		exchange_wndproc_and_mouse(WNDPROC_RESTORE_WOLF);
 		ri.Cmd_ExecuteText(EXEC_APPEND, "quit");
 	}
 	ImGui::SameLine();
@@ -191,6 +293,27 @@ static void do_draw()
 		}
 	}
 
+	/*==========================
+	* Debug Controls
+	*==========================*/
+	if ( g_debug_controls )
+	{
+		ImGui::NewLine();
+		if ( ImGui::Button( " MeshAnim " ) )
+		{
+			ri.Cvar_Set( "r_nomeshanim", (r_nomeshanim->integer ? "0" : "1") );
+		}
+		ImGui::SameLine();
+		ImGui::Text( "Value: %s", r_nomeshanim->integer == 0 ? "on" : "off" );
+		ImGui::SliderInt( "Model type", helper_value( 0 ), -1, 4 );
+		ImGui::SliderInt( "Bone Num", helper_value( 1 ), -1, 4 );
+		ImGui::Text( "Num entities: %d", tr.refdef.num_entities );
+	}
+
+	/*==========================
+	* Stats
+	*==========================*/
+	ImGui::NewLine();
 	ImGui::Text( "App average %.3f ms/frame (%.1f FPS)", 1000.0f / io->Framerate, io->Framerate );
 	ImGui::End();
 }
@@ -202,6 +325,7 @@ void qdx_imgui_init(void *hwnd, void *device)
 		g_initialised = TRUE;
 		g_hwnd = hwnd;
 		g_use_shortcut_keys = qdx_readsetting( "imgui_allow_shortcut_keys", g_use_shortcut_keys );
+		g_debug_controls = qdx_readsetting( "imgui_debug_controls", g_debug_controls );
 
 		IMGUI_CHECKVERSION();
 		ImGui::CreateContext();
@@ -226,12 +350,11 @@ void qdx_imgui_deinit()
 		g_initialised = FALSE;
 		g_hwnd = NULL;
 
-		if ( g_visible && g_in_mouse_val )
+		if ( g_visible )
 		{
-			ri.Cvar_Set( "in_mouse", "1" );
+			g_visible = FALSE;
+			exchange_wndproc_and_mouse(WNDPROC_RESTORE_WOLF);
 		}
-		g_visible = FALSE;
-		g_game_input_blocked = TRUE;
 
 		ImGui_ImplDX9_Shutdown();
 		ImGui_ImplWin32_Shutdown();
@@ -286,6 +409,21 @@ void qdx_imgui_draw()
 
 	if ( g_visible )
 	{
+		if ( g_mouse_click_new )
+		{
+			g_mouse_click_new = FALSE;
+			//if ( remixOnline && remixInterface.pick_RequestObjectPicking )
+			//{
+			//	const int32_t RECT_SPAN = 3;
+			//	remixapi_Rect2D rect;
+			//	rect.left = g_mouse_click_pos.x - RECT_SPAN;
+			//	rect.right = g_mouse_click_pos.x + RECT_SPAN;
+			//	rect.top = g_mouse_click_pos.y - RECT_SPAN;
+			//	rect.bottom = g_mouse_click_pos.y + RECT_SPAN;
+			//	remixInterface.pick_RequestObjectPicking( &rect, qdx_light_pick_callback, NULL );
+			//}
+		}
+
 		ImGui_ImplDX9_NewFrame();
 		ImGui_ImplWin32_NewFrame();
 		ImGui::NewFrame();
@@ -359,19 +497,35 @@ static LRESULT CALLBACK wnd_proc_hk(HWND hWnd, UINT message_type, WPARAM wParam,
 
 	BOOL imgui_consumed = ImGui_ImplWin32_WndProcHandler( hWnd, message_type, wParam, lParam );
 
+	static bool mouse0down = false;
+	if ( !imgui_consumed )
+	{
+		if ( io->KeyCtrl && io->MouseDown[0] && mouse0down == false )
+		{
+			mouse0down = true;
+			g_mouse_click_pos = io->MousePos;
+			g_mouse_click_new = TRUE;
+		}
+	}
+
+	if ( io->MouseDown[0] == false )
+	{
+		mouse0down = false;
+	}
+
 	if ( g_game_wndproc )
 	{
 
-		if ( FALSE == g_game_input_blocked )
-		{
-			//send mouse too
-			if ( io->MouseDelta.x || io->MouseDelta.y )
-			{
-				Sys_QueEvent( 0, SE_MOUSE, io->MouseDelta.x, io->MouseDelta.y, 0, NULL );
-			}
-		}
+		//if ( FALSE == g_game_input_blocked )
+		//{
+		//	//send mouse too
+		//	if ( io->MouseDelta.x || io->MouseDelta.y )
+		//	{
+		//		Sys_QueEvent( 0, SE_MOUSE, io->MouseDelta.x, io->MouseDelta.y, 0, NULL );
+		//	}
+		//}
 
-		if ( pass_msg_to_game || (FALSE == g_game_input_blocked && !imgui_consumed && !io->WantCaptureMouse) )
+		if ( pass_msg_to_game || ( !imgui_consumed && !io->WantCaptureMouse) )
 		{
 			return g_game_wndproc( hWnd, message_type, wParam, lParam );
 		}
@@ -401,40 +555,4 @@ static void exchange_wndproc_and_mouse( enum exc_wprocnmouse_e action )
 		g_in_mouse_val = 0;
 		break;
 	}
-}
-
-static void game_input_activated(bool active)
-{
-	//if ( active )
-	//{
-	//	int width, height;
-	//	RECT window_rect;
-
-	//	width = GetSystemMetrics( SM_CXSCREEN );
-	//	height = GetSystemMetrics( SM_CYSCREEN );
-
-	//	GetWindowRect( HWND( g_hwnd ), &window_rect );
-	//	if ( window_rect.left < 0 ) {
-	//		window_rect.left = 0;
-	//	}
-	//	if ( window_rect.top < 0 ) {
-	//		window_rect.top = 0;
-	//	}
-	//	if ( window_rect.right >= width ) {
-	//		window_rect.right = width - 1;
-	//	}
-	//	if ( window_rect.bottom >= height - 1 ) {
-	//		window_rect.bottom = height - 1;
-	//	}
-	//	window_center_x = (window_rect.right + window_rect.left) / 2;
-	//	window_center_y = (window_rect.top + window_rect.bottom) / 2;
-
-	//	SetCapture( HWND(g_hwnd) );
-	//	ClipCursor( &window_rect );
-	//}
-	//else
-	//{
-	//	ReleaseCapture();
-	//	ClipCursor( NULL );
-	//}
 }

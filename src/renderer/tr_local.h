@@ -1926,4 +1926,6 @@ void *R_Hunk_Begin( void );
 void R_Hunk_End( void );
 void R_FreeImageBuffer( void );
 
+#include "tr_debughelpers.h"
+
 #endif //TR_LOCAL_H (THIS MUST BE LAST!!)

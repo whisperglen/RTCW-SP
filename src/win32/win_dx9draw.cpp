@@ -442,6 +442,16 @@ void qdx_clear_buffers()
 
 void qdx_objects_reset()
 {
+	if ( qdx.anim_vbuffer )
+	{
+		qdx.anim_vbuffer->Release();
+		qdx.anim_vbuffer = NULL;
+	}
+	if ( qdx.anim_ibuffer )
+	{
+		qdx.anim_ibuffer->Release();
+		qdx.anim_ibuffer = NULL;
+	}
 	qdx_clear_buffers();
 	qdx_texobj_delete_all();
 	qdx_lights_clear(LIGHT_ALL);
@@ -1132,7 +1142,7 @@ void qdx_vatt_assemble_and_draw(UINT numindexes, const qdxIndex_t *indexes, cons
 	//qdx.device->SetRenderState(D3DRS_LIGHTING, FALSE);
 	//qdx.device->SetRenderState(D3DRS_CULLMODE, D3DCULL_NONE);
 
-	qdx.device->BeginScene();
+	DX9_BEGIN_SCENE();
 
 	qdx.device->SetFVF(selected_vatt);
 
@@ -1153,7 +1163,8 @@ void qdx_vatt_assemble_and_draw(UINT numindexes, const qdxIndex_t *indexes, cons
 	qdx_matrix_apply();
 
 	qdx.device->DrawIndexedPrimitive(D3DPT_TRIANGLELIST, 0, 0, selectionsize, 0, numindexes / 3);
-	qdx.device->EndScene();
+
+	DX9_END_SCENE();
 }
 
 static void qdx_draw_process(uint32_t selectionbits, int index, byte* buf);
@@ -1254,7 +1265,7 @@ void qdx_vatt_assemble_and_draw0(UINT numindexes, const qdxIndex_t *indexes, con
 		drawbuf = malloc(SHADER_MAX_VERTEXES * sizeof(vatt_vertnormcoltex2_t));
 
 
-	qdx.device->BeginScene();
+	DX9_BEGIN_SCENE();
 
 	//qdx.device->Clear(0, NULL, D3DCLEAR_TARGET, D3DCOLOR_XRGB(0x33, 0x4d, 0x4d), 1.0f, 0);
 	//qdx.device->Clear(0, NULL, D3DCLEAR_ZBUFFER, D3DCOLOR_XRGB(0, 0, 0), 1.0f, 0);
@@ -1357,7 +1368,7 @@ void qdx_vatt_assemble_and_draw0(UINT numindexes, const qdxIndex_t *indexes, con
 	if(c_vertexes > 2)
 		qdx.device->DrawPrimitiveUP(D3DPT_TRIANGLESTRIP, c_vertexes - 2, drawbuf, stride_vatt);
 
-	qdx.device->EndScene();
+	DX9_END_SCENE();
 }
 
 void qdx_vatt_assemble_and_draw0a(UINT numindexes, const qdxIndex_t *indexes, const char *hint)
@@ -1566,7 +1577,7 @@ void qdx_vatt_assemble_and_draw0a(UINT numindexes, const qdxIndex_t *indexes, co
 	v_buffer->Unlock();
 
 
-	qdx.device->BeginScene();
+	DX9_BEGIN_SCENE();
 
 	qdx.device->SetFVF(selected_vatt);
 
@@ -1581,7 +1592,7 @@ void qdx_vatt_assemble_and_draw0a(UINT numindexes, const qdxIndex_t *indexes, co
 		qdx.device->DrawPrimitive(D3DPT_TRIANGLESTRIP, drawbuf[i], drawbuf[i+1]);
 	}
 
-	qdx.device->EndScene();
+	DX9_END_SCENE();
 }
 
 BOOL qdx_vbuffer_steps(qdx_vbuffer_t *buf, UINT vattid, UINT size, void **outmem)
@@ -1607,7 +1618,7 @@ BOOL qdx_vbuffer_steps(qdx_vbuffer_t *buf, UINT vattid, UINT size, void **outmem
 	{
 		if (outmem)
 		{
-			if (FAILED(v_buffer->Lock(0, 0, outmem, D3DLOCK_DISCARD)))
+			if (FAILED(v_buffer->Lock(0, size, outmem, D3DLOCK_DISCARD)))
 			{
 				return FALSE;
 			}
@@ -1649,6 +1660,49 @@ qdx_vbuffer_t qdx_vbuffer_upload(qdx_vbuffer_t buf, UINT vattid, UINT size, void
 }
 
 void qdx_vbuffer_release(qdx_vbuffer_t buf)
+{
+	buf->Release();
+}
+
+
+BOOL qdx_ibuffer_steps( qdx_ibuffer_t* buf, UINT format, UINT size, void** outmem )
+{
+	LPDIRECT3DINDEXBUFFER9 i_buffer = *buf;
+
+	if (i_buffer == NULL)
+	{
+		if (FAILED(
+			qdx.device->CreateIndexBuffer(size,
+				0,
+				(D3DFORMAT)format,
+				D3DPOOL_MANAGED,
+				&i_buffer,
+				NULL)))
+		{
+			return FALSE;
+		}
+		*buf = i_buffer;
+	}
+
+	if (i_buffer != NULL)
+	{
+		if (outmem)
+		{
+			if (FAILED(i_buffer->Lock(0, size, outmem, D3DLOCK_DISCARD)))
+			{
+				return FALSE;
+			}
+		}
+		else
+		{
+			i_buffer->Unlock();
+		}
+	}
+
+	return TRUE;
+}
+
+void qdx_ibuffer_release(qdx_ibuffer_t buf)
 {
 	buf->Release();
 }

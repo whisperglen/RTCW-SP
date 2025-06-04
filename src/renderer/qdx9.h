@@ -31,6 +31,9 @@ struct qdx9_state
 	D3DMATRIX camera;
 	D3DMATRIX world;
 
+	LPDIRECT3DVERTEXBUFFER9 anim_vbuffer;
+	LPDIRECT3DINDEXBUFFER9 anim_ibuffer;
+
 	WINDOWPLACEMENT wplacement;
 	D3DDISPLAYMODE desktop;
 	D3DDISPLAYMODE *modes;
@@ -194,6 +197,21 @@ typedef struct vatt_vertnormcoltex2
 } vatt_vertnormcoltex2_t;
 #define VATTID_VERTNORMCOLTEX2 (D3DFVF_XYZ | D3DFVF_NORMAL | D3DFVF_DIFFUSE | D3DFVF_TEX2 | D3DFVF_TEXCOORDSIZE2(0) | D3DFVF_TEXCOORDSIZE2(1))
 
+typedef struct vatt_anim
+{
+	FLOAT XYZ[3];
+	//FLOAT WEIGHTS[1];
+	union
+	{
+		DWORD MATIND;
+		BYTE MATINDB[4];
+	};
+	FLOAT NORM[3];
+	DWORD COLOR;
+	FLOAT UV[2];
+} vatt_anim_t;
+#define VATTID_ANIM (D3DFVF_XYZB1 | D3DFVF_LASTBETA_UBYTE4 | D3DFVF_NORMAL | D3DFVF_DIFFUSE | D3DFVF_TEX1 | D3DFVF_TEXCOORDSIZE2(0))
+
 #ifdef __cplusplus
 #define DX9_BEGIN_SCENE() qdx.device->BeginScene()
 #define DX9_END_SCENE()   qdx.device->EndScene()
@@ -203,12 +221,15 @@ typedef struct vatt_vertnormcoltex2
 #endif
 
 typedef LPDIRECT3DVERTEXBUFFER9 qdx_vbuffer_t;
+typedef LPDIRECT3DINDEXBUFFER9 qdx_ibuffer_t;
 
 qdx_vbuffer_t qdx_vbuffer_upload(qdx_vbuffer_t buf, UINT fvfid, UINT size, void *data);
 BOOL qdx_vbuffer_steps(qdx_vbuffer_t* buf, UINT vattid, UINT size, void** outmem);
 void qdx_vbuffer_release(qdx_vbuffer_t buf);
+BOOL qdx_ibuffer_steps(qdx_ibuffer_t* buf, UINT format, UINT size, void** outmem);
+void qdx_ibuffer_release(qdx_ibuffer_t buf);
 
-enum light_type
+enum light_type_e
 {
 	LIGHT_NONE = 0,
 	LIGHT_DYNAMIC = 1,
@@ -218,7 +239,7 @@ enum light_type
 	LIGHT_ALL = (LIGHT_DYNAMIC|LIGHT_CORONA|LIGHT_FLASHLIGHT)
 };
 
-void qdx_light_add(int light_type, int ord, const float *position, const float *direction, const float *color, float radius, float scale);
+void qdx_light_add(int light_type_e, int ord, const float *position, const float *direction, const float *color, float radius);
 void qdx_lights_clear(unsigned int light_types);
 
 typedef union surfpartition_u

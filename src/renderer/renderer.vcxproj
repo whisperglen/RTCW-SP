@@ -323,6 +323,7 @@
     <ClInclude Include="qdx9.h" />
     <ClInclude Include="remix\remix.h" />
     <ClInclude Include="remix\remix_c.h" />
+    <ClInclude Include="tr_debughelpers.h" />
     <ClInclude Include="tr_local.h" />
     <ClInclude Include="tr_public.h" />
   </ItemGroup>

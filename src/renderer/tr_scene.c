@@ -334,15 +334,15 @@ void RE_AddLightToScene( const vec3_t org, float intensity, float r, float g, fl
 		//WG: flashlight
 		vec3_t dir = { r, g, b };
 		const vec3_t color = { 1.0f, 1.0f, 1.0f };
-		float radius = intensity * r_dlightScale->value;
-		qdx_light_add(LIGHT_FLASHLIGHT, 0, org, dir, color, radius, 1.0f / radius);
+		//float radius = intensity * r_dlightScale->value;
+		qdx_light_add(LIGHT_FLASHLIGHT, 0, org, dir, color, intensity);
 		return;
 	}
 	if ( r_rmx_dynamiclight->value )
 	{
 		vec3_t color = { r, g, b };
-		float radius = intensity * r_dlightScale->value;
-		qdx_light_add(LIGHT_DYNAMIC, r_rmxdlights - r_firstSceneDlight, org, org, color, radius, 1.0f / radius);
+		//float radius = intensity * r_dlightScale->value;
+		qdx_light_add(LIGHT_DYNAMIC, r_rmxdlights - r_firstSceneDlight, org, org, color, intensity);
 		r_rmxdlights++;
 	}
 	if ( r_numdlights >= MAX_DLIGHTS ) {
@@ -407,7 +407,7 @@ void RE_AddCoronaToScene( const vec3_t org, float r, float g, float b, float sca
 	if ( r_rmx_coronas->value )
 	{
 		vec3_t color = { r, g, b };
-		qdx_light_add(LIGHT_CORONA, r_rmxcoronas - r_firstSceneCorona, org, org, color, 0.0f, scale);
+		qdx_light_add(LIGHT_CORONA, r_rmxcoronas - r_firstSceneCorona, org, org, color, 0.0f);
 	}
 	if ( r_numcoronas >= MAX_CORONAS ) {
 		return;

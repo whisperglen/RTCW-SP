@@ -667,5 +667,8 @@
     <ClInclude Include="imgui\backends\imgui_impl_win32.h">
       <Filter>Source Files\imgui</Filter>
     </ClInclude>
+    <ClInclude Include="tr_debughelpers.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

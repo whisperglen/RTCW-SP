@@ -5,6 +5,25 @@
 #include "qdx9.h"
 #include "remix/bridge_remix_api.h"
 
+typedef union uint64_comp_u
+{
+	uint64_t ll;
+	uint32_t u32[2];
+} uint64_comp_t;
+
+typedef struct light_override_s
+{
+	uint64_t hash;
+	float position_offset[3];
+	float color[3];
+	float radiance_base;
+	float radiance_scale;
+	float radius_base;
+	float radius_scale;
+	float volumetric_scale;
+	BOOL updated;
+} light_override_t;
+
 extern remixapi_Interface remixInterface;
 extern BOOL remixOnline;
 
@@ -40,6 +59,7 @@ void qdx_storemapconfflt( const char* base, const char* valname, float value, bo
 void qdx_lights_load(mINI::INIStructure &ini, const char *mapname);
 void qdx_flashlight_save();
 void qdx_radiance_save( bool inGlobal );
+void qdx_light_override_save( light_override_t* ovr );
 
 #define NUM_FLASHLIGHT_HND 3
 float* qdx_4imgui_radiance_dynamic_1f();
@@ -52,9 +72,18 @@ float* qdx_4imgui_flashlight_radiance_1f(int idx);
 float* qdx_4imgui_flashlight_colors_3f(int idx);
 float* qdx_4imgui_flashlight_coneangles_1f(int idx);
 float* qdx_4imgui_flashlight_conesoft_1f(int idx);
+float* qdx_4imgui_flashlight_volumetric_1f( int idx );
 const float* qdx_4imgui_flashlight_position_3f();
 const float* qdx_4imgui_flashlight_direction_3f();
 float* qdx_4imgui_flashlight_position_off_3f();
 float* qdx_4imgui_flashlight_direction_off_3f();
+
+void REMIXAPI_PTR qdx_light_pick_callback( const uint32_t* objectPickingValues_values, uint32_t objectPickingValues_count, void* callbackUserData );
+void qdx_light_scan_closest_lights( light_type_e type );
+uint64_t qdx_4imgui_light_picking_id( uint32_t idx );
+int qdx_4imgui_light_picking_count();
+void qdx_4imgui_light_picking_clear();
+light_override_t* qdx_4imgui_light_get_override( uint64_t hash, light_type_e type );
+void qdx_4imgui_light_clear_override( uint64_t hash );
 
 #endif

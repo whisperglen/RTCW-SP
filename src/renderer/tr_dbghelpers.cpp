@@ -10,15 +10,16 @@ extern "C" {
 #include "..\game\q_shared.h"
 #include "..\qcommon\qcommon.h"
 }
+#include "tr_debughelpers.h"
 #include <Windows.h>
 #include <WinUser.h>
 
-#define MAX_HELPER_VALUES 10
 
 static std::map<std::string, int> occurences;
 static std::vector<std::string> ordered_calls;
 
 static int helper_values[MAX_HELPER_VALUES] = { 0 };
+byte helper_values_initialised[MAX_HELPER_VALUES] = { 0 };
 
 inputs_t prevstate = { 0 };
 inputs_t prevstate_upd = { 0 };
@@ -172,7 +173,7 @@ extern "C" void functions_dump()
 	}
 }
 
-extern "C" int* helper_value( int index )
+extern "C" int* helper_value( unsigned int index )
 {
 	static int dummyval = 0x1000;
 	int* ret = &dummyval;

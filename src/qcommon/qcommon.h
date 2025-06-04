@@ -1072,35 +1072,4 @@ extern huffman_t clientHuffTables;
 #define CL_ENCODE_START     12
 #define CL_DECODE_START     4
 
-void function_called(const char *name);
-void functions_dump();
-
-typedef union inputs
-{
-	struct {
-		int updown : 2;
-		int leftright : 2;
-		unsigned int ctrl : 1;
-		unsigned int alt : 1;
-		unsigned int x : 1;
-		unsigned int y : 1;
-		unsigned int z : 1;
-		unsigned int i : 1;
-		unsigned int o : 1;
-		unsigned int u : 1;
-		unsigned int c : 1;
-		unsigned int imgui : 1;
-	};
-	unsigned int all;
-} inputs_t;
-
-inputs_t get_keypressed();
-void keypress_frame_ended();
-
-int* helper_value( int index );
-inline int helper_value_equals( int index, int check )
-{
-	return (check == *helper_value(index));
-}
-
 #endif // _QCOMMON_H_
