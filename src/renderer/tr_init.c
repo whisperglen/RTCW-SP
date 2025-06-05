@@ -817,6 +817,7 @@ void GL_SetDefaultState( void ) {
 	IDirect3DDevice9_SetRenderState(qdx.device, D3DRS_CULLMODE, D3DCULL_NONE); 
 	IDirect3DDevice9_SetRenderState(qdx.device, D3DRS_ALPHABLENDENABLE, FALSE);
 	IDirect3DDevice9_SetRenderState(qdx.device, D3DRS_LIGHTING, FALSE);
+	IDirect3DDevice9_SetRenderState(qdx.device, D3DRS_NORMALIZENORMALS, TRUE);
 	
 //----(SA)	added.
 	// ATI pn_triangles
@@ -875,6 +876,9 @@ void GfxInfo_f( void ) {
 	ri.Printf( PRINT_ALL, "MAX_TEXTURE_SIZE: %d\n", glConfig.maxTextureSize );
 	ri.Printf( PRINT_ALL, "MAX_ACTIVE_TEXTURES_ARB: %d\n", glConfig.maxActiveTextures );
 	ri.Printf( PRINT_ALL, "MAX_ACTIVE_LIGHTS: %d\n", qdx.caps.MaxActiveLights );
+	ri.Printf( PRINT_ALL, "MAX_VERTEXBLEND_MATS: %d\n", qdx.caps.MaxVertexBlendMatrices );
+	ri.Printf( PRINT_ALL, "MAX_VERTEXBLEND_IDXS: %d\n", qdx.caps.MaxVertexBlendMatrixIndex );
+	ri.Printf( PRINT_ALL, "VERTEX_TWEENING: %d\n", (qdx.caps.VertexProcessingCaps & D3DVTXPCAPS_TWEENING) != 0 );
 	ri.Printf( PRINT_ALL, "\nPIXELFORMAT: color(%d-bits) Z(%d-bit) stencil(%d-bits)\n", glConfig.colorBits, glConfig.depthBits, glConfig.stencilBits );
 	ri.Printf( PRINT_ALL, "MODE: %d, %d x %d %s hz:", r_mode->integer, glConfig.vidWidth, glConfig.vidHeight, fsstrings[r_fullscreen->integer == 1] );
 	if ( glConfig.displayFrequency ) {

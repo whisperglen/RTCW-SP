@@ -1233,6 +1233,7 @@ static rserr_t GLW_SetMode(const char *drivername,
 			D3DDEVTYPE_HAL,
 			g_wv.hWnd,
 			D3DCREATE_HARDWARE_VERTEXPROCESSING,
+			//D3DCREATE_SOFTWARE_VERTEXPROCESSING,
 			&d3dpp,
 			&qdx.device);
 
@@ -1662,6 +1663,8 @@ void DX9imp_EndFrame(void) {
 	}
 
 	qdx_before_frame_end();
+
+	DX9_END_SCENE_GG();
 
 	// don't flip if drawing to front buffer
 	if (Q_stricmp(r_drawBuffer->string, "GL_FRONT") != 0) {

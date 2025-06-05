@@ -504,6 +504,8 @@ void RE_BeginFrame( stereoFrame_t stereoFrame ) {
 		}
 	}
 
+	DX9_BEGIN_SCENE_GG();
+
 	//
 	// draw buffer stuff
 	//

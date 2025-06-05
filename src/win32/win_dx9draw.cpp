@@ -24,6 +24,7 @@ enum r_logfiletypes_e
 };
 
 static void iniconf_first_init();
+static void qdx_animationbuf_clear(BOOL release);
 
 struct qdx_matrixes
 {
@@ -45,6 +46,7 @@ struct qdx_matrixes
 void qdx_draw_init(void *hwnd, void *device)
 {
 	qdx_mats.init();
+	qdx_animationbuf_clear(TRUE);
 	iniconf_first_init();
 	qdx_imgui_init(hwnd, device);
 }
@@ -442,16 +444,7 @@ void qdx_clear_buffers()
 
 void qdx_objects_reset()
 {
-	if ( qdx.anim_vbuffer )
-	{
-		qdx.anim_vbuffer->Release();
-		qdx.anim_vbuffer = NULL;
-	}
-	if ( qdx.anim_ibuffer )
-	{
-		qdx.anim_ibuffer->Release();
-		qdx.anim_ibuffer = NULL;
-	}
+	qdx_animationbuf_clear(TRUE);
 	qdx_clear_buffers();
 	qdx_texobj_delete_all();
 	qdx_lights_clear(LIGHT_ALL);
@@ -459,6 +452,7 @@ void qdx_objects_reset()
 
 void qdx_frame_ended()
 {
+	qdx.skinned_mesh.bone_count = 1;
 	keypress_frame_ended();
 }
 
@@ -1595,7 +1589,7 @@ void qdx_vatt_assemble_and_draw0a(UINT numindexes, const qdxIndex_t *indexes, co
 	DX9_END_SCENE();
 }
 
-BOOL qdx_vbuffer_steps(qdx_vbuffer_t *buf, UINT vattid, UINT size, void **outmem)
+BOOL qdx_vbuffer_steps(qdx_vbuffer_t *buf, UINT vattid, UINT offset, UINT size, void **outmem)
 {
 	LPDIRECT3DVERTEXBUFFER9 v_buffer = *buf;
 
@@ -1618,7 +1612,7 @@ BOOL qdx_vbuffer_steps(qdx_vbuffer_t *buf, UINT vattid, UINT size, void **outmem
 	{
 		if (outmem)
 		{
-			if (FAILED(v_buffer->Lock(0, size, outmem, D3DLOCK_DISCARD)))
+			if (FAILED(v_buffer->Lock(offset, size, outmem, offset == 0 ? D3DLOCK_DISCARD : D3DLOCK_NOOVERWRITE)))
 			{
 				return FALSE;
 			}
@@ -1665,7 +1659,7 @@ void qdx_vbuffer_release(qdx_vbuffer_t buf)
 }
 
 
-BOOL qdx_ibuffer_steps( qdx_ibuffer_t* buf, UINT format, UINT size, void** outmem )
+BOOL qdx_ibuffer_steps( qdx_ibuffer_t* buf, UINT format, UINT offset, UINT size, void** outmem )
 {
 	LPDIRECT3DINDEXBUFFER9 i_buffer = *buf;
 
@@ -1688,7 +1682,7 @@ BOOL qdx_ibuffer_steps( qdx_ibuffer_t* buf, UINT format, UINT size, void** outme
 	{
 		if (outmem)
 		{
-			if (FAILED(i_buffer->Lock(0, size, outmem, D3DLOCK_DISCARD)))
+			if (FAILED(i_buffer->Lock(offset, size, outmem, offset == 0 ? D3DLOCK_DISCARD : D3DLOCK_NOOVERWRITE)))
 			{
 				return FALSE;
 			}
@@ -1705,6 +1699,64 @@ BOOL qdx_ibuffer_steps( qdx_ibuffer_t* buf, UINT format, UINT size, void** outme
 void qdx_ibuffer_release(qdx_ibuffer_t buf)
 {
 	buf->Release();
+}
+
+static void qdx_animationbuf_clear(BOOL release)
+{
+	struct qdx9_state::animation_buff_s* anim = &qdx.skinned_mesh;
+	if ( release )
+	{
+		if ( anim->vbuffer )
+		{
+			anim->vbuffer->Release();
+			anim->vbuffer = NULL;
+		}
+		if ( anim->ibuffer )
+		{
+			anim->ibuffer->Release();
+			anim->ibuffer = NULL;
+		}
+		anim->bone_count = 1;
+	}
+	anim->vertex_count = 0;
+	anim->index_count = 0;
+	memset( anim->bonemapping, 0xFF, sizeof( anim->bonemapping ) );
+}
+
+void qdx_animation_process()
+{
+	struct qdx9_state::animation_buff_s* anim = &qdx.skinned_mesh;
+	if ( anim->index_count )
+	{
+		DX9_BEGIN_SCENE();
+
+		IDirect3DDevice9_SetRenderState( qdx.device, D3DRS_VERTEXBLEND, D3DVBF_3WEIGHTS );
+		IDirect3DDevice9_SetRenderState( qdx.device, D3DRS_INDEXEDVERTEXBLENDENABLE, TRUE );
+		IDirect3DDevice9_SetFVF( qdx.device, VATTID_ANIM );
+
+		shaderStage_t* pStage = tess.xstages[0];
+		qdx_vatt_attach_texture( pStage->bundle[0].image[0]->texnum - TEXNUM_OFFSET, 0 );
+		
+		D3DXMATRIX matid;
+		D3DXMatrixIdentity( &matid );
+		qdx_matrix_push( D3DTS_WORLD );
+		qdx_matrix_set(D3DTS_WORLD, &matid.m[0][0]);
+		qdx_matrix_apply();
+		qdx_matrix_pop( D3DTS_WORLD );
+
+		qdx.device->SetIndices( anim->ibuffer );
+		qdx.device->SetStreamSource( 0, anim->vbuffer, 0, sizeof( vatt_anim_t ) );
+
+		qdx_texture_apply();
+		qdx.device->DrawIndexedPrimitive(D3DPT_TRIANGLELIST, 0, 0, anim->vertex_count, 0, anim->index_count / 3 );
+
+		IDirect3DDevice9_SetRenderState( qdx.device, D3DRS_VERTEXBLEND, D3DVBF_DISABLE );
+		IDirect3DDevice9_SetRenderState( qdx.device, D3DRS_INDEXEDVERTEXBLENDENABLE, FALSE );
+
+		DX9_END_SCENE();
+
+		qdx_animationbuf_clear(FALSE);
+	}
 }
 
 static int qdx_draw_process_vert(int lowindex, int highindex, byte *pVert)

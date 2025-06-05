@@ -31,8 +31,15 @@ struct qdx9_state
 	D3DMATRIX camera;
 	D3DMATRIX world;
 
-	LPDIRECT3DVERTEXBUFFER9 anim_vbuffer;
-	LPDIRECT3DINDEXBUFFER9 anim_ibuffer;
+	struct animation_buff_s
+	{
+		LPDIRECT3DVERTEXBUFFER9 vbuffer;
+		LPDIRECT3DINDEXBUFFER9 ibuffer;
+		UINT32 vertex_count;
+		UINT32 index_count;
+		UINT8 bone_count;
+		UINT8 bonemapping[256];
+	} skinned_mesh;
 
 	WINDOWPLACEMENT wplacement;
 	D3DDISPLAYMODE desktop;
@@ -200,34 +207,44 @@ typedef struct vatt_vertnormcoltex2
 typedef struct vatt_anim
 {
 	FLOAT XYZ[3];
-	//FLOAT WEIGHTS[1];
+	FLOAT WEIGHTS[3];
 	union
 	{
 		DWORD MATIND;
 		BYTE MATINDB[4];
 	};
 	FLOAT NORM[3];
-	DWORD COLOR;
+	//DWORD COLOR;
 	FLOAT UV[2];
 } vatt_anim_t;
-#define VATTID_ANIM (D3DFVF_XYZB1 | D3DFVF_LASTBETA_UBYTE4 | D3DFVF_NORMAL | D3DFVF_DIFFUSE | D3DFVF_TEX1 | D3DFVF_TEXCOORDSIZE2(0))
+#define VATTID_ANIM (D3DFVF_XYZB4 | D3DFVF_LASTBETA_UBYTE4 | D3DFVF_NORMAL /*| D3DFVF_DIFFUSE*/ | D3DFVF_TEX1 | D3DFVF_TEXCOORDSIZE2(0))
 
 #ifdef __cplusplus
-#define DX9_BEGIN_SCENE() qdx.device->BeginScene()
-#define DX9_END_SCENE()   qdx.device->EndScene()
+#define DX9_BEGIN_SCENE() D3D_OK
+#define DX9_END_SCENE() D3D_OK
 #else
-#define DX9_BEGIN_SCENE() IDirect3DDevice9_BeginScene(qdx.device)
-#define DX9_END_SCENE()   IDirect3DDevice9_EndScene(qdx.device)
+#define DX9_BEGIN_SCENE() D3D_OK
+#define DX9_END_SCENE() D3D_OK
+#endif
+
+#ifdef __cplusplus
+#define DX9_BEGIN_SCENE_GG() qdx.device->BeginScene()
+#define DX9_END_SCENE_GG()   qdx.device->EndScene()
+#else
+#define DX9_BEGIN_SCENE_GG() IDirect3DDevice9_BeginScene(qdx.device)
+#define DX9_END_SCENE_GG()   IDirect3DDevice9_EndScene(qdx.device)
 #endif
 
 typedef LPDIRECT3DVERTEXBUFFER9 qdx_vbuffer_t;
 typedef LPDIRECT3DINDEXBUFFER9 qdx_ibuffer_t;
 
 qdx_vbuffer_t qdx_vbuffer_upload(qdx_vbuffer_t buf, UINT fvfid, UINT size, void *data);
-BOOL qdx_vbuffer_steps(qdx_vbuffer_t* buf, UINT vattid, UINT size, void** outmem);
+BOOL qdx_vbuffer_steps(qdx_vbuffer_t* buf, UINT vattid, UINT offset, UINT size, void** outmem);
 void qdx_vbuffer_release(qdx_vbuffer_t buf);
-BOOL qdx_ibuffer_steps(qdx_ibuffer_t* buf, UINT format, UINT size, void** outmem);
+BOOL qdx_ibuffer_steps(qdx_ibuffer_t* buf, UINT format, UINT offset, UINT size, void** outmem);
 void qdx_ibuffer_release(qdx_ibuffer_t buf);
+void qdx_animation_process();
+#define QDX_ANIMATION_PROCESS() if(qdx.skinned_mesh.index_count) { qdx_animation_process(); }
 
 enum light_type_e
 {

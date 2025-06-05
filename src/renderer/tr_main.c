@@ -1797,6 +1797,11 @@ void R_AddEntitySurfaces(void) {
 				// GR - not tessellated
 				R_AddDrawSurf(&entitySurface, tr.defaultShader, 0, 0, ATI_TESS_NONE);
 			} else {
+				helper_value_initial_value( 0, -1 );
+				if ( helper_value_equals( 0, tr.currentModel->type ) )
+				{
+					continue;
+				}
 				switch (tr.currentModel->type) {
 				case MOD_MESH:
 					R_AddMD3Surfaces(ent);
@@ -1873,7 +1878,7 @@ void R_DebugPolygon(int color, int numPoints, float *points) {
 	// draw solid shade
 	vatt_vertcol_t *data = 0;
 	qdx_vbuffer_t qbuf = 0;
-	qdx_vbuffer_steps(&qbuf, VATTID_VERTCOL, sizeof(vatt_vertcol_t) * numPoints, &data);
+	qdx_vbuffer_steps(&qbuf, VATTID_VERTCOL, 0, sizeof(vatt_vertcol_t) * numPoints, &data);
 
 	//qglColor3f(color & 1, (color >> 1) & 1, (color >> 2) & 1);
 	D3DCOLOR dxcol = D3DCOLOR_XRGB(color & 1, (color >> 1) & 1, (color >> 2) & 1);
@@ -1886,7 +1891,7 @@ void R_DebugPolygon(int color, int numPoints, float *points) {
 	}
 	//qglEnd();
 	//finished adding data
-	qdx_vbuffer_steps(&qbuf, VATTID_VERTCOL, sizeof(vatt_vertcol_t) * numPoints, NULL);
+	qdx_vbuffer_steps(&qbuf, VATTID_VERTCOL, 0, sizeof(vatt_vertcol_t) * numPoints, NULL);
 
 	DX9_BEGIN_SCENE();
 
@@ -1907,7 +1912,7 @@ void R_DebugPolygon(int color, int numPoints, float *points) {
 	//qglColor3f(1, 1, 1);
 	dxcol = D3DCOLOR_XRGB(255, 255, 255);
 	//qglBegin(GL_POLYGON);
-	qdx_vbuffer_steps(&qbuf, VATTID_VERTCOL, sizeof(vatt_vertcol_t) * numPoints, &data);
+	qdx_vbuffer_steps(&qbuf, VATTID_VERTCOL, 0, sizeof(vatt_vertcol_t) * numPoints, &data);
 	for (i = 0; i < numPoints; i++) {
 		//qglVertex3fv(points + i * 3);
 		memcpy(data->XYZ, points + i * 3, sizeof(data->XYZ));
@@ -1916,7 +1921,7 @@ void R_DebugPolygon(int color, int numPoints, float *points) {
 	}
 	//qglEnd();
 	//finished adding data
-	qdx_vbuffer_steps(&qbuf, VATTID_VERTCOL, sizeof(vatt_vertcol_t) * numPoints, NULL);
+	qdx_vbuffer_steps(&qbuf, VATTID_VERTCOL, 0, sizeof(vatt_vertcol_t) * numPoints, NULL);
 
 	DX9_BEGIN_SCENE();
 
