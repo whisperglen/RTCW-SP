@@ -196,7 +196,7 @@ static void do_draw()
 			}
 			if ( ovr )
 			{
-				if ( ImGui::DragFloat3( "Position  Offset##10", ovr->position_offset, 0.1, -100, 100 ) ) ovr->updated = 1;
+				if ( ImGui::DragFloat3( "Position  Offset##10", ovr->position_offset, 0.1, -200, 200 ) ) ovr->updated = 1;
 				if ( ImGui::ColorEdit3( "Color##10", ovr->color, ImGuiColorEditFlags_Float ) ) ovr->updated = 1;
 				if ( ImGui::DragFloat( "RADIANCE##10", &ovr->radiance_base, 10, 0, 50000 ) ) ovr->updated = 1;
 				if ( light_type == 0 )
@@ -307,6 +307,7 @@ static void do_draw()
 		ImGui::Text( "Value: %s", r_nomeshanim->integer == 0 ? "on" : "off" );
 		ImGui::SliderInt( "Model type", helper_value( 0 ), -1, 4 );
 		ImGui::SliderInt( "Bone Num", helper_value( 1 ), -1, 4 );
+		ImGui::SliderInt( "Max Bones", helper_value( 2 ), 0, 50 );
 		ImGui::Text( "Num entities: %d", tr.refdef.num_entities );
 	}
 
