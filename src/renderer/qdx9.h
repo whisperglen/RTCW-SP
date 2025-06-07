@@ -18,6 +18,16 @@ typedef UINT32 qdxIndex_t;
 #define QDX_INDEX_TYPE D3DFMT_INDEX16
 typedef UINT16 qdxIndex_t;
 #endif
+
+struct animation_buff_s
+{
+	LPDIRECT3DVERTEXBUFFER9 vbuffer;
+	LPDIRECT3DINDEXBUFFER9 ibuffer;
+	UINT32 vertex_count;
+	UINT32 index_count;
+	UINT8 bone_count;
+};
+
 struct qdx9_state
 {
 	LPDIRECT3D9 d3d;
@@ -31,15 +41,7 @@ struct qdx9_state
 	D3DMATRIX camera;
 	D3DMATRIX world;
 
-	struct animation_buff_s
-	{
-		LPDIRECT3DVERTEXBUFFER9 vbuffer;
-		LPDIRECT3DINDEXBUFFER9 ibuffer;
-		UINT32 vertex_count;
-		UINT32 index_count;
-		UINT8 bone_count;
-		//UINT8 bonemapping[256];
-	} skinned_mesh;
+	struct animation_buff_s skinned_mesh;
 
 	WINDOWPLACEMENT wplacement;
 	D3DDISPLAYMODE desktop;
@@ -252,6 +254,8 @@ void qdx_vbuffer_release(qdx_vbuffer_t buf);
 BOOL qdx_ibuffer_steps(buffersteps_t step, qdx_ibuffer_t* buf, UINT format, UINT offset, UINT size, void** outmem);
 void qdx_ibuffer_release(qdx_ibuffer_t buf);
 void qdx_animation_process();
+const void* qdx_anim_add_bone_mapping( const void* surface, const void* bones, int numbones );
+const void* qdx_anim_get_bone_transforms( const void* surface );
 #define QDX_ANIMATION_PROCESS() if(qdx.skinned_mesh.index_count) { qdx_animation_process(); }
 
 enum light_type_e

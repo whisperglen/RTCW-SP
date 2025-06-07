@@ -23,6 +23,11 @@ enum r_logfiletypes_e
 	RLOGFILE_VATTSET = 1 << 4,
 };
 
+typedef struct entity_bone_transforms_s
+{
+	mdsBoneFrame_t transf[MDS_MAX_BONES];
+} entity_bone_transforms_t;
+
 static void iniconf_first_init();
 static void qdx_animationbuf_reset(BOOL release);
 
@@ -42,6 +47,8 @@ struct qdx_matrixes
 		D3DXMatrixIdentity(&world);
 	}
 } qdx_mats;
+
+static std::map<const void*, entity_bone_transforms_t> animation_mappings;
 
 void qdx_draw_init(void *hwnd, void *device)
 {
@@ -1721,7 +1728,7 @@ void qdx_ibuffer_release(qdx_ibuffer_t buf)
 
 static void qdx_animationbuf_reset(BOOL release)
 {
-	struct qdx9_state::animation_buff_s* anim = &qdx.skinned_mesh;
+	struct animation_buff_s* anim = &qdx.skinned_mesh;
 	if ( release )
 	{
 		if ( anim->vbuffer )
@@ -1734,16 +1741,16 @@ static void qdx_animationbuf_reset(BOOL release)
 			anim->ibuffer->Release();
 			anim->ibuffer = NULL;
 		}
+		animation_mappings.clear();
 	}
 	anim->vertex_count = 0;
 	anim->index_count = 0;
 	anim->bone_count = 1;
-	//memset( anim->bonemapping, 0xFF, sizeof( anim->bonemapping ) );
 }
 
 void qdx_animation_process()
 {
-	struct qdx9_state::animation_buff_s* anim = &qdx.skinned_mesh;
+	struct animation_buff_s* anim = &qdx.skinned_mesh;
 	if ( anim->index_count )
 	{
 		DX9_BEGIN_SCENE();
@@ -1755,12 +1762,12 @@ void qdx_animation_process()
 		shaderStage_t* pStage = tess.xstages[0];
 		qdx_vatt_attach_texture( pStage->bundle[0].image[0]->texnum - TEXNUM_OFFSET, 0 );
 		
-		D3DXMATRIX matid;
-		D3DXMatrixIdentity( &matid );
-		qdx_matrix_push( D3DTS_WORLD );
-		qdx_matrix_set(D3DTS_WORLD, &matid.m[0][0]);
+		//D3DXMATRIX matid;
+		//D3DXMatrixIdentity( &matid );
+		//qdx_matrix_push( D3DTS_WORLD );
+		//qdx_matrix_set(D3DTS_WORLD, &matid.m[0][0]);
 		qdx_matrix_apply();
-		qdx_matrix_pop( D3DTS_WORLD );
+		//qdx_matrix_pop( D3DTS_WORLD );
 
 		qdx.device->SetIndices( anim->ibuffer );
 		qdx.device->SetStreamSource( 0, anim->vbuffer, 0, sizeof( vatt_anim_t ) );
@@ -1775,6 +1782,24 @@ void qdx_animation_process()
 
 		qdx_animationbuf_reset(FALSE);
 	}
+}
+
+const void* qdx_anim_add_bone_mapping( const void* surface, const void* bones, int numbones )
+{
+	entity_bone_transforms_t &bm = animation_mappings[surface];
+	memcpy( bm.transf, bones, sizeof( bm.transf ) );
+	return bm.transf;
+}
+
+const void* qdx_anim_get_bone_transforms( const void* surface )
+{
+	auto it = animation_mappings.find( surface );
+	if ( it != animation_mappings.end() )
+	{
+		return it->second.transf;
+	}
+
+	return NULL;
 }
 
 static int qdx_draw_process_vert(int lowindex, int highindex, byte *pVert)
@@ -2416,6 +2441,8 @@ void qdx_begin_loading_map(const char* mapname)
 		// Load Light settings
 		qdx_lights_load( g_iniconf, active_map.c_str() );
 	}
+
+	qdx_animationbuf_reset( TRUE );
 }
 
 static std::map<UINT32, std::vector<const void*>> g_surfaces;

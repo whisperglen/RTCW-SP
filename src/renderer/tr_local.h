@@ -1238,6 +1238,7 @@ extern cvar_t  *r_generichelper;
 extern cvar_t  *r_getcenterxyz;
 extern cvar_t  *r_showimgui;
 extern cvar_t  *r_nomeshanim;
+extern cvar_t* r_gpuskinning;
 
 extern cvar_t  *r_rmx_coronas;
 extern cvar_t  *r_rmx_dynamiclight;
@@ -1655,6 +1656,7 @@ void R_MakeAnimModel( model_t *model );
 void R_AddAnimSurfaces( trRefEntity_t *ent );
 void RB_SurfaceAnim( mdsSurface_t *surfType );
 int R_GetBoneTag( orientation_t *outTag, mdsHeader_t *mds, int startTagIndex, const refEntity_t *refent, const char *tagName );
+void RB_BoneToMatrix( const mdsBoneFrame_t* bone, D3DXMATRIX* out );
 
 /*
 =============================================================

@@ -298,24 +298,29 @@ static void do_draw()
 		}
 	}
 
+	ImGui::NewLine();
+	if ( ImGui::Button( " GPU Skinning " ) )
+	{
+		char newval[2] = "0";
+		if ( r_gpuskinning->integer < 2 )
+			newval[0] = '1' + r_gpuskinning->integer;
+		ri.Cvar_Set( "r_gpuskinning", newval );
+	}
+	ImGui::SameLine();
+	ImGui::Text( "Value: %s", r_gpuskinning->string );
 	/*==========================
 	* Debug Controls
 	*==========================*/
 	if ( g_debug_controls )
 	{
-		ImGui::NewLine();
 		if ( ImGui::Button( " MeshAnim " ) )
 		{
 			ri.Cvar_Set( "r_nomeshanim", (r_nomeshanim->integer ? "0" : "1") );
 		}
 		ImGui::SameLine();
 		ImGui::Text( "Value: %s", r_nomeshanim->integer == 0 ? "on" : "off" );
-		ImGui::SliderInt( "Model type", helper_value( 0 ), -1, 4 );
-		ImGui::SliderInt( "Bone Num", helper_value( 1 ), -1, 4 );
-		ImGui::SliderInt( "Max Bones", helper_value( 2 ), 0, 50 );
-		ImGui::SliderInt( "RotX", helper_value( 3 ), -180, 180 );
-		ImGui::SliderInt( "RotY", helper_value( 4 ), -180, 180 );
-		ImGui::SliderInt( "RotZ", helper_value( 5 ), -180, 180 );
+		ImGui::SliderInt( "Hide model type", helper_value( 0 ), -1, 4 );
+		ImGui::SliderInt( "Single Bone Vertexes", helper_value( 1 ), -1, 4 );
 		ImGui::Text( "Num entities: %d", tr.refdef.num_entities );
 	}
 
