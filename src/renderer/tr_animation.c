@@ -1194,7 +1194,13 @@ void RB_SurfaceAnim1( mdsSurface_t *surface ) {
 	boneList = ( int * )( (byte *)surface + surface->ofsBoneReferences );
 	header = ( mdsHeader_t * )( (byte *)surface + surface->ofsHeader );
 
-	R_CalcBones( header, (const refEntity_t *)refent, boneList, surface->numBoneReferences );
+	refEntity_t localEnt;
+	memcpy( &localEnt, refent, sizeof( localEnt ) );
+	localEnt.frame = 0;
+	localEnt.oldframe = 0;
+	localEnt.torsoFrame = 0;
+	localEnt.oldTorsoFrame = 0;
+	R_CalcBones( header, (const refEntity_t*)&localEnt , boneList, surface->numBoneReferences );
 
 	//
 	// calculate LOD

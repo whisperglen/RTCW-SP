@@ -1738,7 +1738,6 @@ static void qdx_animationbuf_reset(BOOL release)
 	anim->vertex_count = 0;
 	anim->index_count = 0;
 	anim->bone_count = 1;
-	//memset( anim->bonemapping, 0xFF, sizeof( anim->bonemapping ) );
 }
 
 void qdx_animation_process()

@@ -38,7 +38,6 @@ struct qdx9_state
 		UINT32 vertex_count;
 		UINT32 index_count;
 		UINT8 bone_count;
-		//UINT8 bonemapping[256];
 	} skinned_mesh;
 
 	WINDOWPLACEMENT wplacement;
