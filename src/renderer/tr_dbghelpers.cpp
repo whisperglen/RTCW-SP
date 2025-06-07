@@ -183,3 +183,27 @@ extern "C" int* helper_value( unsigned int index )
 	}
 	return ret;
 }
+
+void bitmask_set( uint32_t bitnum, uint32_t* storage, uint32_t storagesz )
+{
+	uint32_t slot = bitnum >> 5;
+	uint32_t mask = 1 << (bitnum & 0x1F);
+
+	if ( slot < storagesz )
+	{
+		storage[slot] |= mask;
+	}
+}
+
+uint32_t bitmask_is_set( uint32_t bitnum, uint32_t* storage, uint32_t storagesz )
+{
+	uint32_t slot = bitnum >> 5;
+	uint32_t mask = 1 << (bitnum & 0x1F);
+
+	if ( slot < storagesz )
+	{
+		return (0 != (storage[slot] & mask));
+	}
+
+	return 0;
+}

@@ -1706,6 +1706,7 @@ void RB_EndSurface( void ) {
 	input = &tess;
 
 	if ( input->numIndexes == 0 ) {
+		QDX_ANIMATION_PROCESS();
 		return;
 	}
 

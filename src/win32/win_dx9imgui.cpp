@@ -308,6 +308,9 @@ static void do_draw()
 		ImGui::SliderInt( "Model type", helper_value( 0 ), -1, 4 );
 		ImGui::SliderInt( "Bone Num", helper_value( 1 ), -1, 4 );
 		ImGui::SliderInt( "Max Bones", helper_value( 2 ), 0, 50 );
+		ImGui::SliderInt( "RotX", helper_value( 3 ), -180, 180 );
+		ImGui::SliderInt( "RotY", helper_value( 4 ), -180, 180 );
+		ImGui::SliderInt( "RotZ", helper_value( 5 ), -180, 180 );
 		ImGui::Text( "Num entities: %d", tr.refdef.num_entities );
 	}
 
@@ -390,9 +393,20 @@ void qdx_imgui_draw()
 				}
 				else
 				{ //activate imgui anyway
-					ri.Printf( PRINT_ALL, "Unexpected MainWndProc, replacing anyway\n" );
+					ri.Printf( PRINT_ALL, "Unexpected MainWndProc\n" );
 					g_visible = TRUE;
+#if 1
 					exchange_wndproc_and_mouse( WNDPROC_SET_IMGUI );
+#else
+					//Remix 0.6.0 immediately replaces our proc, and stores it for future use
+					//we would have to restore wolf main proc for it to work
+					//Trouble is, in fullscreen dx9 has an own proc assigned that calls wolf proc
+					game_wndproc = NULL;
+					g_in_mouse_val = in_mouse->integer;
+					if ( g_in_mouse_val )
+						ri.Cvar_Set( "in_mouse", "0" );
+					IN_DeactivateMouse();
+#endif
 				}
 			}
 			else

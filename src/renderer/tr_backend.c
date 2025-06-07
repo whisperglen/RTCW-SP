@@ -1380,7 +1380,7 @@ void RE_StretchRaw( int x, int y, int w, int h, int cols, int rows, const byte *
 	};
 #endif
 
-	//qdx_vbuffer_t b = qdx_vbuffer_upload(FVF_2DVERTCOLTEX, sizeof(rbuf), rbuf);
+	//qdx_vbuffer_t b = qdx_vbuffer_create_and_upload(FVF_2DVERTCOLTEX, sizeof(rbuf), rbuf);
 
 	DX9_BEGIN_SCENE();
 	
@@ -1727,7 +1727,7 @@ void RB_ShowImages( void ) {
 			{ x, y + h, VERT2D_ZVAL, VERT2D_RHVVAL, 0, 1 },
 		};
 
-		//qdx_vbuffer_t b = qdx_vbuffer_upload(FVF_2DVERTCOLTEX, sizeof(rbuf), rbuf);
+		//qdx_vbuffer_t b = qdx_vbuffer_create_and_upload(FVF_2DVERTCOLTEX, sizeof(rbuf), rbuf);
 
 		DX9_BEGIN_SCENE();
 

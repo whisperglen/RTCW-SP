@@ -1173,7 +1173,277 @@ void R_CalcBones( mdsHeader_t *header, const refEntity_t *refent, int *boneList,
 RB_SurfaceAnim
 ==============
 */
-void RB_SurfaceAnim( mdsSurface_t *surface ) {
+void RB_SurfaceAnim1( mdsSurface_t* surface );
+void RB_SurfaceAnim0( mdsSurface_t* surface );
+
+void RB_SurfaceAnim( mdsSurface_t* surface )
+{
+	if ( 1 )
+		RB_SurfaceAnim1( surface );
+	else
+		RB_SurfaceAnim0( surface );
+}
+
+void RB_SurfaceAnim1( mdsSurface_t *surface ) {
+	int i, j, k;
+	refEntity_t *refent;
+	int             *boneList;
+	mdsHeader_t     *header;
+
+	refent = &backEnd.currentEntity->e;
+	boneList = ( int * )( (byte *)surface + surface->ofsBoneReferences );
+	header = ( mdsHeader_t * )( (byte *)surface + surface->ofsHeader );
+
+	R_CalcBones( header, (const refEntity_t *)refent, boneList, surface->numBoneReferences );
+
+	//
+	// calculate LOD
+	//
+	// TODO: lerp the radius and origin
+	VectorAdd( refent->origin, frame->localOrigin, vec );
+	lodRadius = frame->radius;
+	lodScale = R_CalcMDSLod( refent, vec, lodRadius, header->lodBias, header->lodScale );
+
+
+	//----(SA)	modification to allow dead skeletal bodies to go below minlod (experiment)
+	if ( refent->reFlags & REFLAG_DEAD_LOD ) {
+		if ( lodScale < 0.35 ) {   // allow dead to lod down to 35% (even if below surf->minLod) (%35 is arbitrary and probably not good generally.  worked for the blackguard/infantry as a test though)
+			lodScale = 0.35;
+		}
+		render_count = (int)( (float) surface->numVerts * lodScale );
+
+	} else {
+		render_count = (int)( (float) surface->numVerts * lodScale );
+		if ( render_count < surface->minLod ) {
+			if ( !( refent->reFlags & REFLAG_DEAD_LOD ) ) {
+				render_count = surface->minLod;
+			}
+		}
+	}
+	//----(SA)	end
+
+
+	if ( render_count > surface->numVerts ) {
+		render_count = surface->numVerts;
+	}
+
+	//RB_CheckOverflow( render_count, surface->numTriangles );
+
+	//
+	// setup triangle list
+	//
+	//RB_CheckOverflow( surface->numVerts, surface->numTriangles * 3 );
+
+	//RB_EndSurface();
+	//RB_BeginSurface( tess.shader, tess.fogNum );
+
+	collapse_map   = ( int * )( ( byte * )surface + surface->ofsCollapseMap );
+	triangles = ( int * )( (byte *)surface + surface->ofsTriangles );
+	indexes = surface->numTriangles * 3;
+	//baseIndex = tess.numIndexes;
+	//baseVertex = tess.numVertexes;
+	//oldIndexes = baseIndex;
+
+	//tess.numVertexes += render_count;
+
+	//pIndexes = &tess.indexes[baseIndex];
+
+	struct animation_buff_s* anim = &qdx.skinned_mesh;
+	buffersteps_t step;
+	UINT16 offset = anim->vertex_count;
+	UINT16* pIndexes = NULL;
+	if ( anim->ibuffer == 0 )
+	{
+		qdx_ibuffer_steps( STEP_ALLOCATE, &anim->ibuffer, D3DFMT_INDEX16, 0, SHADER_MAX_INDEXES * sizeof( *pIndexes ), NULL );
+	}
+	step = anim->index_count ? STEP_GET_DATAPTR_APPEND : STEP_GET_DATAPTR_CLEAR;
+	qdx_ibuffer_steps( step, &anim->ibuffer, 0, anim->index_count * sizeof( *pIndexes ), indexes * sizeof( *pIndexes ), &pIndexes );
+
+	//numIndexes hardcoded to full lod, find a way to anticipate num indexes for other lods, so that we can request proper buffersize
+	if ( 1 || render_count == surface->numVerts ) {
+		int* src = triangles;
+		for ( i = 0; i < indexes; i++, pIndexes++, src++ )
+		{
+			*pIndexes = *src + offset;
+		}
+	} else
+	{
+		int *collapseEnd;
+
+		pCollapse = collapse;
+		for ( j = 0; j < render_count; pCollapse++, j++ )
+		{
+			*pCollapse = j;
+		}
+
+		pCollapseMap = &collapse_map[render_count];
+		for ( collapseEnd = collapse + surface->numVerts ; pCollapse < collapseEnd; pCollapse++, pCollapseMap++ )
+		{
+			*pCollapse = collapse[ *pCollapseMap ];
+		}
+
+		for ( j = 0 ; j < indexes ; j += 3 )
+		{
+			p0 = collapse[ *( triangles++ ) ];
+			p1 = collapse[ *( triangles++ ) ];
+			p2 = collapse[ *( triangles++ ) ];
+
+			// FIXME
+			// note:  serious optimization opportunity here,
+			//  by sorting the triangles the following "continue"
+			//  could have been made into a "break" statement.
+			if ( p0 == p1 || p1 == p2 || p2 == p0 ) {
+				continue;
+			}
+
+			*( pIndexes++ ) = p0 + offset;
+			*( pIndexes++ ) = p1 + offset;
+			*( pIndexes++ ) = p2 + offset;
+		}
+	}
+	qdx_ibuffer_steps( STEP_FINALIZE, &anim->ibuffer, 0, 0, 0, NULL );
+	anim->index_count += indexes;
+
+	//
+	// deform the vertexes by the lerped bones
+	//
+	//numVerts = surface->numVerts;
+	v = ( mdsVertex_t * )( (byte *)surface + surface->ofsVerts );
+	//tempVert = ( float * )( tess.xyz + baseVertex );
+	//tempNormal = ( float * )( tess.normal + baseVertex );
+
+	static byte bonemapping[256]; //avoid calculating and uploading the bone matrix multiple times
+	memset( bonemapping, 0xFF, sizeof( bonemapping ) );
+
+	vatt_anim_t* pvatt = NULL;
+	if ( anim->vbuffer == 0 )
+	{
+		qdx_vbuffer_steps( STEP_ALLOCATE, &anim->vbuffer, VATTID_ANIM, 0, SHADER_MAX_VERTEXES * sizeof( *pvatt ), NULL );
+	}
+	step = anim->vertex_count ? STEP_GET_DATAPTR_APPEND : STEP_GET_DATAPTR_CLEAR;
+	qdx_vbuffer_steps( step, &anim->vbuffer, 0, anim->vertex_count * sizeof( *pvatt ), render_count * sizeof( *pvatt ), &pvatt );
+
+	for ( j = 0; j < render_count; j++, pvatt++ ) {
+		mdsWeight_t *w, *w0;
+
+		vec3_t singleVert;
+		VectorClear( singleVert );
+		VectorClear( pvatt->WEIGHTS );
+		pvatt->MATIND = 0;
+
+		int numWeights = v->numWeights;
+		if ( numWeights > 4 )
+		{
+			numWeights = 4;
+			qassert( 0 && "Animation error: too many weights" );
+		}
+
+		w = w0 = v->weights;
+		//for ( k = 0; k < numWeights; k++, w0++ )
+		//{
+		//	if ( w0->boneWeight > w->boneWeight )
+		//		w = w0;
+		//}
+		//for ( k = 0; k < numWeights; k++, w++ )
+		//{
+		//	VectorMA( singleVert, w->boneWeight, w->offset, singleVert );
+		//	//if ( k < 3 )
+		//	//{
+		//	//	pvatt->WEIGHTS[k] = w->boneWeight;
+		//	//}
+		//	//pvatt->MATINDB[k] = w->boneIndex;
+		//}
+		//w = v->weights;
+		//pvatt->XYZ[0] = singleVert[0];
+		//pvatt->XYZ[1] = singleVert[1];
+		//pvatt->XYZ[2] = singleVert[2];
+		pvatt->XYZ[0] = w->offset[0];
+		pvatt->XYZ[1] = w->offset[1];
+		pvatt->XYZ[2] = w->offset[2];
+		pvatt->WEIGHTS[0] = 1.0f;
+		//pvatt->MATINDB[0] = w->boneIndex;
+		pvatt->MATINDB[0] = bonemapping[w->boneIndex];
+
+		if( bonemapping[w->boneIndex] == 0xFF )
+		{
+			//helper_value_initial_value( 2, 128 );
+			//if ( helper_value_less( 2, bonematidx ) )
+			//{
+			//	pvatt->MATINDB[0] = 0;
+			//}
+			//else
+			{
+				pvatt->MATINDB[0] = anim->bone_count;
+				bonemapping[w->boneIndex] = anim->bone_count;
+				bone = &bones[w->boneIndex];
+				//vec3_t tempVert;
+				//VectorClear( tempVert );
+				//LocalAddScaledMatrixTransformVectorTranslate( w->offset, w->boneWeight, bone->matrix, bone->translation, tempVert );
+
+				D3DXVECTOR4 res;
+				D3DXMATRIX mat, wmat;
+				//D3DXMATRIX tmp;
+				//D3DXMatrixRotationX( &mat, D3DXToRadian( *helper_value(3) ) );
+				//D3DXMatrixRotationY( &tmp,  D3DXToRadian(*helper_value(4)));
+				//D3DXMatrixMultiply( &mat, &mat, &tmp );
+				//D3DXMatrixRotationZ( &tmp, D3DXToRadian( *helper_value(5) ) );
+				//D3DXMatrixMultiply( &mat, &mat, &tmp );
+				mat.m[0][0] = bone->matrix[0][0];
+				mat.m[1][0] = bone->matrix[0][1];
+				mat.m[2][0] = bone->matrix[0][2];
+				mat.m[3][0] = bone->translation[0];
+
+				mat.m[0][1] = bone->matrix[1][0];
+				mat.m[1][1] = bone->matrix[1][1];
+				mat.m[2][1] = bone->matrix[1][2];
+				mat.m[3][1] = bone->translation[1];
+
+				mat.m[0][2] = bone->matrix[2][0];
+				mat.m[1][2] = bone->matrix[2][1];
+				mat.m[2][2] = bone->matrix[2][2];
+				mat.m[3][2] = bone->translation[2];
+
+				mat.m[0][3] = 0;
+				mat.m[1][3] = 0;
+				mat.m[2][3] = 0;
+				mat.m[3][3] = 1;
+
+				D3DXMatrixMultiply( &wmat, &mat, &qdx.world );
+
+				IDirect3DDevice9_SetTransform( qdx.device, D3DTS_WORLDMATRIX( anim->bone_count ), &wmat );
+				anim->bone_count++;
+
+				//D3DXVec3Transform( &res, w->offset, &wmat );
+				//pvatt->XYZ[0] = res.x;
+				//pvatt->XYZ[1] = res.y;
+				//pvatt->XYZ[2] = res.z;
+			}
+		}
+
+		//for ( k = 0; k < v->numWeights; k++, w++ )
+		//{
+		//	bone = &bones[w->boneIndex];
+		//	LocalAddScaledMatrixTransformVectorTranslate( w->offset, w->boneWeight, bone->matrix, bone->translation, tempVert );
+		//}
+		//LocalMatrixTransformVector( v->normal,  bones[v->weights[0].boneIndex].matrix, tempNormal );
+		pvatt->NORM[0] = v->normal[0];
+		pvatt->NORM[1] = v->normal[1];
+		pvatt->NORM[2] = v->normal[2];
+		//pvatt->COLOR = qdx.crt_color;
+
+		//tess.texCoords[baseVertex + j][0][0] = v->texCoords[0];
+		//tess.texCoords[baseVertex + j][0][1] = v->texCoords[1];
+		pvatt->UV[0] = v->texCoords[0];
+		pvatt->UV[1] = v->texCoords[1];
+
+		v = (mdsVertex_t *)&v->weights[v->numWeights];
+	}
+	qdx_vbuffer_steps( STEP_FINALIZE, &anim->vbuffer, 0, 0, 0, NULL );
+	anim->vertex_count += render_count;
+	QDX_ANIMATION_PROCESS();
+}
+
+void RB_SurfaceAnim0( mdsSurface_t *surface ) {
 	int i, j, k;
 	refEntity_t *refent;
 	int             *boneList;
@@ -1305,7 +1575,8 @@ void RB_SurfaceAnim( mdsSurface_t *surface ) {
 	}
 
 //DBG_SHOWTIME
-
+	static const float matrix_id[3][3] = { 1, 0, 0,  0, 1, 0,  0, 0, 1};
+	vec3_t transl_id = { 0, 0, 0};             // translation vector
 	//
 	// deform the vertexes by the lerped bones
 	//
@@ -1316,12 +1587,29 @@ void RB_SurfaceAnim( mdsSurface_t *surface ) {
 	for ( j = 0; j < render_count; j++, tempVert += 4, tempNormal += 4 ) {
 		mdsWeight_t *w;
 
+		vec3_t singleVert;
+		VectorClear( singleVert );
 		VectorClear( tempVert );
 
-		w = v->weights;
-		for ( k = 0 ; k < v->numWeights ; k++, w++ ) {
-			bone = &bones[w->boneIndex];
-			LocalAddScaledMatrixTransformVectorTranslate( w->offset, w->boneWeight, bone->matrix, bone->translation, tempVert );
+		helper_value_initial_value( 1, -1 );
+		if ( helper_value_equals( 1, -1 ) )
+		{
+			w = v->weights;
+			for ( k = 0; k < v->numWeights; k++, w++ )
+			{
+				bone = &bones[w->boneIndex];
+				LocalAddScaledMatrixTransformVectorTranslate( w->offset, w->boneWeight, bone->matrix, bone->translation, tempVert );
+			}
+		}
+		else
+		{
+			int sel = helper_value_clamp( 1, 0, v->numWeights - 1 );
+			w = &(v->weights[sel]);
+			//for ( k = 0 ; k < v->numWeights; k++, w++ )
+			{
+				bone = &bones[w->boneIndex];
+				LocalAddScaledMatrixTransformVectorTranslate( w->offset, 1.0f/*w->boneWeight*/, bone->matrix, bone->translation, tempVert);
+			}
 		}
 		LocalMatrixTransformVector( v->normal, bones[v->weights[0].boneIndex].matrix, tempNormal );
 

@@ -8,6 +8,7 @@ extern "C" {
 #endif
 
 #include "../game/q_shared.h"
+#include <stdint.h>
 
 void function_called(const char *name);
 void functions_dump();
@@ -53,6 +54,16 @@ inline int helper_value_equals( unsigned int index, int check )
 	return (check == *helper_value(index));
 }
 
+inline int helper_value_less( unsigned int index, int check )
+{
+	return (check > *helper_value(index));
+}
+
+inline int helper_value_greater( unsigned int index, int check )
+{
+	return (check < *helper_value(index));
+}
+
 inline int helper_value_clamp( unsigned int index, int lower, int upper )
 {
 	int val = *helper_value( index );
@@ -62,6 +73,9 @@ inline int helper_value_clamp( unsigned int index, int lower, int upper )
 		val = upper;
 	return val;
 }
+
+void bitmask_set( uint32_t bitnum, uint32_t* storage, uint32_t storagesz );
+uint32_t bitmask_is_set( uint32_t bitnum, uint32_t* storage, uint32_t storagesz );
 
 #ifdef __cplusplus
 }
