@@ -228,6 +228,11 @@ static void do_draw()
 					qdx_4imgui_light_clear_override( idval.ll );
 					ovr = qdx_4imgui_light_get_override( qdx_4imgui_light_picking_id( selected_index ), map_light_type[light_type] );
 				}
+				ImGui::SameLine();
+				if ( ImGui::Button( "Save ALL" ) )
+				{
+					qdx_light_override_save_all();
+				}
 			}
 		}
 	}

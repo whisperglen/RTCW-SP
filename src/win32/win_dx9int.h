@@ -59,7 +59,8 @@ void qdx_storemapconfflt( const char* base, const char* valname, float value, bo
 void qdx_lights_load(mINI::INIStructure &ini, const char *mapname);
 void qdx_flashlight_save();
 void qdx_radiance_save( bool inGlobal );
-void qdx_light_override_save( light_override_t* ovr );
+void qdx_light_override_save( light_override_t* ovr, bool writeOut = true );
+void qdx_light_override_save_all();
 
 #define NUM_FLASHLIGHT_HND 3
 float* qdx_4imgui_radiance_dynamic_1f();

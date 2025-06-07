@@ -221,7 +221,15 @@ void qdx_light_scan_closest_lights(light_type_e type)
 		{
 			if ( g_lights_dynamic_bitmap & bit )
 			{
-				float dist = Distance( FLASHLIGHT_POSITION_CACHE, l->pos ); //use the flashlight cache since we have it
+				vec3_t position = { l->pos[0], l->pos[1], l->pos[2] };
+				light_override_t* ovr = qdx_light_find_override( l->hash );
+				if ( ovr )
+				{
+					position[0] += ovr->position_offset[0];
+					position[1] += ovr->position_offset[1];
+					position[2] += ovr->position_offset[2];
+				}
+				float dist = Distance( FLASHLIGHT_POSITION_CACHE, position ); //use the flashlight cache since we have it
 				distvhash.push_back( std::make_pair( dist, l->hash ) );
 				keep_searching &= ~bit;
 			}
@@ -341,7 +349,7 @@ void qdx_radiance_save( bool inGlobal )
 	qdx_save_iniconf();
 }
 
-void qdx_light_override_save( light_override_t* ovr )
+void qdx_light_override_save( light_override_t* ovr, bool writeOut )
 {
 	char section[64];
 	uint64_comp_t idval;
@@ -358,6 +366,19 @@ void qdx_light_override_save( light_override_t* ovr )
 	qdx_storemapconfflt( section, "Radius", ovr->radius_base, FALSE );
 	qdx_storemapconfflt( section, "RadiusScale", ovr->radius_scale, FALSE );
 	qdx_storemapconfflt( section, "Volumetric", ovr->volumetric_scale, FALSE );
+
+	if ( writeOut )
+	{
+		qdx_save_iniconf();
+	}
+}
+
+void qdx_light_override_save_all()
+{
+	for(auto it = g_light_overrides.begin(); it != g_light_overrides.end(); it++)
+	{
+		qdx_light_override_save(&(it->second), false);
+	}
 
 	qdx_save_iniconf();
 }
