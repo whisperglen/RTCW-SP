@@ -1179,7 +1179,7 @@ void RB_SurfaceAnim0( mdsSurface_t* surface );
 
 void RB_SurfaceAnim( mdsSurface_t* surface )
 {
-	if ( 1 )
+	if ( r_gpuskinning->integer )
 		RB_SurfaceAnim1( surface );
 	else
 		RB_SurfaceAnim0( surface );
@@ -1382,19 +1382,22 @@ void RB_SurfaceAnim1( mdsSurface_t *surface ) {
 		//LocalMatrixTransformVector( v->normal,  bones[v->weights[0].boneIndex].matrix, tempNormal );
 		D3DXMATRIX pose;
 		bone_to_matrix( &bones_tpose[w->boneIndex], &pose );
-#if 0
-		vec3_t tempVert;
-		VectorClear( tempVert );
-		for ( k = 0; k < numWeights; k++, w++ )
+		if ( r_gpuskinning->integer > 1 )
 		{
-			bone = &bones_tpose[w->boneIndex];
-			LocalAddScaledMatrixTransformVectorTranslate( w->offset, w->boneWeight, bone->matrix, bone->translation, tempVert );
+			vec3_t tempVert;
+			VectorClear( tempVert );
+			for ( k = 0; k < numWeights; k++, w++ )
+			{
+				bone = &bones_tpose[w->boneIndex];
+				LocalAddScaledMatrixTransformVectorTranslate( w->offset, w->boneWeight, bone->matrix, bone->translation, tempVert );
+			}
+			w = v->weights;
+			VectorCopy( tempVert, pvatt->XYZ );
 		}
-		w = v->weights;
-		VectorCopy( tempVert, pvatt->XYZ );
-#else
-		D3DXVec3TransformCoord( pvatt->XYZ, w->offset, &pose );
-#endif
+		else
+		{
+			D3DXVec3TransformCoord( pvatt->XYZ, w->offset, &pose );
+		}
 		D3DXVec3TransformNormal( pvatt->NORM, v->normal, &pose );
 
 		for ( k = 0; k < numWeights; k++, w++ )
@@ -1432,7 +1435,7 @@ void RB_SurfaceAnim1( mdsSurface_t *surface ) {
 	}
 	qdx_vbuffer_steps( STEP_FINALIZE, &anim->vbuffer, 0, 0, 0, NULL );
 	anim->vertex_count += render_count;
-	QDX_ANIMATION_PROCESS();
+	//QDX_ANIMATION_PROCESS();
 }
 
 void RB_SurfaceAnim0( mdsSurface_t *surface ) {
