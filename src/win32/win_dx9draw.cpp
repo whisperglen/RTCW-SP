@@ -1721,7 +1721,7 @@ void qdx_ibuffer_release(qdx_ibuffer_t buf)
 
 static void qdx_animationbuf_reset(BOOL release)
 {
-	struct qdx9_state::animation_buff_s* anim = &qdx.skinned_mesh;
+	struct animation_buff_s* anim = &qdx.skinned_mesh;
 	if ( release )
 	{
 		if ( anim->vbuffer )
@@ -1742,7 +1742,7 @@ static void qdx_animationbuf_reset(BOOL release)
 
 void qdx_animation_process()
 {
-	struct qdx9_state::animation_buff_s* anim = &qdx.skinned_mesh;
+	struct animation_buff_s* anim = &qdx.skinned_mesh;
 	if ( anim->index_count )
 	{
 		DX9_BEGIN_SCENE();
@@ -1754,12 +1754,12 @@ void qdx_animation_process()
 		shaderStage_t* pStage = tess.xstages[0];
 		qdx_vatt_attach_texture( pStage->bundle[0].image[0]->texnum - TEXNUM_OFFSET, 0 );
 		
-		D3DXMATRIX matid;
-		D3DXMatrixIdentity( &matid );
-		qdx_matrix_push( D3DTS_WORLD );
-		qdx_matrix_set(D3DTS_WORLD, &matid.m[0][0]);
+		//D3DXMATRIX matid;
+		//D3DXMatrixIdentity( &matid );
+		//qdx_matrix_push( D3DTS_WORLD );
+		//qdx_matrix_set(D3DTS_WORLD, &matid.m[0][0]);
 		qdx_matrix_apply();
-		qdx_matrix_pop( D3DTS_WORLD );
+		//qdx_matrix_pop( D3DTS_WORLD );
 
 		qdx.device->SetIndices( anim->ibuffer );
 		qdx.device->SetStreamSource( 0, anim->vbuffer, 0, sizeof( vatt_anim_t ) );

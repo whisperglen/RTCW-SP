@@ -56,6 +56,7 @@ static int baseIndex, baseVertex, oldIndexes;
 static int numVerts;
 static mdsVertex_t     *v;
 static mdsBoneFrame_t bones[MDS_MAX_BONES], rawBones[MDS_MAX_BONES], oldBones[MDS_MAX_BONES];
+static mdsBoneFrame_t bones_tpose[MDS_MAX_BONES];
 static char validBones[MDS_MAX_BONES];
 static char newBones[ MDS_MAX_BONES ];
 static mdsBoneFrame_t  *bonePtr, *bone, *parentBone;
@@ -1184,6 +1185,29 @@ void RB_SurfaceAnim( mdsSurface_t* surface )
 		RB_SurfaceAnim0( surface );
 }
 
+void bone_to_matrix( mdsBoneFrame_t *bone, D3DXMATRIX *out )
+{
+	out->m[0][0] = bone->matrix[0][0];
+	out->m[1][0] = bone->matrix[0][1];
+	out->m[2][0] = bone->matrix[0][2];
+	out->m[3][0] = bone->translation[0];
+
+	out->m[0][1] = bone->matrix[1][0];
+	out->m[1][1] = bone->matrix[1][1];
+	out->m[2][1] = bone->matrix[1][2];
+	out->m[3][1] = bone->translation[1];
+
+	out->m[0][2] = bone->matrix[2][0];
+	out->m[1][2] = bone->matrix[2][1];
+	out->m[2][2] = bone->matrix[2][2];
+	out->m[3][2] = bone->translation[2];
+
+	out->m[0][3] = 0;
+	out->m[1][3] = 0;
+	out->m[2][3] = 0;
+	out->m[3][3] = 1;
+}
+
 void RB_SurfaceAnim1( mdsSurface_t *surface ) {
 	int i, j, k;
 	refEntity_t *refent;
@@ -1201,6 +1225,8 @@ void RB_SurfaceAnim1( mdsSurface_t *surface ) {
 	localEnt.torsoFrame = 0;
 	localEnt.oldTorsoFrame = 0;
 	R_CalcBones( header, (const refEntity_t*)&localEnt , boneList, surface->numBoneReferences );
+	memcpy( bones_tpose, bones, sizeof( bones_tpose ) );
+	R_CalcBones( header, (const refEntity_t*)refent , boneList, surface->numBoneReferences );
 
 	//
 	// calculate LOD
@@ -1330,10 +1356,8 @@ void RB_SurfaceAnim1( mdsSurface_t *surface ) {
 	qdx_vbuffer_steps( step, &anim->vbuffer, 0, anim->vertex_count * sizeof( *pvatt ), render_count * sizeof( *pvatt ), &pvatt );
 
 	for ( j = 0; j < render_count; j++, pvatt++ ) {
-		mdsWeight_t *w, *w0;
+		mdsWeight_t *w;
 
-		vec3_t singleVert;
-		VectorClear( singleVert );
 		VectorClear( pvatt->WEIGHTS );
 		pvatt->MATIND = 0;
 
@@ -1344,97 +1368,59 @@ void RB_SurfaceAnim1( mdsSurface_t *surface ) {
 			qassert( 0 && "Animation error: too many weights" );
 		}
 
-		w = w0 = v->weights;
-		//for ( k = 0; k < numWeights; k++, w0++ )
+		//if ( numWeights > 1 )
 		//{
-		//	if ( w0->boneWeight > w->boneWeight )
-		//		w = w0;
+		//	__debugbreak();
 		//}
-		//for ( k = 0; k < numWeights; k++, w++ )
-		//{
-		//	VectorMA( singleVert, w->boneWeight, w->offset, singleVert );
-		//	//if ( k < 3 )
-		//	//{
-		//	//	pvatt->WEIGHTS[k] = w->boneWeight;
-		//	//}
-		//	//pvatt->MATINDB[k] = w->boneIndex;
-		//}
-		//w = v->weights;
-		//pvatt->XYZ[0] = singleVert[0];
-		//pvatt->XYZ[1] = singleVert[1];
-		//pvatt->XYZ[2] = singleVert[2];
-		pvatt->XYZ[0] = w->offset[0];
-		pvatt->XYZ[1] = w->offset[1];
-		pvatt->XYZ[2] = w->offset[2];
-		pvatt->WEIGHTS[0] = 1.0f;
-		//pvatt->MATINDB[0] = w->boneIndex;
-		pvatt->MATINDB[0] = bonemapping[w->boneIndex];
 
-		if( bonemapping[w->boneIndex] == 0xFF )
-		{
-			//helper_value_initial_value( 2, 128 );
-			//if ( helper_value_less( 2, bonematidx ) )
-			//{
-			//	pvatt->MATINDB[0] = 0;
-			//}
-			//else
-			{
-				pvatt->MATINDB[0] = anim->bone_count;
-				bonemapping[w->boneIndex] = anim->bone_count;
-				bone = &bones[w->boneIndex];
-				//vec3_t tempVert;
-				//VectorClear( tempVert );
-				//LocalAddScaledMatrixTransformVectorTranslate( w->offset, w->boneWeight, bone->matrix, bone->translation, tempVert );
-
-				D3DXVECTOR4 res;
-				D3DXMATRIX mat, wmat;
-				//D3DXMATRIX tmp;
-				//D3DXMatrixRotationX( &mat, D3DXToRadian( *helper_value(3) ) );
-				//D3DXMatrixRotationY( &tmp,  D3DXToRadian(*helper_value(4)));
-				//D3DXMatrixMultiply( &mat, &mat, &tmp );
-				//D3DXMatrixRotationZ( &tmp, D3DXToRadian( *helper_value(5) ) );
-				//D3DXMatrixMultiply( &mat, &mat, &tmp );
-				mat.m[0][0] = bone->matrix[0][0];
-				mat.m[1][0] = bone->matrix[0][1];
-				mat.m[2][0] = bone->matrix[0][2];
-				mat.m[3][0] = bone->translation[0];
-
-				mat.m[0][1] = bone->matrix[1][0];
-				mat.m[1][1] = bone->matrix[1][1];
-				mat.m[2][1] = bone->matrix[1][2];
-				mat.m[3][1] = bone->translation[1];
-
-				mat.m[0][2] = bone->matrix[2][0];
-				mat.m[1][2] = bone->matrix[2][1];
-				mat.m[2][2] = bone->matrix[2][2];
-				mat.m[3][2] = bone->translation[2];
-
-				mat.m[0][3] = 0;
-				mat.m[1][3] = 0;
-				mat.m[2][3] = 0;
-				mat.m[3][3] = 1;
-
-				D3DXMatrixMultiply( &wmat, &mat, &qdx.world );
-
-				IDirect3DDevice9_SetTransform( qdx.device, D3DTS_WORLDMATRIX( anim->bone_count ), &wmat );
-				anim->bone_count++;
-
-				//D3DXVec3Transform( &res, w->offset, &wmat );
-				//pvatt->XYZ[0] = res.x;
-				//pvatt->XYZ[1] = res.y;
-				//pvatt->XYZ[2] = res.z;
-			}
-		}
-
+		w = v->weights;
 		//for ( k = 0; k < v->numWeights; k++, w++ )
 		//{
 		//	bone = &bones[w->boneIndex];
 		//	LocalAddScaledMatrixTransformVectorTranslate( w->offset, w->boneWeight, bone->matrix, bone->translation, tempVert );
 		//}
 		//LocalMatrixTransformVector( v->normal,  bones[v->weights[0].boneIndex].matrix, tempNormal );
-		pvatt->NORM[0] = v->normal[0];
-		pvatt->NORM[1] = v->normal[1];
-		pvatt->NORM[2] = v->normal[2];
+		D3DXMATRIX pose;
+		bone_to_matrix( &bones_tpose[w->boneIndex], &pose );
+#if 0
+		vec3_t tempVert;
+		VectorClear( tempVert );
+		for ( k = 0; k < numWeights; k++, w++ )
+		{
+			bone = &bones_tpose[w->boneIndex];
+			LocalAddScaledMatrixTransformVectorTranslate( w->offset, w->boneWeight, bone->matrix, bone->translation, tempVert );
+		}
+		w = v->weights;
+		VectorCopy( tempVert, pvatt->XYZ );
+#else
+		D3DXVec3TransformCoord( pvatt->XYZ, w->offset, &pose );
+#endif
+		D3DXVec3TransformNormal( pvatt->NORM, v->normal, &pose );
+
+		for ( k = 0; k < numWeights; k++, w++ )
+		{
+			if ( k < 3 )
+			{
+				pvatt->WEIGHTS[k] = w->boneWeight;
+			}
+			pvatt->MATINDB[k] = bonemapping[w->boneIndex];
+			if ( pvatt->MATINDB[k] == 0xFF )
+			{
+				pvatt->MATINDB[k] = anim->bone_count;
+				bonemapping[w->boneIndex] = anim->bone_count;
+				D3DXMATRIX mat, fmat, wmat, ipose;
+				bone_to_matrix( &bones[w->boneIndex], &mat );
+				bone_to_matrix( &bones_tpose[w->boneIndex], &pose );
+				D3DXMatrixInverse( &ipose, NULL, &pose );
+				D3DXMatrixMultiply( &fmat, &ipose, &mat );
+				//D3DXMatrixIdentity( &fmat );
+				D3DXMatrixMultiply( &wmat, &fmat, &qdx.world );
+
+				IDirect3DDevice9_SetTransform( qdx.device, D3DTS_WORLDMATRIX( anim->bone_count ), &wmat );
+				//IDirect3DDevice9_MultiplyTransform( qdx.device, D3DTS_WORLDMATRIX( anim->bone_count ), &fmat );
+				anim->bone_count++;
+			}
+		}
 		//pvatt->COLOR = qdx.crt_color;
 
 		//tess.texCoords[baseVertex + j][0][0] = v->texCoords[0];

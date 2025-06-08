@@ -18,6 +18,16 @@ typedef UINT32 qdxIndex_t;
 #define QDX_INDEX_TYPE D3DFMT_INDEX16
 typedef UINT16 qdxIndex_t;
 #endif
+
+struct animation_buff_s
+{
+	LPDIRECT3DVERTEXBUFFER9 vbuffer;
+	LPDIRECT3DINDEXBUFFER9 ibuffer;
+	UINT32 vertex_count;
+	UINT32 index_count;
+	UINT8 bone_count;
+};
+
 struct qdx9_state
 {
 	LPDIRECT3D9 d3d;
@@ -31,14 +41,7 @@ struct qdx9_state
 	D3DMATRIX camera;
 	D3DMATRIX world;
 
-	struct animation_buff_s
-	{
-		LPDIRECT3DVERTEXBUFFER9 vbuffer;
-		LPDIRECT3DINDEXBUFFER9 ibuffer;
-		UINT32 vertex_count;
-		UINT32 index_count;
-		UINT8 bone_count;
-	} skinned_mesh;
+	struct animation_buff_s skinned_mesh;
 
 	WINDOWPLACEMENT wplacement;
 	D3DDISPLAYMODE desktop;
