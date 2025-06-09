@@ -1224,6 +1224,8 @@ void RB_SurfaceAnim1( mdsSurface_t *surface ) {
 	localEnt.oldframe = 0;
 	localEnt.torsoFrame = 0;
 	localEnt.oldTorsoFrame = 0;
+	const vec3_t idaxis[3] = { 1, 0, 0, 0, 1, 0, 0, 0, 1 };
+	memcpy(localEnt.torsoAxis, idaxis, sizeof(localEnt.torsoAxis));
 	R_CalcBones( header, (const refEntity_t*)&localEnt , boneList, surface->numBoneReferences );
 	memcpy( bones_tpose, bones, sizeof( bones_tpose ) );
 	R_CalcBones( header, (const refEntity_t*)refent , boneList, surface->numBoneReferences );
