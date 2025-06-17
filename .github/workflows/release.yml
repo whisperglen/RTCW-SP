@@ -23,7 +23,7 @@ env:
 
 jobs:
   build:
-    runs-on: windows-2019
+    runs-on: windows-2022
 
     steps:
     - name: Checkout repository
@@ -49,7 +49,7 @@ jobs:
 
     - name: Create Release
       id: create_release
-      uses: actions/create-release@v1
+      uses: comnoco/create-release-action@v2.0.5
       with:
         draft: false
         prerelease: false
@@ -57,9 +57,15 @@ jobs:
         release_name: ${{ github.ref_name }}
 
     - name: Upload win32 artifact
-      uses: actions/upload-release-asset@v1
+      uses: actions/github-script@v4
       with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: ./wolf_dx9_game_binaries.zip
-        asset_name: wolf_dx9_game_binaries.zip
-        asset_content_type: application/zip
+        script: |
+          const fs = require('fs');
+          // Upload the release asset
+          await github.repos.uploadReleaseAsset({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            release_id: ${{ steps.create_release.outputs.id }},
+            name: "wolf_dx9_game_binaries.zip",
+            data: await fs.readFileSync("./wolf_dx9_game_binaries.zip")
+          });
