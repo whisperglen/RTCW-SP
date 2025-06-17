@@ -149,14 +149,16 @@ static void do_draw()
 		if ( ImGui::Combo( "##11", &light_type, "Scan DynamicLights\0Scan Coronas\0\0" ) )
 		{
 			//require a Scan after this changes
-			UNFLASH_IT();
+			if ( flash_it )
+				UNFLASH_IT();
 			qdx_4imgui_light_picking_clear();
 			ovr = NULL;
 		}
 		if ( ImGui::Button( " Scan " ) )
 		{
 			selected_index = 0;
-			UNFLASH_IT();
+			if ( flash_it )
+				UNFLASH_IT();
 			qdx_light_scan_closest_lights(map_light_type[light_type]);
 			ovr = qdx_4imgui_light_get_override( qdx_4imgui_light_picking_id( selected_index ), map_light_type[light_type] );
 		}
