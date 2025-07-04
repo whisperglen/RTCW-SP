@@ -1,6 +1,7 @@
 
 #include "../renderer/qdx9.h"
 #include "win_dx9int.h"
+#include "tr_surface_mod_int.h"
 extern "C"
 {
 #include "../renderer/tr_local.h"
@@ -12,16 +13,8 @@ extern "C"
 #include "fnv.h"
 
 #include <string>
-#include <map>
-
-enum r_logfiletypes_e
-{
-	RLOGFILE_TEXT = 1,
-	RLOGFILE_VERTEX = 1 << 1,
-	RLOGFILE_TEXTURE = 1 << 2,
-	RLOGFILE_MATRIX = 1 << 3,
-	RLOGFILE_VATTSET = 1 << 4,
-};
+#include <vector>
+#include <unordered_map>
 
 typedef struct entity_bone_transforms_s
 {
@@ -61,7 +54,9 @@ struct qdx_matrixes
 	}
 } qdx_mats;
 
-static std::map<const void*, entity_bone_transforms_t> animation_mappings;
+int qdx_scene_started = 0;
+
+static std::unordered_map<const void*, entity_bone_transforms_t> animation_mappings;
 
 void qdx_draw_init(void *hwnd, void *device)
 {
@@ -829,7 +824,7 @@ void qdx_vatt_set_buffer(vatt_param_t param, const void *buffer, UINT elems, UIN
 	if (r_logFile->integer && (r_logFileTypes->integer & RLOGFILE_VATTSET))
 		qdx_log_comment(__FUNCTION__, param, buffer);
 
-	switch (param)
+	switch (int(param))
 	{
 	case VATT_VERTEX:
 		g_vattribs.vertexes = (float*)buffer;
@@ -2072,7 +2067,7 @@ std::stack<D3DXMATRIX> g_matworld_stack;
 
 void qdx_matrix_set(D3DTRANSFORMSTATETYPE type, const float *matrix)
 {
-	switch (type)
+	switch (int(type))
 	{
 	case D3DTS_VIEW:
 		qdx_mats.view = D3DXMATRIX(matrix);
@@ -2088,7 +2083,7 @@ void qdx_matrix_set(D3DTRANSFORMSTATETYPE type, const float *matrix)
 
 void qdx_matrix_mul(D3DTRANSFORMSTATETYPE type, const D3DMATRIX *matrix)
 {
-	switch (type)
+	switch (int(type))
 	{
 	case D3DTS_VIEW:
 		qdx_mats.view = D3DXMATRIX(*matrix) * qdx_mats.view;
@@ -2104,7 +2099,7 @@ void qdx_matrix_mul(D3DTRANSFORMSTATETYPE type, const D3DMATRIX *matrix)
 
 void qdx_matrix_push(D3DTRANSFORMSTATETYPE type)
 {
-	switch (type)
+	switch (int(type))
 	{
 	case D3DTS_VIEW:
 		g_matview_stack.push(qdx_mats.view);
@@ -2120,7 +2115,7 @@ void qdx_matrix_push(D3DTRANSFORMSTATETYPE type)
 
 void qdx_matrix_pop(D3DTRANSFORMSTATETYPE type)
 {
-	switch (type)
+	switch (int(type))
 	{
 	case D3DTS_VIEW:
 		qdx_mats.view = g_matview_stack.top();
@@ -2186,7 +2181,8 @@ void qdx_matrix_apply(void)
 		qdx_log_matrix("world", (float*)qdx_mats.world.m);
 		qdx_log_matrix("view", (float*)qdx_mats.view.m);
 		qdx_log_matrix("proj", (float*)qdx_mats.proj.m);
-		qdx_log_matrix("all", (float*)(&(qdx_mats.world * qdx_mats.view * qdx_mats.proj))->m);
+		D3DXMATRIX all = qdx_mats.world * qdx_mats.view * qdx_mats.proj;
+		qdx_log_matrix("all", (float*)all.m);
 	}
 }
 
@@ -2214,7 +2210,7 @@ void qdx_depthrange(float znear, float zfar)
 	qdx.device->SetViewport(&vp);
 }
 
-static std::map<std::string, int> asserted_fns;
+static std::unordered_map<std::string, int> asserted_fns;
 #define ASSERT_MAX_PRINTS 5
 
 void qdx_assert_failed_str(const char* expression, const char* function, unsigned line, const char* file)
@@ -2303,9 +2299,9 @@ int qdx_readsetting( const char* valname, int default )
 	return default;
 }
 
-intptr_t qdx_readmapconf_ex(const char* base, const char* valname, int radix)
+intptr_t qdx_readmapconf_ex(const char* base, const char* valname, int radix, int defval)
 {
-	intptr_t ret = 0;
+	intptr_t ret = defval;
 	int tries = 0;
 	std::string section( base );
 	section.append( "." );
@@ -2336,14 +2332,14 @@ intptr_t qdx_readmapconf_ex(const char* base, const char* valname, int radix)
 	return ret;
 }
 
-int qdx_readmapconf( const char* base, const char* valname )
+int qdx_readmapconf( const char* base, const char* valname, int defval)
 {
-	return (int) qdx_readmapconf_ex( base, valname, 10 );
+	return (int) qdx_readmapconf_ex( base, valname, 10, defval);
 }
 
 void* qdx_readmapconfptr( const char* base, const char* valname)
 {
-	return (void*) qdx_readmapconf_ex( base, valname, 16 );
+	return (void*) qdx_readmapconf_ex( base, valname, 16, NULL );
 }
 
 float qdx_readmapconfflt(const char* base, const char* valname, float default)
@@ -2401,6 +2397,48 @@ void qdx_storemapconfflt( const char* base, const char* valname, float value, bo
 	g_iniconf[section][valname] = data;
 }
 
+void qdx_storemapconfint( const char* base, const char* valname, int value, bool inGlobal )
+{
+	if ( inGlobal == false && active_map.length() == 0 )
+	{
+		return;
+	}
+	char data[32];
+	snprintf( data, sizeof( data ), "%d", value );
+
+	std::string section( base );
+	section.append( "." );
+	if ( inGlobal )
+	{
+		section.append( INICONF_GLOBAL );
+	}
+	else
+	{
+		section.append( active_map.c_str() );
+	}
+	g_iniconf[section][valname] = data;
+}
+
+void qdx_storemapconfstr( const char* base, const char* valname, const char *value, bool inGlobal )
+{
+	if ( inGlobal == false && active_map.length() == 0 )
+	{
+		return;
+	}
+
+	std::string section( base );
+	section.append( "." );
+	if ( inGlobal )
+	{
+		section.append( INICONF_GLOBAL );
+	}
+	else
+	{
+		section.append( active_map.c_str() );
+	}
+	g_iniconf[section][valname] = std::string(value);
+}
+
 int qdx_readmapconfstr( const char* base, const char* valname, char *out, int outsz )
 {
 	int tries = 0;
@@ -2443,7 +2481,7 @@ int qdx_readmapconfstr( const char* base, const char* valname, char *out, int ou
 
 void qdx_begin_loading_map(const char* mapname)
 {
-	static char section[256];
+	static char section[32];
 
 	const char *name = strrchr(mapname, '/');
 	if (name == NULL) return;
@@ -2462,27 +2500,32 @@ void qdx_begin_loading_map(const char* mapname)
 
 	active_map.assign( name, namelen );
 
+	qdx_animationbuf_reset( TRUE );
+	qdx_surface_aabb_clearall();
+
 	if (g_inifile.read(g_iniconf))
 	{
 		if ( remixOnline )
 		{
-			mINI::INIMap<std::string>* opts;
+			mINI::INIMap<std::string>* default_opts;
+			mINI::INIMap<std::string>* map_opts = 0;
 
 			// Apply RTX.conf options
 			snprintf( section, sizeof( section ), "rtxconf.%.*s", namelen, name );
 			if ( g_iniconf.has( section ) )
 			{
-				opts = &g_iniconf[ section ];
+				map_opts = &g_iniconf[ section ];
 			}
-			else
-			{
-				opts = &g_iniconf[ "rtxconf.default" ];
-			}
+			default_opts = &g_iniconf[ "rtxconf.default" ];
 
-			for ( auto it = opts->begin(); it != opts->end(); it++ )
+			for ( auto it = default_opts->begin(); it != default_opts->end(); it++ )
 			{
 				const char* key = it->first.c_str();
 				const char* value = it->second.c_str();
+				if ( map_opts && map_opts->has( key ) )
+				{
+					value = map_opts->operator[](key).c_str();
+				}
 				remixapi_ErrorCode rercd = remixInterface.SetConfigVariable( key, value );
 				if ( REMIXAPI_ERROR_CODE_SUCCESS != rercd )
 				{
@@ -2493,79 +2536,8 @@ void qdx_begin_loading_map(const char* mapname)
 
 		// Load Light settings
 		qdx_lights_load( g_iniconf, active_map.c_str() );
+		qdx_surface_replacements_load( g_iniconf, active_map.c_str() );
 	}
-
-	qdx_animationbuf_reset( TRUE );
-}
-
-static std::map<UINT32, std::vector<const void*>> g_surfaces;
-
-void qdx_surface_clear()
-{
-	g_surfaces.clear();
-}
-
-void qdx_surface_add( const void* surf, surfpartition_t id )
-{
-	auto grp = g_surfaces.find( id.combined );
-	if ( grp != g_surfaces.end() )
-	{
-		grp->second.push_back( surf );
-	}
-	else
-	{
-		g_surfaces[id.combined].push_back( surf );
-	}
-}
-
-void qdx_surface_get_members( surfpartition_t id, const void** surfs, int* count )
-{
-	auto grp = g_surfaces.find( id.combined );
-	if ( grp != g_surfaces.end() )
-	{
-		*surfs = *grp->second.data();
-		*count = grp->second.size();
-	}
-	else
-	{
-		*surfs = 0;
-		*count = 0;
-	}
-}
-
-#define QDX_SURFACE_GRID_VAL 500.0f
-
-surfpartition_t qdx_surface_get_partition( const void* data )
-{
-	surfpartition_t sid = { 0 };
-	float* vert;
-	srfSurfaceFace_t* face;
-	srfGridMesh_t* grid;
-	srfTriangles_t* tris;
-	switch ( *(surfaceType_t*)data )
-	{
-	case SF_FACE:
-		face = (srfSurfaceFace_t*)data;
-		vert = face->points[0];
-		break;
-	case SF_GRID:
-		grid = (srfGridMesh_t*)data;
-		vert = grid->verts[0].xyz;
-		break;
-	case SF_TRIANGLES:
-		tris = (srfTriangles_t*)data;
-		vert = tris->verts->xyz;
-		break;
-	default:
-		vert = 0;
-	}
-	if ( vert )
-	{
-		sid.p.x = (INT32)(vert[0] / QDX_SURFACE_GRID_VAL);
-		sid.p.y = (INT32)(vert[1] / QDX_SURFACE_GRID_VAL);
-		sid.p.z = (INT32)(vert[2] / QDX_SURFACE_GRID_VAL);
-	}
-	return sid;
 }
 
 void qdx_screen_getxyz( float *xyz )
@@ -2628,6 +2600,36 @@ void qdx_screen_getxyz( float *xyz )
 		ssrc->Release();
 		sdest->Release();
 	}
+}
+
+bool str_starts_with(const std::string& str, const std::string& prefix)
+{
+	return str.size() >= prefix.size() && str.compare(0, prefix.size(), prefix) == 0;
+}
+
+bool str_starts_with(const std::string& str, const char* prefix, unsigned prefixLen)
+{
+	return str.size() >= prefixLen && str.compare(0, prefixLen, prefix, prefixLen) == 0;
+}
+
+bool str_starts_with(const std::string& str, const char* prefix)
+{
+	return str_starts_with(str, prefix, std::string::traits_type::length(prefix));
+}
+
+bool str_ends_with(const std::string& str, const std::string& suffix)
+{
+	return str.size() >= suffix.size() && str.compare(str.size()-suffix.size(), suffix.size(), suffix) == 0;
+}
+
+bool str_ends_with(const std::string& str, const char* suffix, unsigned suffixLen)
+{
+	return str.size() >= suffixLen && str.compare(str.size()-suffixLen, suffixLen, suffix, suffixLen) == 0;
+}
+
+bool str_ends_with(const std::string& str, const char* suffix)
+{
+	return str_ends_with(str, suffix, std::string::traits_type::length(suffix));
 }
 
 /**

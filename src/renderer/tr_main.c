@@ -905,6 +905,12 @@ void R_SetupProjection(void) {
 	tr.viewParms.projectionMatrix[15] = 0;
 }
 
+vec3_t frustumnormals[4] = { 0 };
+float frustumdist[4] = { 0 };
+int frustumdebug = 0;
+int frustumoverride = 0;
+static void R_SetupFrustum_Debug1(void);
+static void R_SetupFrustum_Debug2(void);
 /*
 =================
 R_SetupFrustum
@@ -916,6 +922,20 @@ void R_SetupFrustum(void) {
 	int i;
 	float xs, xc;
 	float ang;
+
+	if (frustumdebug)
+	{
+		if (frustumdebug == 1)
+		{
+			R_SetupFrustum_Debug1();
+			return;
+		}
+		if (frustumdebug == 2)
+		{
+			R_SetupFrustum_Debug2();
+			return;
+		}
+	}
 
 	ang = tr.viewParms.fovX / 180 * M_PI * 0.5f;
 	xs = sin(ang);
@@ -944,6 +964,116 @@ void R_SetupFrustum(void) {
 	}
 }
 
+float* qdx_4imgui_frustrumplane(int idx) { return frustumnormals[idx]; }
+float* qdx_4imgui_frustumdist(int idx) { return &frustumdist[idx]; }
+int* qdx_4imgui_frustumdebug() { return &frustumdebug; }
+int* qdx_4imgui_frustumoverride() { return &frustumoverride;  }
+
+void R_SetupFrustum_Debug1(void) {
+	int i;
+	float xs, xc;
+	float ang;
+
+	ang = tr.viewParms.fovX / 180 * M_PI * 0.5f;
+	if (frustumoverride)
+	{
+		xs = 0;
+		xc = 1;
+	}
+	else
+	{
+		xs = sin(ang);
+		xc = cos(ang);
+	}
+
+	VectorScale(tr.viewParms. or .axis[0], xs, tr.viewParms.frustum[0].normal);
+	VectorMA(tr.viewParms.frustum[0].normal, xc, tr.viewParms. or .axis[1], tr.viewParms.frustum[0].normal);
+
+	VectorScale(tr.viewParms. or .axis[0], xs, tr.viewParms.frustum[1].normal);
+	VectorMA(tr.viewParms.frustum[1].normal, -xc, tr.viewParms. or .axis[1], tr.viewParms.frustum[1].normal);
+
+	ang = tr.viewParms.fovY / 180 * M_PI * 0.5f;
+	if (frustumoverride)
+	{
+		xs = 0;
+		xc = 1;
+	}
+	else
+	{
+		xs = sin(ang);
+		xc = cos(ang);
+	}
+
+	VectorScale(tr.viewParms. or .axis[0], xs, tr.viewParms.frustum[2].normal);
+	VectorMA(tr.viewParms.frustum[2].normal, xc, tr.viewParms. or .axis[2], tr.viewParms.frustum[2].normal);
+
+	VectorScale(tr.viewParms. or .axis[0], xs, tr.viewParms.frustum[3].normal);
+	VectorMA(tr.viewParms.frustum[3].normal, -xc, tr.viewParms. or .axis[2], tr.viewParms.frustum[3].normal);
+
+
+	for (i = 0; i < 4; i++)
+	{
+
+		if (frustumoverride)
+		{
+			VectorCopy(frustumnormals[i], tr.viewParms.frustum[i].normal);
+		}
+		else
+		{
+			VectorCopy(tr.viewParms.frustum[i].normal, frustumnormals[i]);
+		}
+	}
+
+	for (i = 0; i < 4; i++) {
+		tr.viewParms.frustum[i].type = PLANE_NON_AXIAL;
+		tr.viewParms.frustum[i].dist = DotProduct(tr.viewParms. or .origin, tr.viewParms.frustum[i].normal);
+		if (frustumoverride)
+		{
+			tr.viewParms.frustum[i].dist = frustumdist[i];
+		}
+		else
+		{
+			frustumdist[i] = tr.viewParms.frustum[i].dist;
+		}
+		SetPlaneSignbits(&tr.viewParms.frustum[i]);
+	}
+}
+
+void R_SetupFrustum_Debug2(void) {
+	int i;
+
+	const vec3_t vert_l = { 0, 1, 0 };
+	const vec3_t vert_r = { 0, -1, 0 };
+
+	VectorCopy(vert_l, tr.viewParms.frustum[0].normal);
+	VectorCopy(vert_r, tr.viewParms.frustum[1].normal);
+
+	const vec3_t horiz_t = { 0, 0, -1 };
+	const vec3_t horiz_b = { 0, 0, 1 };
+
+	VectorCopy(horiz_t, tr.viewParms.frustum[2].normal);
+	VectorCopy(horiz_b, tr.viewParms.frustum[3].normal);
+
+	for (i = 0; i < 4; i++)
+	{
+		VectorCopy(tr.viewParms.frustum[i].normal, frustumnormals[i]);
+	}
+
+	for (i = 0; i < 4; i++) {
+		tr.viewParms.frustum[i].type = PLANE_NON_AXIAL;
+		tr.viewParms.frustum[i].dist = DotProduct(tr.viewParms. or .origin, tr.viewParms.frustum[i].normal);
+
+		if (frustumoverride)
+		{
+			tr.viewParms.frustum[i].dist += frustumdist[i];
+		}
+		else
+		{
+			frustumdist[i] = tr.viewParms.frustum[i].dist;
+		}
+		SetPlaneSignbits(&tr.viewParms.frustum[i]);
+	}
+}
 
 /*
 =================
@@ -1436,6 +1566,7 @@ static int qsort_compare( const void *arg1, const void *arg2 )
 	int ret = 0;
 	drawSurf_t* s1 = (drawSurf_t*)arg1;
 	drawSurf_t* s2 = (drawSurf_t*)arg2;
+
 	if (s1->sort > s2->sort)
 	{
 		ret = 1;
@@ -1462,6 +1593,49 @@ static int qsort_compare( const void *arg1, const void *arg2 )
 	return ret;
 }
 
+static int qsort_compare_withaabbs( const void *arg1, const void *arg2 )
+{
+	int ret = 0;
+	drawSurf_t* s1 = (drawSurf_t*)arg1;
+	drawSurf_t* s2 = (drawSurf_t*)arg2;
+
+	if( s1->sortex[0] == s2->sortex[0] )
+	{
+		if (s1->sortex[1] > s2->sortex[1])
+		{
+			ret = 1;
+		}
+		else if (s1->sortex[1] < s2->sortex[1])
+		{
+			ret = -1;
+		}
+		else //equals
+		{
+			if (s1->surface > s2->surface)
+			{
+				ret = 1;
+			}
+			else if (s1->surface < s2->surface)
+			{
+				ret = -1;
+			}
+			else //equals
+			{
+			}
+		}
+	}
+	else if ( s1->sortex[0] > s2->sortex[0] )
+	{
+		ret = 1;
+	}
+	else // s1->sortex[0] < s2->sortex[0]
+	{
+		ret = -1;
+	}
+
+	return ret;
+}
+
 #if 1
 void qsortFast(
 	void* base,
@@ -1469,7 +1643,14 @@ void qsortFast(
 	unsigned width
 )
 {
-	qsort(base, num, width, qsort_compare);
+	if ( r_aabb_culling->integer == 0 )
+	{
+		qsort( base, num, width, qsort_compare );
+	}
+	else
+	{
+		qsort( base, num, width, qsort_compare_withaabbs );
+	}
 }
 #else
 /* sort the array between lo and hi (inclusive)
@@ -1654,6 +1835,33 @@ void R_AddDrawSurf(surfaceType_t *surface, shader_t *shader,
 	tr.refdef.drawSurfs[index].sort = (shader->sortedIndex << QSORT_SHADERNUM_SHIFT)
 		| (atiTess << QSORT_ATI_TESS_SHIFT)
 		| tr.shiftedEntityNum | (fogIndex << QSORT_FOGNUM_SHIFT) | (int)dlightMap;
+#ifdef DRAWSURFEX
+	tr.refdef.drawSurfs[index].sortex[0] = shader->sortedIndex;
+	tr.refdef.drawSurfs[index].sortex[1] = 0 /*(aabb_index << QSORT_SHADERNUM_SHIFT)*/
+		| (atiTess << QSORT_ATI_TESS_SHIFT)
+		| tr.shiftedEntityNum | (fogIndex << QSORT_FOGNUM_SHIFT) | (int)dlightMap;
+#endif
+	tr.refdef.drawSurfs[index].surface = surface;
+	tr.refdef.numDrawSurfs++;
+}
+
+void R_AddDrawSurfEx(surfaceType_t *surface, shader_t *shader, int aabb_index,
+	int fogIndex, int dlightMap, int atiTess) {
+	int index;
+
+	// instead of checking for overflow, we just mask the index
+	// so it wraps around
+	index = tr.refdef.numDrawSurfs & DRAWSURF_MASK;
+	// the sort data is packed into a single 32 bit value so it can be
+	// compared quickly during the qsorting process
+	// GR - add tesselation flag to the sort
+	tr.refdef.drawSurfs[index].sort = (shader->sortedIndex << QSORT_SHADERNUM_SHIFT)
+		| (atiTess << QSORT_ATI_TESS_SHIFT)
+		| tr.shiftedEntityNum | (fogIndex << QSORT_FOGNUM_SHIFT) | (int)dlightMap;
+	tr.refdef.drawSurfs[index].sortex[0] = shader->sortedIndex;
+	tr.refdef.drawSurfs[index].sortex[1] = ((aabb_index & (MAX_SHADERS - 1)) << QSORT_SHADERNUM_SHIFT)
+		| (atiTess << QSORT_ATI_TESS_SHIFT)
+		| tr.shiftedEntityNum | (fogIndex << QSORT_FOGNUM_SHIFT) | (int)dlightMap;
 	tr.refdef.drawSurfs[index].surface = surface;
 	tr.refdef.numDrawSurfs++;
 }
@@ -1673,6 +1881,25 @@ void R_DecomposeSort(unsigned sort, int *entityNum, shader_t **shader,
 	*dlightMap = sort & 3;
 	//GR - extract tessellation flag
 	*atiTess = (sort >> QSORT_ATI_TESS_SHIFT) & 1;
+}
+
+void R_DecomposeSortEx(drawSurf_t *surf, int *entityNum, shader_t **shader, int *aabb_index,
+	int *fogNum, int *dlightMap, int *atiTess) {
+	*fogNum = (surf->sort >> QSORT_FOGNUM_SHIFT) & 31;
+	*shader = tr.sortedShaders[(surf->sortex[0]) & (MAX_SHADERS - 1)];
+	*aabb_index = (surf->sortex[1] >> QSORT_SHADERNUM_SHIFT) & (MAX_SHADERS - 1);
+	//	*entityNum = ( sort >> QSORT_ENTITYNUM_SHIFT ) & 1023;
+	*entityNum = (surf->sort >> QSORT_ENTITYNUM_SHIFT) & (MAX_GENTITIES - 1);   // (SA) uppded entity count for Wolf to 11 bits
+	*dlightMap = surf->sort & 3;
+	//GR - extract tessellation flag
+	*atiTess = (surf->sort >> QSORT_ATI_TESS_SHIFT) & 1;
+}
+
+int R_DecomposeSort_GetAABBIndex(drawSurf_t* surf, int *index)
+{
+	int ret = (surf->sortex[1] >> QSORT_SHADERNUM_SHIFT) & (MAX_SHADERS - 1);
+	if (index) *index = ret;
+	return ret;
 }
 
 /*
@@ -1797,6 +2024,11 @@ void R_AddEntitySurfaces(void) {
 				// GR - not tessellated
 				R_AddDrawSurf(&entitySurface, tr.defaultShader, 0, 0, ATI_TESS_NONE);
 			} else {
+				helper_value_initial_value( 0, -1 );
+				if ( helper_value_equals( 0, tr.currentModel->type ) )
+				{
+					continue;
+				}
 				switch (tr.currentModel->type) {
 				case MOD_MESH:
 					R_AddMD3Surfaces(ent);
@@ -1840,7 +2072,12 @@ R_GenerateDrawSurfs
 ====================
 */
 void R_GenerateDrawSurfs(void) {
+
+	qdx_surface_aabb_clear_marked_indexes();
+
 	R_AddWorldSurfaces();
+
+	qdx_surface_aabb_add_all_marked_surfs();
 
 	R_AddPolygonSurfaces();
 

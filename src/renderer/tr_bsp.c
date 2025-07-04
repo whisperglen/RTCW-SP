@@ -29,6 +29,7 @@ If you have questions concerning this license or the applicable additional terms
 // tr_map.c
 
 #include "tr_local.h"
+#include "tr_surface_mod.h"
 
 /*
 
@@ -1729,7 +1730,17 @@ static void R_LoadMarksurfaces( lump_t *l ) {
 	for ( i = 0 ; i < count ; i++ )
 	{
 		j = LittleLong( in[i] );
-		out[i] = s_worldData.surfaces + j;
+		msurface_t *ts = out[i] = s_worldData.surfaces + j;
+
+		aabb_store_t box;
+		if ( 0 <= qdx_surface_aabb_generate( ts->data, &box ) )
+		{
+			image_t *repimg = qdx_surface_handle_replacement(&box, ts->shader->name, ts->shader->lightmapIndex);
+			if ( repimg )
+			{
+				ts->shader = R_DupModShader( ts->shader, repimg );
+			}
+		}
 	}
 }
 

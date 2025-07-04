@@ -78,7 +78,7 @@ static int p0, p1, p2;
 static qboolean isTorso, fullTorso;
 static vec4_t m1[4], m2[4];
 //static  vec4_t m3[4], m4[4], tmp1[4], tmp2[4]; // TTimo: unused
-static vec3_t t;
+//static vec3_t t;
 static refEntity_t lastBoneEntity;
 
 static int totalrv, totalrt, totalv, totalt;    //----(SA)
@@ -999,6 +999,7 @@ void R_CalcBones( mdsHeader_t *header, const refEntity_t *refent, int *boneList,
 	int i;
 	int     *boneRefs;
 	float torsoWeight;
+	vec3_t t;
 
 	//
 	// if the entity has changed since the last time the bones were built, reset them
@@ -1217,7 +1218,7 @@ void RB_SurfaceAnim1( mdsSurface_t *surface ) {
 	boneList = ( int * )( (byte *)surface + surface->ofsBoneReferences );
 	header = ( mdsHeader_t * )( (byte *)surface + surface->ofsHeader );
 
-	mdsBoneFrame_t *ipose_transf = qdx_anim_get_bone_transforms(surface);
+	const mdsBoneFrame_t *ipose_transf = qdx_anim_get_bone_transforms(surface);
 	if ( ipose_transf == NULL )
 	{
 		refEntity_t localEnt;
@@ -1575,8 +1576,8 @@ void RB_SurfaceAnim0( mdsSurface_t *surface ) {
 	}
 
 //DBG_SHOWTIME
-	static const float matrix_id[3][3] = { 1, 0, 0,  0, 1, 0,  0, 0, 1};
-	vec3_t transl_id = { 0, 0, 0};             // translation vector
+	//const float matrix_id[3][3] = { 1, 0, 0,  0, 1, 0,  0, 0, 1};
+	//const vec3_t transl_id = { 0, 0, 0};             // translation vector
 	//
 	// deform the vertexes by the lerped bones
 	//

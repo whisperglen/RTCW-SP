@@ -51,7 +51,7 @@ typedef unsigned short glIndex_t;
 C_ASSERT(sizeof(qdxIndex_t) == sizeof(UINT));
 
 // fast float to int conversion
-#if id386 && !( ( defined __linux__ || defined __FreeBSD__ ) && ( defined __i386__ ) ) // rb010123
+#if (id386 || idx86sse) && !( ( defined __linux__ || defined __FreeBSD__ ) && ( defined __i386__ ) ) // rb010123
 long myftol( float f );
 #else
 #error "FIXME: Nobody wants float truncation!"
@@ -597,10 +597,20 @@ typedef enum {
 	SF_MAX = 0xffffffff         // ensures that sizeof( surfaceType_t ) == sizeof( int )
 } surfaceType_t;
 
+#define DRAWSURFEX
+
+#ifndef DRAWSURFEX
 typedef struct drawSurf_s {
 	unsigned sort;                      // bit combination for fast compares
 	surfaceType_t       *surface;       // any of surface*_t
 } drawSurf_t;
+#else
+typedef struct drawSurf_s {
+	unsigned sort;                      // old sort combination
+	unsigned sortex[2];
+	surfaceType_t       *surface;       // any of surface*_t
+} drawSurf_t;
+#endif
 
 #define MAX_FACE_POINTS     64
 
@@ -1119,6 +1129,7 @@ extern cvar_t  *r_norefresh;            // bypasses the ref rendering
 extern cvar_t  *r_drawentities;         // disable/enable entity rendering
 extern cvar_t  *r_drawworld;            // disable/enable world rendering
 extern cvar_t  *r_drawpolys;
+extern cvar_t  *r_draw1shader;
 extern cvar_t  *r_speeds;               // various levels of information display
 extern cvar_t  *r_detailTextures;       // enables/disables detail texturing stages
 extern cvar_t  *r_novis;                // disable/enable usage of PVS
@@ -1126,6 +1137,7 @@ extern cvar_t  *r_nocull;
 extern cvar_t  *r_facePlaneCull;        // enables culling of planar surfaces with back side test
 extern cvar_t  *r_nocurves;
 extern cvar_t  *r_showcluster;
+extern cvar_t  *r_nobackfacecull;
 
 extern cvar_t   *r_mode;                // video mode
 extern cvar_t   *r_menu_modes;
@@ -1187,6 +1199,7 @@ extern cvar_t  *r_showtris;                     // enables wireframe rendering o
 extern cvar_t  *r_showsky;                      // forces sky in front of all surfaces
 extern cvar_t  *r_shownormals;                  // draws wireframe normals
 extern cvar_t  *r_clear;                        // force screen clear every frame
+extern cvar_t  *r_showaabbs;                    // shows the aabbs for eac shader
 
 extern cvar_t  *r_shadows;                      // controls shadows: 0 = none, 1 = blur, 2 = stencil, 3 = black planar projection
 extern cvar_t  *r_flares;                       // light flares
@@ -1239,6 +1252,8 @@ extern cvar_t  *r_getcenterxyz;
 extern cvar_t  *r_showimgui;
 extern cvar_t  *r_nomeshanim;
 extern cvar_t  *r_gpuskinning;
+extern cvar_t  *r_aabb_mergedist;
+extern cvar_t  *r_aabb_culling;
 extern cvar_t  *r_gpu_uv_trnsf;
 
 extern cvar_t  *r_rmx_coronas;
@@ -1266,9 +1281,13 @@ void R_AddPolygonSurfaces( void );
 // GR - add tessellation flag
 void R_DecomposeSort( unsigned sort, int *entityNum, shader_t **shader,
 					  int *fogNum, int *dlightMap, int *atiTess );
+void R_DecomposeSortEx( drawSurf_t *surf, int *entityNum, shader_t **shader, int *aabb_index,
+					  int *fogNum, int *dlightMap, int *atiTess );
+int R_DecomposeSort_GetAABBIndex(drawSurf_t* surf, int* index);
 
 // GR - add tessellation flag
 void R_AddDrawSurf( surfaceType_t *surface, shader_t *shader, int fogIndex, int dlightMap, int atiTess );
+void R_AddDrawSurfEx( surfaceType_t* surface, shader_t* shader, int aabb_index, int fogIndex, int dlightMap, int atiTess );
 
 
 #define CULL_IN     0       // completely unclipped
@@ -1391,12 +1410,13 @@ qhandle_t        RE_RegisterShaderNoMip( const char *name );
 qhandle_t RE_RegisterShaderFromImage( const char *name, int lightmapIndex, image_t *image, qboolean mipRawImage );
 
 shader_t    *R_FindShader( const char *name, int lightmapIndex, qboolean mipRawImage );
+shader_t    *R_DupModShader( shader_t *source, image_t *newimg );
 shader_t    *R_GetShaderByHandle( qhandle_t hShader );
 shader_t    *R_GetShaderByState( int index, long *cycleTime );
-shader_t *R_FindShaderByName( const char *name );
+shader_t    *R_FindShaderByName( const char *name );
 void        R_InitShaders( void );
 void        R_ShaderList_f( void );
-void    R_RemapShader( const char *oldShader, const char *newShader, const char *timeOffset );
+void        R_RemapShader( const char *oldShader, const char *newShader, const char *timeOffset );
 
 /*
 ====================================================================
@@ -1565,7 +1585,7 @@ void R_DlightBmodel( bmodel_t *bmodel );
 void R_SetupEntityLighting( const trRefdef_t *refdef, trRefEntity_t *ent );
 void R_TransformDlights( int count, dlight_t * dl, orientationr_t * or );
 int R_LightForPoint( vec3_t point, vec3_t ambientLight, vec3_t directedLight, vec3_t lightDir );
-
+int R_DlightSurface(msurface_t* surf, int dlightBits);
 
 /*
 ============================================================

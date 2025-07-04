@@ -4,6 +4,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <ctype.h>
+#include <time.h>
+
+#include "tests.h"
 
 static int tests_total = 0;
 static int tests_ok = 0;
@@ -16,6 +20,7 @@ extern void maintest_boxonplaneside();
 extern void test_errorcode();
 extern void test_sorting();
 extern void test_gamevals();
+extern void test_surface();
 
 int main()
 {
@@ -29,6 +34,7 @@ int main()
 	//test_errorcode();
 	//test_sorting();
 	//test_gamevals();
+	//test_surface();
 
 	printf("Tests results: %d/%d\n", tests_ok, tests_total);
 	system("pause");
@@ -60,6 +66,55 @@ void xassert_int(int success, int printval, const char* function, unsigned line,
 
 		printf("assert failed: 0x%x in %s:%d %s\n", printval, function, line, fn);
 	}
+}
+
+int ispasswd(int val)
+{
+    return isalnum(val) || ispunct(val);
+}
+
+void random_init()
+{
+    static int initialised = 0;
+    if (initialised == 0)
+    {
+        unsigned int seed = (unsigned int)time(NULL);
+        srand(seed);
+        initialised = 1;
+        printf( "seed: %d\n", seed);
+    }
+}
+
+void random_bytes(uc8_t* out, int size)
+{
+    random_init();
+
+    int i;
+    for (i = 0; i < size; i++)
+    {
+        out[i] = rand() % 0x100;
+    }
+}
+
+void random_text(uc8_t* out, int size)
+{
+    random_init();
+
+    int i;
+    for (i = 0; i < size; )
+    {
+        int val = rand();
+        uc8_t* itr = (uc8_t*)&val;
+        for (int j = 0; j < sizeof(val); j++, itr++)
+        {
+            if (ispasswd(*itr))
+            {
+                out[i] = *itr;
+                i++;
+                break;
+            }
+        }
+    }
 }
 
 // Run program: Ctrl + F5 or Debug > Start Without Debugging menu

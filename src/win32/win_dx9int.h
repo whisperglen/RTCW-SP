@@ -5,6 +5,8 @@
 #include "qdx9.h"
 #include "remix/bridge_remix_api.h"
 
+#include "../renderer/tr_surface_mod.h"
+
 typedef union uint64_comp_u
 {
 	uint64_t ll;
@@ -21,7 +23,8 @@ typedef struct light_override_s
 	float radius_base;
 	float radius_scale;
 	float volumetric_scale;
-	BOOL updated;
+	uint8_t updated;
+	uint8_t type;
 } light_override_t;
 
 extern remixapi_Interface remixInterface;
@@ -49,12 +52,14 @@ mINI::INIStructure& qdx_get_iniconf();
 void qdx_save_iniconf();
 
 int qdx_readsetting( const char* valname, int default );
-int qdx_readmapconf( const char* base, const char* valname );
+int qdx_readmapconf( const char* base, const char* valname, int defval );
 void* qdx_readmapconfptr( const char* base, const char* valname );
 float qdx_readmapconfflt( const char* base, const char* valname, float default );
 int qdx_readmapconfstr( const char* base, const char* valname, char *out, int outsz );
 
+void qdx_storemapconfint( const char* base, const char* valname, int value, bool inGlobal = true );
 void qdx_storemapconfflt( const char* base, const char* valname, float value, bool inGlobal = true );
+void qdx_storemapconfstr( const char* base, const char* valname, const char *value, bool inGlobal = true );
 
 void qdx_lights_load(mINI::INIStructure &ini, const char *mapname);
 void qdx_flashlight_save();
@@ -86,5 +91,21 @@ int qdx_4imgui_light_picking_count();
 void qdx_4imgui_light_picking_clear();
 light_override_t* qdx_4imgui_light_get_override( uint64_t hash, light_type_e type );
 void qdx_4imgui_light_clear_override( uint64_t hash );
+
+int* qdx_4imgui_surface_aabb_selection( int *total );
+const char *qdx_4imgui_shader_info( int *value );
+void qdx_4imgui_surface_aabb_saveselection(const char *hint);
+
+extern "C" float* qdx_4imgui_frustrumplane(int idx);
+extern "C" float* qdx_4imgui_frustumdist(int idx);
+extern "C" int* qdx_4imgui_frustumdebug();
+extern "C" int* qdx_4imgui_frustumoverride();
+
+bool str_starts_with( const std::string& str, const std::string& prefix );
+bool str_starts_with( const std::string& str, const char* prefix, unsigned prefixLen );
+bool str_starts_with( const std::string& str, const char* prefix );
+bool str_ends_with( const std::string& str, const std::string& suffix );
+bool str_ends_with( const std::string& str, const char* suffix, unsigned suffixLen );
+bool str_ends_with( const std::string& str, const char* suffix );
 
 #endif

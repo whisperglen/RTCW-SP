@@ -133,6 +133,16 @@ void GL_Cull( int cullType ) {
 		return;
 	}
 
+	if ( r_nobackfacecull->integer )
+	{
+		if ( glState.faceCulling != CT_TWO_SIDED )
+		{
+			glState.faceCulling = CT_TWO_SIDED;
+			IDirect3DDevice9_SetRenderState(qdx.device, D3DRS_CULLMODE, D3DCULL_NONE);
+		}
+		return;
+	}
+
 	glState.faceCulling = cullType;
 
 	if ( cullType == CT_TWO_SIDED ) {
@@ -998,6 +1008,27 @@ void RB_ZombieFX( int part, drawSurf_t *drawSurf, int oldNumVerts, int oldNumInd
 
 }
 
+static void RB_GetSurfLocalOrigin(const shader_t* shader, int index, vec3_t aabb_org)
+{
+	aabb_store_t* aabb;
+	if (qdx_surface_aabb_get_data(shader->sortedIndex, index, &aabb))
+	{
+		if (aabb->surftype == SRFT_TRIS)
+		{
+			qdx_surface_aabb_get_local_origin(aabb, aabb_org);
+		}
+	}
+}
+
+static void ID_INLINE RB_SFTRIS_UpdateLocalOrigin(int entityNum, void* surface, vec3_t aabb_org)
+{
+	srfTriangles_t* srf = (srfTriangles_t*)surface;
+	if ((entityNum == ENTITYNUM_WORLD) && (srf->surfaceType == SF_TRIANGLES))
+	{
+		VectorCopy(aabb_org, srf->localOrigin);
+	}
+}
+
 
 #define MAC_EVENT_PUMP_MSEC     5
 
@@ -1008,6 +1039,8 @@ RB_RenderDrawSurfList
 */
 void RB_RenderDrawSurfList( drawSurf_t *drawSurfs, int numDrawSurfs ) {
 	shader_t        *shader, *oldShader;
+	int aabbIndex, oldAabbIndex;
+	vec3_t aabbOrigin;
 	int fogNum, oldFogNum;
 	int entityNum, oldEntityNum;
 	int dlighted, oldDlighted;
@@ -1015,20 +1048,10 @@ void RB_RenderDrawSurfList( drawSurf_t *drawSurfs, int numDrawSurfs ) {
 	int i;
 	drawSurf_t      *drawSurf;
 	unsigned int oldSort;
-	surfaceType_t *oldSurfType;
 	float originalTime;
 	int oldNumVerts, oldNumIndex;
 //GR - tessellation flag
 	int atiTess = 0, oldAtiTess;
-#ifdef __MACOS__
-	int macEventTime;
-
-	Sys_PumpEvents();       // crutch up the mac's limited buffer queue size
-
-	// we don't want to pump the event loop too often and waste time, so
-	// we are going to check every shader change
-	macEventTime = ri.Milliseconds() + MAC_EVENT_PUMP_MSEC;
-#endif
 
 	// save original time for entity shader offsets
 	originalTime = backEnd.refdef.floatTime;
@@ -1040,11 +1063,11 @@ void RB_RenderDrawSurfList( drawSurf_t *drawSurfs, int numDrawSurfs ) {
 	oldEntityNum = -1;
 	backEnd.currentEntity = &tr.worldEntity;
 	oldShader = NULL;
+	oldAabbIndex = -1;
 	oldFogNum = -1;
 	oldDepthRange = qfalse;
 	oldDlighted = qfalse;
 	oldSort = -1;
-	oldSurfType = NULL;
 	depthRange = qfalse;
 // GR - tessellation also forces to draw everything
 	oldAtiTess = -1;
@@ -1052,12 +1075,22 @@ void RB_RenderDrawSurfList( drawSurf_t *drawSurfs, int numDrawSurfs ) {
 	backEnd.pc.c_surfaces += numDrawSurfs;
 
 	for ( i = 0, drawSurf = drawSurfs ; i < numDrawSurfs ; i++, drawSurf++ ) {
-		if ( drawSurf->sort == oldSort /*&& drawSurf->surface == oldSurfType*/ ) {
+		if ( (drawSurf->sort == oldSort) &&
+		       (
+				       (r_aabb_culling->integer == 0)
+			        || (r_aabb_culling->integer && (R_DecomposeSort_GetAABBIndex(drawSurf, &aabbIndex) == oldAabbIndex))
+			   )
+		   )
+		{
 			// fast path, same as previous sort
 			oldNumVerts = tess.numVertexes;
 			oldNumIndex = tess.numIndexes;
 
+			RB_SFTRIS_UpdateLocalOrigin(entityNum, drawSurf->surface, aabbOrigin);
+
 			rb_surfaceTable[ *drawSurf->surface ]( drawSurf->surface );
+			if(r_logFile->integer && (r_logFileTypes->integer & RLOGFILE_SURFID))
+				GPUimp_LogComment(va("added surf: %p %d %d z\n", drawSurf, (shader ? shader->sortedIndex : -1), oldAabbIndex));
 /*
 			// RF, convert the newly created vertexes into dust particles, and overwrite
 			if (backEnd.currentEntity->e.reFlags & REFLAG_ZOMBIEFX) {
@@ -1071,7 +1104,8 @@ void RB_RenderDrawSurfList( drawSurf_t *drawSurfs, int numDrawSurfs ) {
 		}
 		oldSort = drawSurf->sort;
 // GR - also extract tesselation flag
-		R_DecomposeSort( drawSurf->sort, &entityNum, &shader, &fogNum, &dlighted, &atiTess );
+		//R_DecomposeSort( drawSurf->sort, &entityNum, &shader, &fogNum, &dlighted, &atiTess );
+		R_DecomposeSortEx( drawSurf, &entityNum, &shader, &aabbIndex, &fogNum, &dlighted, &atiTess );
 
 		//
 		// change the tess parameters if needed
@@ -1080,37 +1114,41 @@ void RB_RenderDrawSurfList( drawSurf_t *drawSurfs, int numDrawSurfs ) {
 		if ( shader != oldShader || fogNum != oldFogNum || dlighted != oldDlighted
 // GR - force draw on tessellation flag change
 			 || ( atiTess != oldAtiTess )
-			 || ( entityNum != oldEntityNum && !shader->entityMergable)
-			 /*|| (drawSurf->surface != oldSurfType)*/) {
+			 || ( entityNum != oldEntityNum && !shader->entityMergable )
+			 || ( r_aabb_culling->integer && aabbIndex != oldAabbIndex )
+			 ) {
 			if ( oldShader != NULL ) {
-#ifdef __MACOS__    // crutch up the mac's limited buffer queue size
-				int t;
-
-				t = ri.Milliseconds();
-				if ( t > macEventTime ) {
-					macEventTime = t + MAC_EVENT_PUMP_MSEC;
-					Sys_PumpEvents();
-				}
-#endif
 // GR - pass tessellation flag to the shader command
 //		make sure to use oldAtiTess!!!
 				tess.ATI_tess = ( oldAtiTess == ATI_TESS_TRUFORM );
 
+				if (r_logFile->integer && (r_logFileTypes->integer & RLOGFILE_SURFID))
+					GPUimp_LogComment(va("draw break: sh %p %p, fg %d %d, dl %d %d, te %d %d, en %d %d z\n",
+						shader, oldShader, fogNum, oldFogNum, dlighted, oldDlighted, atiTess, oldAtiTess, entityNum, oldEntityNum));
+
 				RB_EndSurface();
+				if ( r_showaabbs->integer && !(backEnd.refdef.rdflags & RDF_SKYBOXPORTAL) )
+				{
+					if ( r_draw1shader->integer == oldShader->sortedIndex )
+					{
+						qdx_surface_aabb_draw( oldShader->sortedIndex );
+					}
+				}
 			}
 			RB_BeginSurface( shader, fogNum );
-			oldShader = shader;
+			//oldShader = shader;
 			oldFogNum = fogNum;
 			oldDlighted = dlighted;
 // GR - update old tessellation flag
 			oldAtiTess = atiTess;
+			//oldAabbIndex = aabbIndex;
+			VectorClear(aabbOrigin);
 		}
-		oldSurfType = drawSurf->surface;
 
 		//
 		// change the modelview matrix if needed
 		//
-		if ( entityNum != oldEntityNum ) {
+		if ( entityNum != oldEntityNum || shader != oldShader || aabbIndex != oldAabbIndex) {
 			depthRange = qfalse;
 
 			if ( entityNum != ENTITYNUM_WORLD ) {
@@ -1133,6 +1171,13 @@ void RB_RenderDrawSurfList( drawSurf_t *drawSurfs, int numDrawSurfs ) {
 					// hack the depth range to prevent view model from poking into walls
 					depthRange = qtrue;
 				}
+			} else if(*drawSurf->surface == SF_TRIANGLES) {
+				backEnd.currentEntity = &tr.worldEntity;
+				backEnd.refdef.floatTime = originalTime;
+				backEnd.or = backEnd.viewParms.world;
+				RB_GetSurfLocalOrigin(shader, aabbIndex, aabbOrigin);
+				D3DXMatrixTranslation(&qdx.world, aabbOrigin[0], aabbOrigin[1], aabbOrigin[2]);
+
 			} else {
 				backEnd.currentEntity = &tr.worldEntity;
 				backEnd.refdef.floatTime = originalTime;
@@ -1169,6 +1214,8 @@ void RB_RenderDrawSurfList( drawSurf_t *drawSurfs, int numDrawSurfs ) {
 			}
 
 			oldEntityNum = entityNum;
+			oldShader = shader;
+			oldAabbIndex = aabbIndex;
 		}
 
 		// RF, ZOMBIEFX, store the tess indexes, so we can grab the calculated
@@ -1176,15 +1223,19 @@ void RB_RenderDrawSurfList( drawSurf_t *drawSurfs, int numDrawSurfs ) {
 		oldNumVerts = tess.numVertexes;
 		oldNumIndex = tess.numIndexes;
 
+		RB_SFTRIS_UpdateLocalOrigin(entityNum, drawSurf->surface, aabbOrigin);
 		// add the triangles for this surface
 		rb_surfaceTable[ *drawSurf->surface ]( drawSurf->surface );
-
+		if (r_logFile->integer && (r_logFileTypes->integer & RLOGFILE_SURFID))
+			GPUimp_LogComment(va("added surf: %p %d %d x\n", drawSurf, (shader ? shader->sortedIndex : -1), aabbIndex));
+/*
 		// RF, convert the newly created vertexes into dust particles, and overwrite
 		if ( backEnd.currentEntity->e.reFlags & REFLAG_ZOMBIEFX ) {
 			RB_ZombieFX( 0, drawSurf, oldNumVerts, oldNumIndex );
 		} else if ( backEnd.currentEntity->e.reFlags & REFLAG_ZOMBIEFX2 )     {
 			RB_ZombieFX( 1, drawSurf, oldNumVerts, oldNumIndex );
 		}
+*/
 	}
 
 	// draw the contents of the last shader batch
@@ -1194,6 +1245,13 @@ void RB_RenderDrawSurfList( drawSurf_t *drawSurfs, int numDrawSurfs ) {
 		tess.ATI_tess = ( oldAtiTess == ATI_TESS_TRUFORM );
 
 		RB_EndSurface();
+		if ( r_showaabbs->integer && !(backEnd.refdef.rdflags & RDF_SKYBOXPORTAL) )
+		{
+			if ( r_draw1shader->integer == oldShader->sortedIndex )
+			{
+				qdx_surface_aabb_draw( oldShader->sortedIndex );
+			}
+		}
 	}
 
 	// go back to the world modelview matrix
@@ -1224,10 +1282,6 @@ void RB_RenderDrawSurfList( drawSurf_t *drawSurfs, int numDrawSurfs ) {
 
 	// add light flares on lights that aren't obscured
 	RB_RenderFlares();
-
-#ifdef __MACOS__
-	Sys_PumpEvents();       // crutch up the mac's limited buffer queue size
-#endif
 }
 
 
@@ -1666,7 +1720,10 @@ const void  *RB_DrawBuffer( const void *data ) {
 	if ( r_clear->integer ) {
 		//qglClearColor( 1, 0, 0.5, 1 );
 		//qglClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
-		IDirect3DDevice9_Clear(qdx.device, 0, NULL, D3DCLEAR_TARGET| D3DCLEAR_ZBUFFER, D3DCOLOR_COLORVALUE(1, 0, 0.5, 1), qdx.depth_clear, 0);
+		if( r_clear->integer > 1 )
+			IDirect3DDevice9_Clear(qdx.device, 0, NULL, D3DCLEAR_TARGET| D3DCLEAR_ZBUFFER, D3DCOLOR_COLORVALUE(0.3, 0.3, 0.3, 1), qdx.depth_clear, 0);
+		else
+			IDirect3DDevice9_Clear(qdx.device, 0, NULL, D3DCLEAR_TARGET| D3DCLEAR_ZBUFFER, D3DCOLOR_COLORVALUE(1, 0, 0.5, 1), qdx.depth_clear, 0);
 	}
 
 	return (const void *)( cmd + 1 );

@@ -374,9 +374,9 @@ void RB_SurfaceTriangles( srfTriangles_t *srf ) {
 	needsNormal = tess.shader->needsNormal;
 
 	for ( i = 0 ; i < srf->numVerts ; i++, dv++, xyz += 4, normal += 4, texCoords += 4, color += 4 ) {
-		xyz[0] = dv->xyz[0];
-		xyz[1] = dv->xyz[1];
-		xyz[2] = dv->xyz[2];
+		xyz[0] = dv->xyz[0] - srf->localOrigin[0];
+		xyz[1] = dv->xyz[1] - srf->localOrigin[1];
+		xyz[2] = dv->xyz[2] - srf->localOrigin[2];
 
 		if ( needsNormal ) {
 			normal[0] = dv->normal[0];

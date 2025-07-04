@@ -7,6 +7,8 @@
 #include <d3d9.h>
 #include "d3dx9.h"
 
+#include "tr_surface_mod.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -225,21 +227,32 @@ typedef struct vatt_anim
 } vatt_anim_t;
 #define VATTID_ANIM (D3DFVF_XYZB4 | D3DFVF_LASTBETA_UBYTE4 | D3DFVF_NORMAL /*| D3DFVF_DIFFUSE*/ | D3DFVF_TEX1 | D3DFVF_TEXCOORDSIZE2(0))
 
-#ifdef __cplusplus
-#define DX9_BEGIN_SCENE() D3D_OK
-#define DX9_END_SCENE() D3D_OK
-#else
-#define DX9_BEGIN_SCENE() D3D_OK
-#define DX9_END_SCENE() D3D_OK
-#endif
+extern int qdx_scene_started;
 
+__inline HRESULT _dx9_begin_scene() {
+	HRESULT ret = D3D_OK;
 #ifdef __cplusplus
-#define DX9_BEGIN_SCENE_GG() qdx.device->BeginScene()
-#define DX9_END_SCENE_GG()   qdx.device->EndScene()
+	if(!qdx_scene_started) { qdx_scene_started++; ret = qdx.device->BeginScene(); }
 #else
-#define DX9_BEGIN_SCENE_GG() IDirect3DDevice9_BeginScene(qdx.device)
-#define DX9_END_SCENE_GG()   IDirect3DDevice9_EndScene(qdx.device)
+	if(!qdx_scene_started) { qdx_scene_started++; ret = IDirect3DDevice9_BeginScene(qdx.device); }
 #endif
+	return ret;
+}
+__inline HRESULT _dx9_end_scene() {
+	HRESULT ret = D3D_OK;
+#ifdef __cplusplus
+	if( qdx_scene_started) { qdx_scene_started--; ret = qdx.device->EndScene(); }
+#else
+	if( qdx_scene_started) { qdx_scene_started--; ret = IDirect3DDevice9_EndScene(qdx.device); }
+#endif
+	return ret;
+}
+
+#define DX9_BEGIN_SCENE() _dx9_begin_scene()
+#define DX9_END_SCENE()   D3D_OK
+
+#define DX9_BEGIN_SCENE_GG() _dx9_begin_scene()
+#define DX9_END_SCENE_GG()   _dx9_end_scene()
 
 typedef LPDIRECT3DVERTEXBUFFER9 qdx_vbuffer_t;
 typedef LPDIRECT3DINDEXBUFFER9 qdx_ibuffer_t;
@@ -275,20 +288,16 @@ enum light_type_e
 void qdx_light_add(int light_type_e, int ord, const float *position, const float *direction, const float *color, float radius);
 void qdx_lights_clear(unsigned int light_types);
 
-typedef union surfpartition_u
+enum r_logfiletypes_e
 {
-	UINT32 combined;
-	struct surfaceid_s
-	{
-		INT32 x : 10;
-		INT32 y : 10;
-		INT32 z : 10;
-	} p;
-} surfpartition_t;
-
-surfpartition_t qdx_surface_get_partition( const void* data );
-void qdx_surface_add( const void* surf, surfpartition_t id );
-void qdx_surface_get_members( surfpartition_t id, const void** surfs, int* count );
+	RLOGFILE_TEXT = 1,
+	RLOGFILE_VERTEX = 2,
+	RLOGFILE_TEXTURE = 4,
+	RLOGFILE_MATRIX = 8,
+	RLOGFILE_VATTSET = 16,
+	RLOGFILE_AABB = 32,
+	RLOGFILE_SURFID = 64
+};
 
 void qdx_screen_getxyz( float *xyz );
 

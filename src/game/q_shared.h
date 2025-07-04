@@ -120,6 +120,9 @@ If you have questions concerning this license or the applicable additional terms
 #if _M_IX86_FP >= 2
 #define idx86sse   1
 #endif
+#elif ( defined _M_X64 || defined _M_AMD64 || defined __x86_64__ || defined __amd64__ )
+#define id386   0
+#define idx86sse   1
 #else
 #define id386   0
 #define idx86sse   0

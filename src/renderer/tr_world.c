@@ -256,7 +256,7 @@ that is touched by one or more dlights, so try to throw out
 more dlights if possible.
 ====================
 */
-static int R_DlightSurface( msurface_t *surf, int dlightBits ) {
+int R_DlightSurface( msurface_t *surf, int dlightBits ) {
 	if ( *surf->data == SF_FACE ) {
 		dlightBits = R_DlightFace( (srfSurfaceFace_t *)surf->data, dlightBits );
 	} else if ( *surf->data == SF_GRID ) {
@@ -281,7 +281,7 @@ static int R_DlightSurface( msurface_t *surf, int dlightBits ) {
 R_AddWorldSurface
 ======================
 */
-static void R_AddWorldSurface( msurface_t *surf, int dlightBits ) {
+static void R_AddWorldSurface( msurface_t *surf, int dlightBits, qboolean aabb_candidate ) {
 	if ( surf->viewCount == tr.viewCount ) {
 		return;     // already in this view
 	}
@@ -300,8 +300,23 @@ static void R_AddWorldSurface( msurface_t *surf, int dlightBits ) {
 		dlightBits = ( dlightBits != 0 );
 	}
 
+	int aabb_index = -1;
+	if ( aabb_candidate )
+	{
+		if ( *(surf->data) == SF_FACE || *(surf->data) == SF_GRID || *(surf->data) == SF_TRIANGLES )
+		{
+			//prime aabbs
+			aabb_index = qdx_surface_aabb_get_index( surf->shader->sortedIndex, surf, 0 );
+			//qassert( aabb_index != -1 );
+			if ( aabb_index >= 0 )
+			{
+				qdx_surface_aabb_mark_index( surf->shader->sortedIndex, aabb_index );
+			}
+		}
+	}
+
 // GR - not tessellated
-	R_AddDrawSurf( surf->data, surf->shader, surf->fogIndex, dlightBits, ATI_TESS_NONE );
+	R_AddDrawSurfEx( surf->data, surf->shader, aabb_index, surf->fogIndex, dlightBits, ATI_TESS_NONE );
 }
 
 /*
@@ -387,7 +402,7 @@ void R_AddBrushModelSurfaces( trRefEntity_t *ent ) {
 
 	for ( i = 0 ; i < bmodel->numSurfaces ; i++ ) {
 		( bmodel->firstSurface + i )->fogIndex = fognum;
-		R_AddWorldSurface( bmodel->firstSurface + i, 0/*tr.currentEntity->needDlights*/ );
+		R_AddWorldSurface( bmodel->firstSurface + i, 0/*tr.currentEntity->needDlights*/, qfalse );
 	}
 //----(SA) end
 }
@@ -407,13 +422,20 @@ void R_AddBrushModelSurfaces( trRefEntity_t *ent ) {
 R_RecursiveWorldNode
 ================
 */
-static void R_RecursiveWorldNode( mnode_t *node, int planeBits, int dlightBits ) {
+static void R_RecursiveWorldNode( mnode_t *node, int planeBits, int dlightBits, qboolean inpvs ) {
 
 	do {
 		int newDlights[2];
 
+		if (r_logFile->integer && (r_logFileTypes->integer & RLOGFILE_AABB))
+		{
+			if(node->nummarksurfaces)
+				GPUimp_LogComment(va("%p-%d %x\n", node->firstmarksurface, node->nummarksurfaces, node->contents));
+		}
+
 		// if the node wasn't marked as potentially visible, exit
 		if ( node->visframe != tr.visCount ) {
+			inpvs = qfalse;
 			return;
 		}
 
@@ -498,7 +520,7 @@ static void R_RecursiveWorldNode( mnode_t *node, int planeBits, int dlightBits )
 		}
 */
 		// recurse down the children, front side first
-		R_RecursiveWorldNode( node->children[0], planeBits, newDlights[0] );
+		R_RecursiveWorldNode( node->children[0], planeBits, newDlights[0], inpvs );
 
 		// tail recurse
 		node = node->children[1];
@@ -543,7 +565,7 @@ static void R_RecursiveWorldNode( mnode_t *node, int planeBits, int dlightBits )
 			// the surface may have already been added if it
 			// spans multiple leafs
 			surf = *mark;
-			R_AddWorldSurface( surf, dlightBits );
+			R_AddWorldSurface( surf, dlightBits, qtrue );
 			mark++;
 		}
 	}
@@ -640,13 +662,24 @@ static void R_MarkLeaves( void ) {
 	tr.visCount++;
 	tr.viewCluster = cluster;
 
-	if ( (r_novis->integer && !(tr.refdef.rdflags & RDF_SKYBOXPORTAL)) || tr.viewCluster == -1 ) {
+	if ( ((r_novis->integer || qdx_surface_aabb_needs_priming()) && !(tr.refdef.rdflags & RDF_SKYBOXPORTAL)) || tr.viewCluster == -1) {
+		qdx_suface_aabb_set_primed();
 		for ( i = 0 ; i < tr.world->numnodes ; i++ ) {
 			if ( tr.world->nodes[i].contents != CONTENTS_SOLID ) {
 				tr.world->nodes[i].visframe = tr.visCount;
 			}
 		}
 		return;
+	}
+
+	if (r_logFile->integer && (r_logFileTypes->integer & RLOGFILE_AABB))
+	{
+		GPUimp_LogComment("MarkLeaves START\n");
+		for (i = 0; i < tr.world->numnodes; i++) {
+			if(tr.world->nodes[i].nummarksurfaces)
+				GPUimp_LogComment(va("%p-%d %x\n", tr.world->nodes[i].firstmarksurface, tr.world->nodes[i].nummarksurfaces, tr.world->nodes[i].contents));
+		}
+		GPUimp_LogComment("MarkLeaves END\n");
 	}
 
 	vis = R_ClusterPVS( tr.viewCluster );
@@ -706,5 +739,6 @@ void R_AddWorldSurfaces( void ) {
 	if ( tr.refdef.num_dlights > 32 ) {
 		tr.refdef.num_dlights = 32 ;
 	}
-	R_RecursiveWorldNode( tr.world->nodes, 15, ( 1 << tr.refdef.num_dlights ) - 1 );
+
+	R_RecursiveWorldNode( tr.world->nodes, 15, ( 1 << tr.refdef.num_dlights ) - 1, qtrue );
 }

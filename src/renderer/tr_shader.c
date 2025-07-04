@@ -2598,6 +2598,54 @@ shader_t *R_FindShader( const char *name, int lightmapIndex, qboolean mipRawImag
 	return FinishShader();
 }
 
+shader_t *R_DupModShader( shader_t *source, image_t *newimg )
+{
+	int i;
+	const char *newname = newimg->imgName;
+	int hash = generateHashValue( newname );
+	int lightmapIndex = source->lightmapIndex;
+	shader_t *sh;
+
+	//
+	// see if the shader is already loaded
+	//
+	for ( sh = hashTable[hash]; sh; sh = sh->next ) {
+		// index by name
+
+		if ( ( ( sh->lightmapIndex == lightmapIndex ) || ( sh->lightmapIndex < 0 && lightmapIndex >= 0 ) ) &&
+			!Q_stricmp( sh->name, newname ) ) {
+			// match found
+			return sh;
+		}
+	}
+
+	memcpy( &shader, source, sizeof( shader ) );
+	memset( &stages, 0, sizeof( stages ) );
+	strncpy( shader.name, newimg->imgName, sizeof( shader.name ) );
+	for ( i = 0; i < source->numUnfoggedPasses; i++ ) {
+		if ( !source->stages[i]->active ) {
+			break;
+		}
+		memcpy( &stages[i], source->stages[i], sizeof( stages[0] ) );
+	}
+
+	stages[0].bundle[0].image[0] = newimg;
+	//switch ( shader.lightmapIndex )
+	//{
+	//case LIGHTMAP_NONE:
+	//case LIGHTMAP_BY_VERTEX:
+	//case LIGHTMAP_2D:
+	//	stages[0].bundle[0].image[0] = newimg;
+	//	break;
+	//case LIGHTMAP_WHITEIMAGE:
+	//default:
+	//	stages[1].bundle[0].image[0] = newimg;
+	//	break;
+	//}
+
+	return GeneratePermanentShader();
+}
+
 
 qhandle_t RE_RegisterShaderFromImage( const char *name, int lightmapIndex, image_t *image, qboolean mipRawImage ) {
 	int i, hash;
