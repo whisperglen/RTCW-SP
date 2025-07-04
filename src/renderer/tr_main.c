@@ -1436,6 +1436,7 @@ static int qsort_compare( const void *arg1, const void *arg2 )
 	int ret = 0;
 	drawSurf_t* s1 = (drawSurf_t*)arg1;
 	drawSurf_t* s2 = (drawSurf_t*)arg2;
+#ifndef DRAWSURFEX
 	if (s1->sort > s2->sort)
 	{
 		ret = 1;
@@ -1458,7 +1459,41 @@ static int qsort_compare( const void *arg1, const void *arg2 )
 		{
 		}
 	}
-
+#else
+	if( s1->sortex[0] == s2->sortex[0] )
+	{
+		if (s1->sortex[1] > s2->sortex[1])
+		{
+			ret = 1;
+		}
+		else if (s1->sortex[1] < s2->sortex[1])
+		{
+			ret = -1;
+		}
+		else //equals
+		{
+			if (s1->surface > s2->surface)
+			{
+				ret = 1;
+			}
+			else if (s1->surface < s2->surface)
+			{
+				ret = -1;
+			}
+			else //equals
+			{
+			}
+		}
+	}
+	else if ( s1->sortex[0] > s2->sortex[0] )
+	{
+		ret = 1;
+	}
+	else // s1->sortex[0] < s2->sortex[0]
+	{
+		ret = -1;
+	}
+#endif
 	return ret;
 }
 
@@ -1654,6 +1689,33 @@ void R_AddDrawSurf(surfaceType_t *surface, shader_t *shader,
 	tr.refdef.drawSurfs[index].sort = (shader->sortedIndex << QSORT_SHADERNUM_SHIFT)
 		| (atiTess << QSORT_ATI_TESS_SHIFT)
 		| tr.shiftedEntityNum | (fogIndex << QSORT_FOGNUM_SHIFT) | (int)dlightMap;
+#ifdef DRAWSURFEX
+	tr.refdef.drawSurfs[index].sortex[0] = shader->sortedIndex;
+	tr.refdef.drawSurfs[index].sortex[1] = 0 /*(aabb_index << QSORT_SHADERNUM_SHIFT)*/
+		| (atiTess << QSORT_ATI_TESS_SHIFT)
+		| tr.shiftedEntityNum | (fogIndex << QSORT_FOGNUM_SHIFT) | (int)dlightMap;
+#endif
+	tr.refdef.drawSurfs[index].surface = surface;
+	tr.refdef.numDrawSurfs++;
+}
+
+void R_AddDrawSurfEx(surfaceType_t *surface, shader_t *shader, int aabb_index,
+	int fogIndex, int dlightMap, int atiTess) {
+	int index;
+
+	// instead of checking for overflow, we just mask the index
+	// so it wraps around
+	index = tr.refdef.numDrawSurfs & DRAWSURF_MASK;
+	// the sort data is packed into a single 32 bit value so it can be
+	// compared quickly during the qsorting process
+	// GR - add tesselation flag to the sort
+	tr.refdef.drawSurfs[index].sort = (shader->sortedIndex << QSORT_SHADERNUM_SHIFT)
+		| (atiTess << QSORT_ATI_TESS_SHIFT)
+		| tr.shiftedEntityNum | (fogIndex << QSORT_FOGNUM_SHIFT) | (int)dlightMap;
+	tr.refdef.drawSurfs[index].sortex[0] = shader->sortedIndex;
+	tr.refdef.drawSurfs[index].sortex[1] = (aabb_index << QSORT_SHADERNUM_SHIFT)
+		| (atiTess << QSORT_ATI_TESS_SHIFT)
+		| tr.shiftedEntityNum | (fogIndex << QSORT_FOGNUM_SHIFT) | (int)dlightMap;
 	tr.refdef.drawSurfs[index].surface = surface;
 	tr.refdef.numDrawSurfs++;
 }
@@ -1673,6 +1735,18 @@ void R_DecomposeSort(unsigned sort, int *entityNum, shader_t **shader,
 	*dlightMap = sort & 3;
 	//GR - extract tessellation flag
 	*atiTess = (sort >> QSORT_ATI_TESS_SHIFT) & 1;
+}
+
+void R_DecomposeSortEx(drawSurf_t *surf, int *entityNum, shader_t **shader, int *aabb_index,
+	int *fogNum, int *dlightMap, int *atiTess) {
+	*fogNum = (surf->sort >> QSORT_FOGNUM_SHIFT) & 31;
+	*shader = tr.sortedShaders[(surf->sortex[0]) & (MAX_SHADERS - 1)];
+	*aabb_index = (surf->sortex[1] >> QSORT_SHADERNUM_SHIFT) & (MAX_SHADERS - 1);
+	//	*entityNum = ( sort >> QSORT_ENTITYNUM_SHIFT ) & 1023;
+	*entityNum = (surf->sort >> QSORT_ENTITYNUM_SHIFT) & (MAX_GENTITIES - 1);   // (SA) uppded entity count for Wolf to 11 bits
+	*dlightMap = surf->sort & 3;
+	//GR - extract tessellation flag
+	*atiTess = (surf->sort >> QSORT_ATI_TESS_SHIFT) & 1;
 }
 
 /*
@@ -1797,6 +1871,11 @@ void R_AddEntitySurfaces(void) {
 				// GR - not tessellated
 				R_AddDrawSurf(&entitySurface, tr.defaultShader, 0, 0, ATI_TESS_NONE);
 			} else {
+				helper_value_initial_value( 0, -1 );
+				if ( helper_value_equals( 0, tr.currentModel->type ) )
+				{
+					continue;
+				}
 				switch (tr.currentModel->type) {
 				case MOD_MESH:
 					R_AddMD3Surfaces(ent);

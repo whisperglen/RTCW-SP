@@ -908,14 +908,16 @@ void RB_DrawSun( void ) {
 	// WG: the sun does not draw with depth 1; it does if I change z comp function to D3DCMP_GREATER
 	//   I see similar results with a 3rd party ogl->dx9 wrapper
 	qdx_depthrange(0.9, 1);
+	//IDirect3DDevice9_SetRenderState( qdx.device, D3DRS_ZFUNC, D3DCMP_ALWAYS );
 
 	color[0] = color[1] = color[2] = color[3] = 255;
 
 	// (SA) simpler sun drawing
 	RB_BeginSurface( tr.sunShader, tess.fogNum );
 
+#if 1
 	RB_AddQuadStamp( origin, vec1, vec2, color );
-/*
+#else
 		VectorCopy( origin, temp );
 		VectorSubtract( temp, vec1, temp );
 		VectorSubtract( temp, vec2, temp );
@@ -966,7 +968,7 @@ void RB_DrawSun( void ) {
 		tess.indexes[tess.numIndexes++] = 0;
 		tess.indexes[tess.numIndexes++] = 2;
 		tess.indexes[tess.numIndexes++] = 3;
-*/
+#endif
 	RB_EndSurface();
 
 
@@ -1002,6 +1004,7 @@ void RB_DrawSun( void ) {
 	// back to normal depth range
 	//qglDepthRange( 0.0, 1.0 );
 	qdx_depthrange(0, 1);
+	//IDirect3DDevice9_SetRenderState( qdx.device, D3DRS_ZFUNC, D3DCMP_LESSEQUAL );
 }
 
 extern void R_Fog( glfog_t *curfog );

@@ -133,6 +133,16 @@ void GL_Cull( int cullType ) {
 		return;
 	}
 
+	if ( r_nobackfacecull->integer )
+	{
+		if ( glState.faceCulling != CT_TWO_SIDED )
+		{
+			glState.faceCulling = CT_TWO_SIDED;
+			IDirect3DDevice9_SetRenderState(qdx.device, D3DRS_CULLMODE, D3DCULL_NONE);
+		}
+		return;
+	}
+
 	glState.faceCulling = cullType;
 
 	if ( cullType == CT_TWO_SIDED ) {
@@ -1008,6 +1018,7 @@ RB_RenderDrawSurfList
 */
 void RB_RenderDrawSurfList( drawSurf_t *drawSurfs, int numDrawSurfs ) {
 	shader_t        *shader, *oldShader;
+	int aabbIndex, oldAabbIndex;
 	int fogNum, oldFogNum;
 	int entityNum, oldEntityNum;
 	int dlighted, oldDlighted;
@@ -1015,7 +1026,6 @@ void RB_RenderDrawSurfList( drawSurf_t *drawSurfs, int numDrawSurfs ) {
 	int i;
 	drawSurf_t      *drawSurf;
 	unsigned int oldSort;
-	surfaceType_t *oldSurfType;
 	float originalTime;
 	int oldNumVerts, oldNumIndex;
 //GR - tessellation flag
@@ -1040,11 +1050,11 @@ void RB_RenderDrawSurfList( drawSurf_t *drawSurfs, int numDrawSurfs ) {
 	oldEntityNum = -1;
 	backEnd.currentEntity = &tr.worldEntity;
 	oldShader = NULL;
+	oldAabbIndex = -1;
 	oldFogNum = -1;
 	oldDepthRange = qfalse;
 	oldDlighted = qfalse;
 	oldSort = -1;
-	oldSurfType = NULL;
 	depthRange = qfalse;
 // GR - tessellation also forces to draw everything
 	oldAtiTess = -1;
@@ -1052,7 +1062,7 @@ void RB_RenderDrawSurfList( drawSurf_t *drawSurfs, int numDrawSurfs ) {
 	backEnd.pc.c_surfaces += numDrawSurfs;
 
 	for ( i = 0, drawSurf = drawSurfs ; i < numDrawSurfs ; i++, drawSurf++ ) {
-		if ( drawSurf->sort == oldSort /*&& drawSurf->surface == oldSurfType*/ ) {
+		if ( drawSurf->sort == oldSort ) {
 			// fast path, same as previous sort
 			oldNumVerts = tess.numVertexes;
 			oldNumIndex = tess.numIndexes;
@@ -1071,7 +1081,11 @@ void RB_RenderDrawSurfList( drawSurf_t *drawSurfs, int numDrawSurfs ) {
 		}
 		oldSort = drawSurf->sort;
 // GR - also extract tesselation flag
-		R_DecomposeSort( drawSurf->sort, &entityNum, &shader, &fogNum, &dlighted, &atiTess );
+		//R_DecomposeSort( drawSurf->sort, &entityNum, &shader, &fogNum, &dlighted, &atiTess );
+		R_DecomposeSortEx( drawSurf, &entityNum, &shader, &aabbIndex, &fogNum, &dlighted, &atiTess );
+
+		//do aabbIndex stuff here
+		oldAabbIndex = aabbIndex;
 
 		//
 		// change the tess parameters if needed
@@ -1081,7 +1095,7 @@ void RB_RenderDrawSurfList( drawSurf_t *drawSurfs, int numDrawSurfs ) {
 // GR - force draw on tessellation flag change
 			 || ( atiTess != oldAtiTess )
 			 || ( entityNum != oldEntityNum && !shader->entityMergable)
-			 /*|| (drawSurf->surface != oldSurfType)*/) {
+			 ) {
 			if ( oldShader != NULL ) {
 #ifdef __MACOS__    // crutch up the mac's limited buffer queue size
 				int t;
@@ -1097,6 +1111,13 @@ void RB_RenderDrawSurfList( drawSurf_t *drawSurfs, int numDrawSurfs ) {
 				tess.ATI_tess = ( oldAtiTess == ATI_TESS_TRUFORM );
 
 				RB_EndSurface();
+				if ( r_showaabbs->integer )
+				{
+					if ( r_draw1shader->integer == oldShader->sortedIndex )
+					{
+						qdx_surface_aabb_draw( oldShader->sortedIndex );
+					}
+				}
 			}
 			RB_BeginSurface( shader, fogNum );
 			oldShader = shader;
@@ -1105,7 +1126,6 @@ void RB_RenderDrawSurfList( drawSurf_t *drawSurfs, int numDrawSurfs ) {
 // GR - update old tessellation flag
 			oldAtiTess = atiTess;
 		}
-		oldSurfType = drawSurf->surface;
 
 		//
 		// change the modelview matrix if needed
@@ -1194,6 +1214,13 @@ void RB_RenderDrawSurfList( drawSurf_t *drawSurfs, int numDrawSurfs ) {
 		tess.ATI_tess = ( oldAtiTess == ATI_TESS_TRUFORM );
 
 		RB_EndSurface();
+		if ( r_showaabbs->integer )
+		{
+			if ( r_draw1shader->integer == oldShader->sortedIndex )
+			{
+				qdx_surface_aabb_draw( oldShader->sortedIndex );
+			}
+		}
 	}
 
 	// go back to the world modelview matrix
@@ -1666,7 +1693,10 @@ const void  *RB_DrawBuffer( const void *data ) {
 	if ( r_clear->integer ) {
 		//qglClearColor( 1, 0, 0.5, 1 );
 		//qglClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
-		IDirect3DDevice9_Clear(qdx.device, 0, NULL, D3DCLEAR_TARGET| D3DCLEAR_ZBUFFER, D3DCOLOR_COLORVALUE(1, 0, 0.5, 1), qdx.depth_clear, 0);
+		if( r_clear->integer > 1 )
+			IDirect3DDevice9_Clear(qdx.device, 0, NULL, D3DCLEAR_TARGET| D3DCLEAR_ZBUFFER, D3DCOLOR_COLORVALUE(0.3, 0.3, 0.3, 1), qdx.depth_clear, 0);
+		else
+			IDirect3DDevice9_Clear(qdx.device, 0, NULL, D3DCLEAR_TARGET| D3DCLEAR_ZBUFFER, D3DCOLOR_COLORVALUE(1, 0, 0.5, 1), qdx.depth_clear, 0);
 	}
 
 	return (const void *)( cmd + 1 );

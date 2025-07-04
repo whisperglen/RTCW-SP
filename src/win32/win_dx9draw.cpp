@@ -1,6 +1,7 @@
 
 #include "../renderer/qdx9.h"
 #include "win_dx9int.h"
+#include "tr_surface_mod_int.h"
 extern "C"
 {
 #include "../renderer/tr_local.h"
@@ -12,6 +13,7 @@ extern "C"
 #include "fnv.h"
 
 #include <string>
+#include <vector>
 #include <map>
 
 enum r_logfiletypes_e
@@ -47,6 +49,8 @@ struct qdx_matrixes
 		D3DXMatrixIdentity(&world);
 	}
 } qdx_mats;
+
+int qdx_scene_started = 0;
 
 static std::map<const void*, entity_bone_transforms_t> animation_mappings;
 
@@ -2348,6 +2352,48 @@ void qdx_storemapconfflt( const char* base, const char* valname, float value, bo
 	g_iniconf[section][valname] = data;
 }
 
+void qdx_storemapconfint( const char* base, const char* valname, int value, bool inGlobal )
+{
+	if ( inGlobal == false && active_map.length() == 0 )
+	{
+		return;
+	}
+	char data[32];
+	snprintf( data, sizeof( data ), "%d", value );
+
+	std::string section( base );
+	section.append( "." );
+	if ( inGlobal )
+	{
+		section.append( INICONF_GLOBAL );
+	}
+	else
+	{
+		section.append( active_map.c_str() );
+	}
+	g_iniconf[section][valname] = data;
+}
+
+void qdx_storemapconfstr( const char* base, const char* valname, const char *value, bool inGlobal )
+{
+	if ( inGlobal == false && active_map.length() == 0 )
+	{
+		return;
+	}
+
+	std::string section( base );
+	section.append( "." );
+	if ( inGlobal )
+	{
+		section.append( INICONF_GLOBAL );
+	}
+	else
+	{
+		section.append( active_map.c_str() );
+	}
+	g_iniconf[section][valname] = std::string(value);
+}
+
 int qdx_readmapconfstr( const char* base, const char* valname, char *out, int outsz )
 {
 	int tries = 0;
@@ -2409,6 +2455,9 @@ void qdx_begin_loading_map(const char* mapname)
 
 	active_map.assign( name, namelen );
 
+	qdx_animationbuf_reset( TRUE );
+	qdx_surface_aabb_clearall();
+
 	if (g_inifile.read(g_iniconf))
 	{
 		if ( remixOnline )
@@ -2440,79 +2489,8 @@ void qdx_begin_loading_map(const char* mapname)
 
 		// Load Light settings
 		qdx_lights_load( g_iniconf, active_map.c_str() );
+		qdx_surface_replacements_load( g_iniconf, active_map.c_str() );
 	}
-
-	qdx_animationbuf_reset( TRUE );
-}
-
-static std::map<UINT32, std::vector<const void*>> g_surfaces;
-
-void qdx_surface_clear()
-{
-	g_surfaces.clear();
-}
-
-void qdx_surface_add( const void* surf, surfpartition_t id )
-{
-	auto grp = g_surfaces.find( id.combined );
-	if ( grp != g_surfaces.end() )
-	{
-		grp->second.push_back( surf );
-	}
-	else
-	{
-		g_surfaces[id.combined].push_back( surf );
-	}
-}
-
-void qdx_surface_get_members( surfpartition_t id, const void** surfs, int* count )
-{
-	auto grp = g_surfaces.find( id.combined );
-	if ( grp != g_surfaces.end() )
-	{
-		*surfs = *grp->second.data();
-		*count = grp->second.size();
-	}
-	else
-	{
-		*surfs = 0;
-		*count = 0;
-	}
-}
-
-#define QDX_SURFACE_GRID_VAL 500.0f
-
-surfpartition_t qdx_surface_get_partition( const void* data )
-{
-	surfpartition_t sid = { 0 };
-	float* vert;
-	srfSurfaceFace_t* face;
-	srfGridMesh_t* grid;
-	srfTriangles_t* tris;
-	switch ( *(surfaceType_t*)data )
-	{
-	case SF_FACE:
-		face = (srfSurfaceFace_t*)data;
-		vert = face->points[0];
-		break;
-	case SF_GRID:
-		grid = (srfGridMesh_t*)data;
-		vert = grid->verts[0].xyz;
-		break;
-	case SF_TRIANGLES:
-		tris = (srfTriangles_t*)data;
-		vert = tris->verts->xyz;
-		break;
-	default:
-		vert = 0;
-	}
-	if ( vert )
-	{
-		sid.p.x = (INT32)(vert[0] / QDX_SURFACE_GRID_VAL);
-		sid.p.y = (INT32)(vert[1] / QDX_SURFACE_GRID_VAL);
-		sid.p.z = (INT32)(vert[2] / QDX_SURFACE_GRID_VAL);
-	}
-	return sid;
 }
 
 void qdx_screen_getxyz( float *xyz )
@@ -2575,6 +2553,36 @@ void qdx_screen_getxyz( float *xyz )
 		ssrc->Release();
 		sdest->Release();
 	}
+}
+
+bool str_starts_with(const std::string& str, const std::string& prefix)
+{
+	return str.size() >= prefix.size() && str.compare(0, prefix.size(), prefix) == 0;
+}
+
+bool str_starts_with(const std::string& str, const char* prefix, unsigned prefixLen)
+{
+	return str.size() >= prefixLen && str.compare(0, prefixLen, prefix, prefixLen) == 0;
+}
+
+bool str_starts_with(const std::string& str, const char* prefix)
+{
+	return str_starts_with(str, prefix, std::string::traits_type::length(prefix));
+}
+
+bool str_ends_with(const std::string& str, const std::string& suffix)
+{
+	return str.size() >= suffix.size() && str.compare(str.size()-suffix.size(), suffix.size(), suffix) == 0;
+}
+
+bool str_ends_with(const std::string& str, const char* suffix, unsigned suffixLen)
+{
+	return str.size() >= suffixLen && str.compare(str.size()-suffixLen, suffixLen, suffix, suffixLen) == 0;
+}
+
+bool str_ends_with(const std::string& str, const char* suffix)
+{
+	return str_ends_with(str, suffix, std::string::traits_type::length(suffix));
 }
 
 /**

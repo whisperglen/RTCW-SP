@@ -36,9 +36,14 @@ inputs_t get_keypressed();
 void keypress_frame_ended();
 
 #define MAX_HELPER_VALUES 10
+#define MAX_HELPER_STRINGSIZE 1024
+
 extern byte helper_values_initialised[];
 
 int* helper_value( unsigned int index );
+
+const char* helper_value_str( unsigned int index );
+void helper_value_str_store( unsigned int index, const char* str );
 
 inline void helper_value_initial_value( unsigned int index, int value )
 {

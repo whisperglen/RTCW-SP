@@ -383,6 +383,9 @@
     <ClCompile Include="..\win32\win_dx9imgui.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="tr_surface_mod.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="anorms256.h">
@@ -668,6 +671,12 @@
       <Filter>Source Files\imgui</Filter>
     </ClInclude>
     <ClInclude Include="tr_debughelpers.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="tr_surface_mod.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="tr_surface_mod_int.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

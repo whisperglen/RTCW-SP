@@ -44,8 +44,13 @@ static void do_draw()
 {
 	static float f = 0.0f;
 	static int counter = 0;
+	static bool no_background = 0;
+	static bool no_scrollbar = 1;
+	ImGuiWindowFlags flags = 0;
+	if ( no_background ) flags = flags | ImGuiWindowFlags_NoBackground;
+	if ( no_scrollbar ) flags = flags | ImGuiWindowFlags_NoScrollbar;
 
-	ImGui::Begin( "Wolf config" );                          // Create a window and append into it.
+	ImGui::Begin( "Wolf config", NULL, flags );                          // Create a window and append into it.
 
 	if ( ImGui::Button( "Play!" ) )
 	{
@@ -56,13 +61,17 @@ static void do_draw()
 	{
 		ri.Cvar_Set( "r_showimgui", "0" );
 	}
+	ImGui::SameLine();
+	ImGui::Checkbox("No background", &no_background);
+	ImGui::SameLine();
+	ImGui::Checkbox("No scrollbar", &no_scrollbar);
 
+	const float* pos = qdx_4imgui_flashlight_position_3f();
+	const float* dir = qdx_4imgui_flashlight_direction_3f();
+	ImGui::Text( "Position  %.3f %.3f %.3f", pos[0], pos[1], pos[2] );
+	ImGui::Text( "Direction %.3f %.3f %.3f", dir[0], dir[1], dir[2] );
 	if ( ImGui::CollapsingHeader( "Flashlight Config" ) )
 	{
-		const float* pos = qdx_4imgui_flashlight_position_3f();
-		const float* dir = qdx_4imgui_flashlight_direction_3f();
-		ImGui::Text( "Position  %.3f %.3f %.3f", pos[0], pos[1], pos[2] );
-		ImGui::Text( "Direction %.3f %.3f %.3f", dir[0], dir[1], dir[2] );
 		ImGui::SeparatorText("Placement");
 		float* pos_off = qdx_4imgui_flashlight_position_off_3f();
 		float* dir_off = qdx_4imgui_flashlight_direction_off_3f();
@@ -203,7 +212,7 @@ static void do_draw()
 				if ( ImGui::DragFloat( "RADIANCE##10", &ovr->radiance_base, 10, 0, 50000 ) ) ovr->updated = 1;
 				if ( light_type == 0 )
 				{
-					if ( ImGui::DragFloat( "RADIANCE_SCALE##10", &ovr->radiance_scale, 0.1, 0, 10 ) ) ovr->updated = 1;
+					if ( ImGui::DragFloat( "RADIANCE_SCALE##10", &ovr->radiance_scale, 0.01, 0, 10 ) ) ovr->updated = 1;
 				}
 				else
 				{
@@ -225,7 +234,7 @@ static void do_draw()
 					qdx_light_override_save( ovr );
 				}
 				ImGui::SameLine();
-				if ( ImGui::Button( " Reset " ) )
+				if ( ImGui::Button( " Reset ##OVR" ) )
 				{
 					qdx_4imgui_light_clear_override( idval.ll );
 					ovr = qdx_4imgui_light_get_override( qdx_4imgui_light_picking_id( selected_index ), map_light_type[light_type] );
@@ -236,6 +245,142 @@ static void do_draw()
 					qdx_light_override_save_all();
 				}
 			}
+		}
+	}
+
+	if ( ImGui::CollapsingHeader( "Surface Separation" ) )
+	{
+		int selected_shader = r_draw1shader->integer;
+		int total_shaders = tr.numShaders;
+		int shader_info = -99;
+		const char *shader_name = qdx_4imgui_shader_info( &shader_info );
+		int total_aabbs = 0;
+		int *selected_aabb = qdx_4imgui_surface_aabb_selection( &total_aabbs );
+		ImGui::Text( "Hint: Press <Draw AABBs> then switch shaders +/-" );
+		ImGui::Text( " after <Separate>, reload map to see results" );
+		static int shader_dir = 0;
+		if ( shader_dir != 0 )
+		{
+			if ( shader_name[0] != 0 )
+			{
+				shader_dir = 0;
+			}
+			else if ( selected_shader <= -1 || selected_shader >= total_shaders )
+			{
+				shader_dir = 0;
+				selected_shader = -1;
+			}
+			else
+			{
+				selected_shader = selected_shader + shader_dir;
+			}
+		}
+		if ( ImGui::Button( "Draw nearby AABBs" ) )
+		{
+			std::string cmd = "r_showaabbs 1; r_nobackfacecull 1; r_clear 2";
+			if ( r_novis->integer != 0 )
+				cmd.append("; r_novis 0");
+			if ( r_nocull->integer != 0 )
+				cmd.append("; r_nocull 0");
+			if ( r_ignoreFastPath->integer == 0 )
+			{
+				cmd.append( "; r_ignoreFastPath 1; vid_restart" );
+				g_visible = FALSE;
+				exchange_wndproc_and_mouse( WNDPROC_RESTORE_WOLF );
+			}
+			ri.Cmd_ExecuteText( EXEC_APPEND, cmd.c_str() );
+		}
+		ImGui::SetItemTooltip("with novis/nocull 0");
+		ImGui::SameLine();
+		if ( ImGui::Button( "Draw all AABBs" ) )
+		{
+			std::string cmd = "r_showaabbs 1; r_nobackfacecull 1; r_clear 2";
+			if ( r_novis->integer == 0 )
+				cmd.append("; r_novis 1");
+			if ( r_nocull->integer == 0 )
+				cmd.append("; r_nocull 1");
+			if ( r_ignoreFastPath->integer == 0 )
+			{
+				cmd.append( "; r_ignoreFastPath 1; vid_restart" );
+				g_visible = FALSE;
+				exchange_wndproc_and_mouse( WNDPROC_RESTORE_WOLF );
+			}
+			ri.Cmd_ExecuteText( EXEC_APPEND, cmd.c_str() );
+		}
+		ImGui::SetItemTooltip("with novis/nocull 1");
+		ImGui::Text( "Shader: %d out of: %d", selected_shader, total_shaders );
+		ImGui::Text( "Shader name: %s", shader_name );
+		ImGui::Text( "Shader info: %d", shader_info );
+		if ( ImGui::Button( " Reset ##AABB" ) )
+		{
+			*selected_aabb = 0;
+			shader_dir = 0;
+			selected_shader = -1;
+			qdx_surface_store_shader_info( "", -99 );
+		}
+		ImGui::SameLine();
+		if ( ImGui::Button( " Shader- " ) )
+		{
+			*selected_aabb = 0;
+			if ( selected_shader == -1 )
+			{
+				shader_dir = -1;
+				selected_shader = total_shaders - 1;
+				qdx_surface_store_shader_info( "", -99 );
+			}
+			else if ( selected_shader > -1 )
+			{
+				shader_dir = -1;
+				selected_shader = selected_shader + shader_dir;
+				qdx_surface_store_shader_info( "", -99 );
+			}
+		}
+		ImGui::SameLine();
+		if ( ImGui::Button( " Shader+ " ) )
+		{
+			*selected_aabb = 0;
+			if ( selected_shader + 1 == total_shaders )
+			{
+				shader_dir = 0;
+				selected_shader = -1;
+				qdx_surface_store_shader_info( "", -99 );
+			}
+			else if ( selected_shader +1 < total_shaders )
+			{
+				shader_dir = 1;
+				selected_shader = selected_shader + shader_dir;
+				qdx_surface_store_shader_info( "", -99 );
+			}
+		}
+		ImGui::SameLine();
+		int input0 = selected_shader;
+		if ( ImGui::InputInt( "##ManualInputSelectedShader", &input0, 0, 0, ImGuiInputTextFlags_AutoSelectAll ) )
+		{
+			if ( input0 >= -1 && input0 +1 < total_shaders )
+			{
+				shader_dir = 1;
+				selected_shader = input0;
+				qdx_surface_store_shader_info( "", -99 );
+			}
+		}
+		ImGui::SliderInt( "Selection", selected_aabb, 0, total_aabbs );
+		static float mergedist = r_aabb_mergedist->value;
+		if ( ImGui::SliderFloat( "Merge Dist", &mergedist, 0, 100 ) )
+		{
+			char value[10];
+			snprintf( value, sizeof( value ), "%.3f", mergedist );
+			ri.Cvar_Set( "r_aabb_mergedist", value );
+			qdx_surface_aabb_clearall();
+		}
+		if ( ImGui::Button( "Separate" ) )
+		{
+			qdx_4imgui_surface_aabb_saveselection();
+		}
+		if ( selected_shader != r_draw1shader->integer )
+		{
+			char value[6];
+			snprintf( value, sizeof( value ), "%d", selected_shader );
+			ri.Cvar_Set( "r_draw1shader", value );
 		}
 	}
 
@@ -291,7 +436,7 @@ static void do_draw()
 	if ( g_in_mouse_val == 0 )
 	{
 		ImGui::SameLine();
-		if ( ImGui::Button( "FIX DA MOUSE!" ) )
+		if ( ImGui::Button( "MOUSE FIX" ) )
 		{
 			g_in_mouse_val = 1;
 			ri.Cvar_Set( "in_mouse", "1" );

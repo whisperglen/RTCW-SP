@@ -1217,7 +1217,7 @@ void RB_SurfaceAnim1( mdsSurface_t *surface ) {
 	boneList = ( int * )( (byte *)surface + surface->ofsBoneReferences );
 	header = ( mdsHeader_t * )( (byte *)surface + surface->ofsHeader );
 
-	mdsBoneFrame_t *ipose_transf = qdx_anim_get_bone_transforms(surface);
+	const mdsBoneFrame_t *ipose_transf = qdx_anim_get_bone_transforms(surface);
 	if ( ipose_transf == NULL )
 	{
 		refEntity_t localEnt;
@@ -1575,8 +1575,8 @@ void RB_SurfaceAnim0( mdsSurface_t *surface ) {
 	}
 
 //DBG_SHOWTIME
-	static const float matrix_id[3][3] = { 1, 0, 0,  0, 1, 0,  0, 0, 1};
-	vec3_t transl_id = { 0, 0, 0};             // translation vector
+	//const float matrix_id[3][3] = { 1, 0, 0,  0, 1, 0,  0, 0, 1};
+	//const vec3_t transl_id = { 0, 0, 0};             // translation vector
 	//
 	// deform the vertexes by the lerped bones
 	//

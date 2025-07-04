@@ -300,8 +300,16 @@ static void R_AddWorldSurface( msurface_t *surf, int dlightBits ) {
 		dlightBits = ( dlightBits != 0 );
 	}
 
+	int aabb_index = 0;
+	if ( *(surf->data) == SF_FACE || *(surf->data) == SF_GRID || *(surf->data) == SF_TRIANGLES )
+	{
+		//prime aabbs
+		aabb_index = qdx_surface_aabb_get_index( surf->shader->sortedIndex, surf->data, 0);
+		//qassert( aabb_index != -1 );
+	}
+
 // GR - not tessellated
-	R_AddDrawSurf( surf->data, surf->shader, surf->fogIndex, dlightBits, ATI_TESS_NONE );
+	R_AddDrawSurfEx( surf->data, surf->shader, aabb_index, surf->fogIndex, dlightBits, ATI_TESS_NONE );
 }
 
 /*

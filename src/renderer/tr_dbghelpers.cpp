@@ -21,6 +21,9 @@ static std::vector<std::string> ordered_calls;
 static int helper_values[MAX_HELPER_VALUES] = { 0 };
 byte helper_values_initialised[MAX_HELPER_VALUES] = { 0 };
 
+typedef char helper_string_t[MAX_HELPER_STRINGSIZE];
+static helper_string_t helper_strings[1] = { 0 };
+
 inputs_t prevstate = { 0 };
 inputs_t prevstate_upd = { 0 };
 
@@ -182,6 +185,25 @@ extern "C" int* helper_value( unsigned int index )
 		ret = &helper_values[index];
 	}
 	return ret;
+}
+
+extern "C" const char* helper_value_str( unsigned int index )
+{
+	static char dummyval[1] = "";
+	const char* ret = dummyval;
+	if ( index < ARRAYSIZE(helper_strings) )
+	{
+		ret = helper_strings[index];
+	}
+	return ret;
+}
+
+extern "C" void helper_value_str_store( unsigned int index, const char *str )
+{
+	if ( index < ARRAYSIZE(helper_strings) )
+	{
+		strncpy_s( helper_strings[index], str, MAX_HELPER_STRINGSIZE );
+	}
 }
 
 void bitmask_set( uint32_t bitnum, uint32_t* storage, uint32_t storagesz )

@@ -2,7 +2,9 @@
 #include <stdio.h>
 #include <windows.h>
 
-//#define USE_STACK_WALKER
+#ifndef USE_STACK_WALKER
+#define USE_STACK_WALKER
+#endif
 
 #ifdef USE_STACK_WALKER
 #include "StackWalker/Main/StackWalker/StackWalker.h"

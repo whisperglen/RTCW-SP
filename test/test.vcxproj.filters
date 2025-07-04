@@ -54,6 +54,9 @@
     <ClCompile Include="gamevals.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="surface.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="perftesthelpers\include\bdmpx.h">

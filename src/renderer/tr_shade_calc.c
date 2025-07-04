@@ -1110,10 +1110,16 @@ void RB_CalcRotateTexCoords( float degsPerSecond, float *st ) {
 #if id386 && !( ( defined __linux__ || defined __FreeBSD__ ) && ( defined __i386__ ) ) // rb010123
 
 long myftol( float f ) {
-	static int tmp;
+	int tmp;
 	__asm fld f
 	__asm fistp tmp
 	__asm mov eax, tmp
+}
+
+#elif idx86sse && !( ( defined __linux__ || defined __FreeBSD__ ) && ( defined __i386__ ) )
+
+long myftol( float f ) {
+	return _mm_cvt_ss2si( _mm_set1_ps( f ) );
 }
 
 #endif

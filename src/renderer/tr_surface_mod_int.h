@@ -1,0 +1,25 @@
+
+#ifndef _TR_SURFACE_MOD_INT
+#define _TR_SURFACE_MOD_INT
+
+#include "tr_surface_mod.h"
+#include "mINI/ini.h"
+
+#ifdef __cplusplus
+
+#include <string>
+#include <vector>
+#include <map>
+
+typedef struct aabb_group_s
+{
+	std::vector<aabb_store_t> storage;
+	std::map<const void*, int> indexes;
+}  aabb_group_t;
+
+void qdx_surface_aabb_prune_storage( aabb_group_t* grp );
+
+void qdx_surface_replacements_load( mINI::INIStructure &ini, const char *mapname );
+
+#endif
+#endif

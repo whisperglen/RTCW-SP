@@ -61,9 +61,12 @@ static light_override_t* qdx_light_find_override( uint64_t hash );
  */
 static light_data_t g_lights_dynamic[LIGHTS_DYNAMIC_SZ] = { 0 };
 static uint32_t g_lights_dynamic_bitmap = 0;
-static std::map<uint64_t, light_data_t> g_lights_flares;
+static std::map<uint64_t, light_data_t> g_lights_coronas;
+static std::map<uint64_t, light_data_t> g_lights_new;
 static remixapi_LightHandle g_flashlight_handle[NUM_FLASHLIGHT_HND] = { 0 };
 #define FLASHLIGHT_HASH 0xF1A581168700ULL
+static std::vector<struct color_override_data_s> g_color_overrides;
+static std::map<uint64_t, light_override_t> g_light_overrides;
 
 //no idea what to choose here
 #define DEFAULT_LIGHT_RADIANCE_DYNAMIC_BASE 150.0f
@@ -91,9 +94,6 @@ static float FLASHLIGHT_POSITION_OFFSET[3] = { -8, 1, -6 };
 static float FLASHLIGHT_DIRECTION_OFFSET[3] = { 0.095f, -0.08f, 0 };
 static uint64_t LIGHT_PICKING_IDS[3] = { 0 };
 static uint32_t LIGHT_PICKING_COUNT = 0;
-
-static std::vector<struct color_override_data_s> g_color_overrides;
-static std::map<uint64_t, light_override_t> g_light_overrides;
 
 float* qdx_4imgui_radiance_dynamic_1f() { return &LIGHT_RADIANCE_DYNAMIC_BASE; }
 float* qdx_4imgui_radiance_dynamic_scale_1f() { return &LIGHT_RADIANCE_DYNAMIC_SCALE; }
@@ -165,7 +165,7 @@ light_override_t* qdx_4imgui_light_get_override( uint64_t hash, light_type_e typ
 		}
 		else if ( type == LIGHT_CORONA )
 		{
-			for ( auto it = g_lights_flares.begin(); it != g_lights_flares.end(); it++ )
+			for ( auto it = g_lights_coronas.begin(); it != g_lights_coronas.end(); it++ )
 			{
 				if ( it->second.hash == hash )
 				{
@@ -177,6 +177,25 @@ light_override_t* qdx_4imgui_light_get_override( uint64_t hash, light_type_e typ
 			}
 			local.radiance_base = LIGHT_RADIANCE_CORONAS;
 			local.radius_base = LIGHT_RADIUS[1];
+		}
+		else if ( type == LIGHT_NEW )
+		{
+			static light_override_t newlight;
+			ZeroMemory( &newlight, sizeof( newlight ) );
+			for ( auto it = g_lights_new.begin(); it != g_lights_new.end(); it++ )
+			{
+				if ( it->second.hash == hash )
+				{
+					newlight.color[0] = it->second.color[0];
+					newlight.color[1] = it->second.color[1];
+					newlight.color[2] = it->second.color[2];
+					break;
+				}
+			}
+			newlight.radiance_base = LIGHT_RADIANCE_CORONAS;
+			newlight.radius_base = LIGHT_RADIUS[1];
+
+			return &newlight;
 		}
 
 		ret = &g_light_overrides[hash];
@@ -237,9 +256,33 @@ void qdx_light_scan_closest_lights(light_type_e type)
 	}
 	if ( type == LIGHT_CORONA )
 	{
-		for ( auto it = g_lights_flares.begin(); it != g_lights_flares.end(); it++ )
+		for ( auto it = g_lights_coronas.begin(); it != g_lights_coronas.end(); it++ )
 		{
-			float dist = Distance( FLASHLIGHT_POSITION_CACHE, it->second.pos ); //use the flashlight cache since we have it
+			vec3_t position = { it->second.pos[0], it->second.pos[1], it->second.pos[2] };
+			light_override_t* ovr = qdx_light_find_override( it->second.hash );
+			if ( ovr )
+			{
+				position[0] += ovr->position_offset[0];
+				position[1] += ovr->position_offset[1];
+				position[2] += ovr->position_offset[2];
+			}
+			float dist = Distance( FLASHLIGHT_POSITION_CACHE, position ); //use the flashlight cache since we have it
+			distvhash.push_back( std::make_pair( dist, it->second.hash ) );
+		}
+	}
+	if ( type == LIGHT_NEW )
+	{
+		for ( auto it = g_lights_new.begin(); it != g_lights_new.end(); it++ )
+		{
+			vec3_t position = { it->second.pos[0], it->second.pos[1], it->second.pos[2] };
+			light_override_t* ovr = qdx_light_find_override( it->second.hash );
+			if ( ovr )
+			{
+				position[0] += ovr->position_offset[0];
+				position[1] += ovr->position_offset[1];
+				position[2] += ovr->position_offset[2];
+			}
+			float dist = Distance( FLASHLIGHT_POSITION_CACHE, position ); //use the flashlight cache since we have it
 			distvhash.push_back( std::make_pair( dist, it->second.hash ) );
 		}
 	}
@@ -265,37 +308,6 @@ static light_override_t* qdx_light_find_override( uint64_t hash )
 		return &(itm->second);
 	}
 	return NULL;
-}
-
-
-static bool str_starts_with(const std::string& str, const std::string& prefix)
-{
-	return str.size() >= prefix.size() && str.compare(0, prefix.size(), prefix) == 0;
-}
-
-static bool str_starts_with(const std::string& str, const char* prefix, unsigned prefixLen)
-{
-	return str.size() >= prefixLen && str.compare(0, prefixLen, prefix, prefixLen) == 0;
-}
-
-static bool str_starts_with(const std::string& str, const char* prefix)
-{
-	return str_starts_with(str, prefix, std::string::traits_type::length(prefix));
-}
-
-static bool str_ends_with(const std::string& str, const std::string& suffix)
-{
-	return str.size() >= suffix.size() && str.compare(str.size()-suffix.size(), suffix.size(), suffix) == 0;
-}
-
-static bool str_ends_with(const std::string& str, const char* suffix, unsigned suffixLen)
-{
-	return str.size() >= suffixLen && str.compare(str.size()-suffixLen, suffixLen, suffix, suffixLen) == 0;
-}
-
-static bool str_ends_with(const std::string& str, const char* suffix)
-{
-	return str_ends_with(str, suffix, std::string::traits_type::length(suffix));
 }
 
 #define SECTION_LIGHTS "lights"
@@ -643,7 +655,7 @@ void qdx_lights_clear(unsigned int light_types)
 		}
 		if (light_types & LIGHT_CORONA)
 		{
-			for (auto it = g_lights_flares.begin(); it != g_lights_flares.end(); it++)
+			for (auto it = g_lights_coronas.begin(); it != g_lights_coronas.end(); it++)
 			{
 				if (it->second.isRemix)
 				{
@@ -655,7 +667,23 @@ void qdx_lights_clear(unsigned int light_types)
 					qdx.device->LightEnable(it->second.number, FALSE);
 				}
 			}
-			g_lights_flares.clear();
+			g_lights_coronas.clear();
+		}
+		if (light_types & LIGHT_NEW)
+		{
+			for (auto it = g_lights_new.begin(); it != g_lights_new.end(); it++)
+			{
+				if (it->second.isRemix)
+				{
+					if( it->second.handle )
+						remixInterface.DestroyLight(it->second.handle);
+				}
+				else
+				{
+					qdx.device->LightEnable(it->second.number, FALSE);
+				}
+			}
+			g_lights_new.clear();
 		}
 		if ( light_types & LIGHT_FLASHLIGHT )
 		{
@@ -711,8 +739,12 @@ void qdx_lights_draw()
 		}
 	}
 
-	//draw corona lights and flashlight
-	for ( auto it = g_lights_flares.begin(); it != g_lights_flares.end(); it++ )
+	//draw corona lights, new lights and flashlight
+	for ( auto it = g_lights_coronas.begin(); it != g_lights_coronas.end(); it++ )
+	{
+		remixInterface.DrawLightInstance( it->second.handle );
+	}
+	for ( auto it = g_lights_new.begin(); it != g_lights_new.end(); it++ )
 	{
 		remixInterface.DrawLightInstance( it->second.handle );
 	}
@@ -755,8 +787,8 @@ void qdx_light_add(int light_type, int ord, const float *position, const float *
 	if (light_type == LIGHT_CORONA)
 	{
 		hash = hashpos;
-		auto itm = g_lights_flares.find(hash);
-		if (itm != g_lights_flares.end())
+		auto itm = g_lights_coronas.find(hash);
+		if (itm != g_lights_coronas.end())
 		{
 			//flare already exists
 			light_override_t* ovr = qdx_light_find_override( hash );
@@ -947,7 +979,7 @@ void qdx_light_add(int light_type, int ord, const float *position, const float *
 			light_store = qdx_dynamiclight_get_slot(hash);
 			break;
 		case LIGHT_CORONA:
-			light_store = &g_lights_flares[hash];
+			light_store = &g_lights_coronas[hash];
 			break;
 		default:
 			qassert(FALSE && "Unknown light type");

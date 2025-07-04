@@ -88,6 +88,7 @@ cvar_t  *r_norefresh;
 cvar_t  *r_drawentities;
 cvar_t  *r_drawworld;
 cvar_t  *r_drawpolys;
+cvar_t  *r_draw1shader;
 cvar_t  *r_speeds;
 cvar_t  *r_fullbright;
 cvar_t  *r_novis;
@@ -95,6 +96,7 @@ cvar_t  *r_nocull;
 cvar_t  *r_facePlaneCull;
 cvar_t  *r_showcluster;
 cvar_t  *r_nocurves;
+cvar_t  *r_nobackfacecull;
 
 cvar_t  *r_allowExtensions;
 
@@ -155,6 +157,7 @@ cvar_t  *r_showsky;
 cvar_t  *r_shownormals;
 cvar_t  *r_finish;
 cvar_t  *r_clear;
+cvar_t  *r_showaabbs;
 cvar_t  *r_swapInterval;
 cvar_t  *r_textureMode;
 cvar_t  *r_offsetFactor;
@@ -220,7 +223,8 @@ cvar_t  *r_generichelper;
 cvar_t  *r_getcenterxyz;
 cvar_t  *r_showimgui;
 cvar_t  *r_nomeshanim;
-cvar_t* r_gpuskinning;
+cvar_t  *r_gpuskinning;
+cvar_t  *r_aabb_mergedist;
 
 cvar_t  *r_rmx_coronas;
 cvar_t  *r_rmx_dynamiclight;
@@ -1080,6 +1084,7 @@ void R_Register( void ) {
 	r_gamma = ri.Cvar_Get( "r_gamma", "1.3", CVAR_ARCHIVE );
 #endif
 	r_facePlaneCull = ri.Cvar_Get( "r_facePlaneCull", "1", CVAR_ARCHIVE );
+	r_nobackfacecull = ri.Cvar_Get( "r_nobackfacecull", "0", CVAR_TEMP );
 
 	r_railWidth = ri.Cvar_Get( "r_railWidth", "16", CVAR_ARCHIVE );
 	r_railCoreWidth = ri.Cvar_Get( "r_railCoreWidth", "1", CVAR_ARCHIVE );
@@ -1130,6 +1135,7 @@ void R_Register( void ) {
 	r_nocurves = ri.Cvar_Get( "r_nocurves", "0", CVAR_CHEAT );
 	r_drawworld = ri.Cvar_Get( "r_drawworld", "1", CVAR_CHEAT );
 	r_drawpolys = ri.Cvar_Get( "r_drawpolys", "1", CVAR_CHEAT );
+	r_draw1shader = ri.Cvar_Get( "r_draw1shader", "-1", CVAR_CHEAT|CVAR_TEMP );
 	r_lightmap = ri.Cvar_Get( "r_lightmap", "0", CVAR_CHEAT );
 	r_portalOnly = ri.Cvar_Get( "r_portalOnly", "0", CVAR_CHEAT );
 
@@ -1157,6 +1163,7 @@ void R_Register( void ) {
 	r_showsky = ri.Cvar_Get( "r_showsky", "0", CVAR_CHEAT );
 	r_shownormals = ri.Cvar_Get( "r_shownormals", "0", CVAR_CHEAT );
 	r_clear = ri.Cvar_Get( "r_clear", "0", CVAR_CHEAT );
+	r_showaabbs = ri.Cvar_Get( "r_showaabbs", "0", CVAR_CHEAT|CVAR_TEMP );
 	r_offsetFactor = ri.Cvar_Get( "r_offsetfactor", "-1", CVAR_CHEAT );
 	r_offsetUnits = ri.Cvar_Get( "r_offsetunits", "-2", CVAR_CHEAT );
 	r_drawBuffer = ri.Cvar_Get( "r_drawBuffer", "GL_BACK", CVAR_CHEAT );
@@ -1175,6 +1182,7 @@ void R_Register( void ) {
 	r_showimgui = ri.Cvar_Get( "r_showimgui", "0", CVAR_TEMP );
 	r_nomeshanim = ri.Cvar_Get( "r_nomeshanim", "0", CVAR_ARCHIVE );
 	r_gpuskinning = ri.Cvar_Get( "r_gpuskinning", "0", CVAR_ARCHIVE );
+	r_aabb_mergedist = ri.Cvar_Get( "r_aabb_mergedist", "10", CVAR_ARCHIVE );
 
 	r_rmx_coronas = ri.Cvar_Get( "r_rmx_coronas", "1", CVAR_ARCHIVE );
 	r_rmx_dynamiclight = ri.Cvar_Get( "r_rmx_dynamiclight", "1", CVAR_ARCHIVE );
