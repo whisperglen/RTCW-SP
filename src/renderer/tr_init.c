@@ -963,6 +963,11 @@ void GfxInfo_f( void ) {
 	}
 }
 
+void ToggleFlashlight_f( void ) {
+	const char *val = r_rmx_flashlight->integer ? "0" : "1";
+	ri.Cvar_Set( "r_rmx_flashlight", val );
+}
+
 // RF
 extern void R_CropImages_f( void );
 
@@ -1079,7 +1084,7 @@ void R_Register( void ) {
 	r_dlightBacks = ri.Cvar_Get( "r_dlightBacks", "1", CVAR_ARCHIVE );
 	r_finish = ri.Cvar_Get( "r_finish", "0", CVAR_ARCHIVE );
 	r_textureMode = ri.Cvar_Get( "r_textureMode", "GL_LINEAR_MIPMAP_NEAREST", CVAR_ARCHIVE );
-	r_swapInterval = ri.Cvar_Get( "r_swapInterval", "1", CVAR_ARCHIVE );
+	r_swapInterval = ri.Cvar_Get( "r_swapInterval", "1", CVAR_ARCHIVE | CVAR_LATCH );
 #ifdef __MACOS__
 	r_gamma = ri.Cvar_Get( "r_gamma", "1.2", CVAR_ARCHIVE );
 #else
@@ -1207,6 +1212,8 @@ void R_Register( void ) {
 	// Ridah
 	ri.Cmd_AddCommand( "cropimages", R_CropImages_f );
 	// done.
+
+	ri.Cmd_AddCommand( "toggleflashlight", ToggleFlashlight_f );
 }
 
 /*
@@ -1339,6 +1346,8 @@ void RE_Shutdown( qboolean destroyWindow ) {
 	// Ridah
 	ri.Cmd_RemoveCommand( "cropimages" );
 	// done.
+
+	ri.Cmd_RemoveCommand( "toggleflashlight" );
 
 	R_ShutdownCommandBuffers();
 

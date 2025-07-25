@@ -976,7 +976,23 @@ static void fill_in_d3dpresentparams(D3DPRESENT_PARAMETERS &d3dpp)
 	{
 		d3dpp.FullScreen_RefreshRateInHz = qdx.desktop.RefreshRate;
 	}
-	d3dpp.PresentationInterval = r_swapInterval->integer ? D3DPRESENT_INTERVAL_DEFAULT : D3DPRESENT_INTERVAL_IMMEDIATE;
+	UINT pinterval;
+	switch ( r_swapInterval->integer )
+	{
+	default:
+	case 0:
+		pinterval = D3DPRESENT_INTERVAL_IMMEDIATE;
+		break;
+	case 1:
+		pinterval = D3DPRESENT_INTERVAL_DEFAULT;
+		break;
+	case 2:
+		pinterval = D3DPRESENT_INTERVAL_ONE;
+		break;
+	case 3:
+		pinterval = D3DPRESENT_INTERVAL_TWO;
+	}
+	d3dpp.PresentationInterval = pinterval;
 
 	//check for multisample
 	while (samples >= 2)

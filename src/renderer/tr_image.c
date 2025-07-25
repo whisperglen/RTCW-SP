@@ -625,6 +625,7 @@ static void Upload32(   int texnum, unsigned *data,
 	float rMax = 0, gMax = 0, bMax = 0;
 	static int rmse_saved = 0;
 	float rmse;
+	qboolean org_mipmap = mipmap;
 
 	if (r_nomipmaps->value)
 	{
@@ -869,7 +870,14 @@ done:
 	}
 	else
 	{
-		qdx_texobj_setparam(texnum - TEXNUM_OFFSET, TEXP_FLT_MIN | TEXP_FLT_MAG, D3DTEXF_LINEAR);
+		if ( org_mipmap == 0 )
+		{
+			qdx_texobj_setparam( texnum - TEXNUM_OFFSET, TEXP_FLT_MIN | TEXP_FLT_MAG, D3DTEXF_LINEAR );
+		}
+		else
+		{
+			qdx_texobj_setparam( texnum - TEXNUM_OFFSET, TEXP_FLT_MIN | TEXP_FLT_MAG, gl_filter_min );
+		}
 		//qglTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 		//qglTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	}

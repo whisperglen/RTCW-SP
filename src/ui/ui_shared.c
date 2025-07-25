@@ -3694,7 +3694,8 @@ static bind_t g_bindings[] =
 //	{"help",			K_F1,           -1, -1, -1},
 	{"+leanleft",        -1,             -1, -1, -1},
 	{"+leanright",       -1,             -1, -1, -1},
-	{"kill",         -1,             -1, -1, -1}
+	{"kill",         -1,             -1, -1, -1},
+	{"toggleflashlight", -1,             -1, -1, -1}
 };
 
 
