@@ -93,7 +93,7 @@ void qdx_4imgui_light_clear_override( uint64_t hash );
 
 int* qdx_4imgui_surface_aabb_selection( int *total );
 const char *qdx_4imgui_shader_info( int *value );
-void qdx_4imgui_surface_aabb_saveselection();
+void qdx_4imgui_surface_aabb_saveselection(const char *hint);
 
 bool str_starts_with( const std::string& str, const std::string& prefix );
 bool str_starts_with( const std::string& str, const char* prefix, unsigned prefixLen );

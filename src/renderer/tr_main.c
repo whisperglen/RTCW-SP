@@ -1436,7 +1436,7 @@ static int qsort_compare( const void *arg1, const void *arg2 )
 	int ret = 0;
 	drawSurf_t* s1 = (drawSurf_t*)arg1;
 	drawSurf_t* s2 = (drawSurf_t*)arg2;
-#ifndef DRAWSURFEX
+
 	if (s1->sort > s2->sort)
 	{
 		ret = 1;
@@ -1459,7 +1459,16 @@ static int qsort_compare( const void *arg1, const void *arg2 )
 		{
 		}
 	}
-#else
+
+	return ret;
+}
+
+static int qsort_compare_withaabbs( const void *arg1, const void *arg2 )
+{
+	int ret = 0;
+	drawSurf_t* s1 = (drawSurf_t*)arg1;
+	drawSurf_t* s2 = (drawSurf_t*)arg2;
+
 	if( s1->sortex[0] == s2->sortex[0] )
 	{
 		if (s1->sortex[1] > s2->sortex[1])
@@ -1493,7 +1502,7 @@ static int qsort_compare( const void *arg1, const void *arg2 )
 	{
 		ret = -1;
 	}
-#endif
+
 	return ret;
 }
 
@@ -1504,7 +1513,14 @@ void qsortFast(
 	unsigned width
 )
 {
-	qsort(base, num, width, qsort_compare);
+	if ( r_aabb_culling->integer == 0 )
+	{
+		qsort( base, num, width, qsort_compare );
+	}
+	else
+	{
+		qsort( base, num, width, qsort_compare_withaabbs );
+	}
 }
 #else
 /* sort the array between lo and hi (inclusive)

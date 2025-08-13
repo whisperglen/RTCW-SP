@@ -81,7 +81,7 @@
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <ModuleDefinitionFile>.\cgame.def</ModuleDefinitionFile>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <ProgramDatabaseFile>.\Debug/cgamex86.pdb</ProgramDatabaseFile>
+      <ProgramDatabaseFile>../Debug/cgamex86.pdb</ProgramDatabaseFile>
       <GenerateMapFile>true</GenerateMapFile>
       <MapFileName>.\Debug/cgamex86.map</MapFileName>
       <SubSystem>Windows</SubSystem>
@@ -128,7 +128,7 @@
       <OutputFile>../Release/cgamex86.dll</OutputFile>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <ModuleDefinitionFile>.\cgame.def</ModuleDefinitionFile>
-      <ProgramDatabaseFile>.\Release/cgamex86.pdb</ProgramDatabaseFile>
+      <ProgramDatabaseFile>../Release/cgamex86.pdb</ProgramDatabaseFile>
       <GenerateMapFile>true</GenerateMapFile>
       <MapFileName>.\Release/cgamex86.map</MapFileName>
       <SubSystem>Windows</SubSystem>

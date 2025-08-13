@@ -2436,7 +2436,7 @@ int qdx_readmapconfstr( const char* base, const char* valname, char *out, int ou
 
 void qdx_begin_loading_map(const char* mapname)
 {
-	static char section[256];
+	static char section[32];
 
 	const char *name = strrchr(mapname, '/');
 	if (name == NULL) return;
@@ -2462,23 +2462,25 @@ void qdx_begin_loading_map(const char* mapname)
 	{
 		if ( remixOnline )
 		{
-			mINI::INIMap<std::string>* opts;
+			mINI::INIMap<std::string>* default_opts;
+			mINI::INIMap<std::string>* map_opts = 0;
 
 			// Apply RTX.conf options
 			snprintf( section, sizeof( section ), "rtxconf.%.*s", namelen, name );
 			if ( g_iniconf.has( section ) )
 			{
-				opts = &g_iniconf[ section ];
+				map_opts = &g_iniconf[ section ];
 			}
-			else
-			{
-				opts = &g_iniconf[ "rtxconf.default" ];
-			}
+			default_opts = &g_iniconf[ "rtxconf.default" ];
 
-			for ( auto it = opts->begin(); it != opts->end(); it++ )
+			for ( auto it = default_opts->begin(); it != default_opts->end(); it++ )
 			{
 				const char* key = it->first.c_str();
 				const char* value = it->second.c_str();
+				if ( map_opts->has( key ) )
+				{
+					value = map_opts->operator[](key).c_str();
+				}
 				remixapi_ErrorCode rercd = remixInterface.SetConfigVariable( key, value );
 				if ( REMIXAPI_ERROR_CODE_SUCCESS != rercd )
 				{

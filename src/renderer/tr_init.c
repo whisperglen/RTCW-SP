@@ -225,6 +225,7 @@ cvar_t  *r_showimgui;
 cvar_t  *r_nomeshanim;
 cvar_t  *r_gpuskinning;
 cvar_t  *r_aabb_mergedist;
+cvar_t  *r_aabb_culling;
 
 cvar_t  *r_rmx_coronas;
 cvar_t  *r_rmx_dynamiclight;
@@ -1183,6 +1184,7 @@ void R_Register( void ) {
 	r_nomeshanim = ri.Cvar_Get( "r_nomeshanim", "0", CVAR_ARCHIVE );
 	r_gpuskinning = ri.Cvar_Get( "r_gpuskinning", "0", CVAR_ARCHIVE );
 	r_aabb_mergedist = ri.Cvar_Get( "r_aabb_mergedist", "10", CVAR_ARCHIVE );
+	r_aabb_culling = ri.Cvar_Get( "r_aabb_culling", "0", CVAR_ARCHIVE );
 
 	r_rmx_coronas = ri.Cvar_Get( "r_rmx_coronas", "1", CVAR_ARCHIVE );
 	r_rmx_dynamiclight = ri.Cvar_Get( "r_rmx_dynamiclight", "1", CVAR_ARCHIVE );

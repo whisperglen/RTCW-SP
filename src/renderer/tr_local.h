@@ -1253,6 +1253,7 @@ extern cvar_t  *r_showimgui;
 extern cvar_t  *r_nomeshanim;
 extern cvar_t  *r_gpuskinning;
 extern cvar_t  *r_aabb_mergedist;
+extern cvar_t  *r_aabb_culling;
 
 extern cvar_t  *r_rmx_coronas;
 extern cvar_t  *r_rmx_dynamiclight;

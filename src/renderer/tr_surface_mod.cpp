@@ -30,7 +30,7 @@ static aabb_group_t g_aabb_groups[MAX_SHADERS];
 BOOL qdx_surface_aabb_intersect( const aabb_store_t* boxa, const aabb_store_t* boxb );
 void qdx_surface_aabb_merge( const aabb_store_t* boxa, const aabb_store_t* boxb, aabb_store_t* boxo );
 void qdx_surface_aabb_switch_indexes( aabb_group_t* grp, int from, int to );
-void qdx_surface_replacement_save( const char *name, int val, aabb_store_t *box, bool writeOut = true );
+void qdx_surface_replacement_save( const char *hint, const char *name, int val, aabb_store_t *box, bool writeOut = true );
 
 void qdx_surface_aabb_clearall()
 {
@@ -176,12 +176,13 @@ int qdx_surface_aabb_get_index( int grpid, const void *surf, int dbgpoi )
 			}
 		}
 
-		if ( merged == FALSE )
+		if ( merged == FALSE || r_showaabbs->integer > 1 )
 		{   //insert new
 			index = grp->storage.size();
 			grp->storage.push_back( aabb_local );
 			grp->indexes[surface] = index;
-			return index;
+			if( merged == FALSE )
+				return index;
 		}
 
 		//compound merges
@@ -380,7 +381,7 @@ int* qdx_4imgui_surface_aabb_selection( int *total )
 	return &g_selected_aabb;
 }
 
-void qdx_4imgui_surface_aabb_saveselection()
+void qdx_4imgui_surface_aabb_saveselection(const char *hint)
 {
 	if ( g_selected_shader_value == -99 || g_selected_shader_name[0] == 0 )
 	{
@@ -392,7 +393,7 @@ void qdx_4imgui_surface_aabb_saveselection()
 	{
 		aabb_store_t* aabb = &grp->storage[g_selected_aabb];
 
-		qdx_surface_replacement_save( g_selected_shader_name, g_selected_shader_value, aabb, true );
+		qdx_surface_replacement_save( hint, g_selected_shader_name, g_selected_shader_value, aabb, true );
 	}
 }
 
@@ -413,7 +414,7 @@ void qdx_surface_aabb_draw( int grpid )
 	for ( auto it = grp->storage.begin(); it != grp->storage.end(); it++, i++ )
 	{
 		aabb_store_t* aabb = it._Ptr;
-		if ( aabb->usage_count == 0 )
+		if ( aabb->usage_count == 0 && r_showaabbs->integer < 2 )
 			continue;
 
 		bool is_colored = (i == g_selected_aabb);
@@ -434,7 +435,7 @@ void qdx_surface_aabb_draw( int grpid )
 		v->XYZ[0] = aabb->vmax[0]; v->XYZ[1] = aabb->vmin[1]; v->XYZ[2] = aabb->vmin[2];
 
 		v++;
-		v->COLOR = is_colored ? D3DCOLOR_XRGB( 255, 255, 255 ) : white;
+		v->COLOR = is_colored ? D3DCOLOR_XRGB( 128, 128, 128 ) : white;
 		v->XYZ[0] = aabb->vmax[0]; v->XYZ[1] = aabb->vmax[1]; v->XYZ[2] = aabb->vmax[2];
 		v++;
 		v->COLOR = is_colored ? D3DCOLOR_XRGB( 0, 255, 255 ) : white;
@@ -480,17 +481,21 @@ void qdx_surface_aabb_draw( int grpid )
 
 static uint8_t sample_dot( uint32_t code, int x, int y, int len )
 {
-	int lc = (y * 9) % (len / 16);
-	int lr = (x * 9) % (len / 16);
+	//scale to 9 rows and columns
+	int lc = (y * 9) % (len / 8);
+	int lr = (x * 9) % (len / 8);
 
+	//egdes are blank
 	if ( lc < 2 || lc > 6 )
 		return 0;
 	if ( lr < 2 || lr > 6 )
 		return 0;
 
+	//5 rows and 5 columns
 	int c = lc - 2;
 	int r = lr - 2;
 
+	//horizontal mirror
 	if( c > 2 )
 		c = c & 1; // 3 -> 1, 4 -> 0
 
@@ -540,7 +545,7 @@ static void fill_texbuf( uint8_t *buf, int len, uint32_t code )
 
 image_t *qdx_surface_create_texture(uint32_t hash)
 {
-	const int texsize = 128;
+	const int texsize = 64;
 	char name[16];
 	static uint8_t data[texsize][texsize][4];
 	snprintf( name, sizeof( name ), "repl_0x%.8x", hash );
@@ -590,7 +595,7 @@ void qdx_surface_replacements_load( mINI::INIStructure &ini, const char *mapname
 	}
 }
 
-void qdx_surface_replacement_save( const char *name, int val, aabb_store_t *box, bool writeOut )
+void qdx_surface_replacement_save( const char *hint, const char *name, int val, aabb_store_t *box, bool writeOut )
 {
 	char section[64];
 	uint32_t genhash = fnv_32a_str( name, val );
@@ -598,6 +603,10 @@ void qdx_surface_replacement_save( const char *name, int val, aabb_store_t *box,
 	genhash = fnv_32a_buf( box->vmax, sizeof( box->vmax ), genhash );
 
 	snprintf( section, sizeof( section ), SECTION_SURF_REPLACE_PRINT, genhash );
+	if ( hint && hint[0] )
+	{
+		qdx_storemapconfstr( section, "hint", hint, FALSE );
+	}
 	qdx_storemapconfstr( section, "shader_name", name, FALSE );
 	qdx_storemapconfint( section, "shader_val", val, FALSE );
 	qdx_storemapconfflt( section, "vmin0", box->vmin[0], FALSE );

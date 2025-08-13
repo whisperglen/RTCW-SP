@@ -147,7 +147,7 @@ static void do_draw()
 		static float original_color[3] = { 0 };
 
 #define FLASH_IT() if(ovr) { flash_it = 1; original_color[0] = ovr->color[0]; original_color[1] = ovr->color[1]; original_color[2] = ovr->color[2]; }
-#define UNFLASH_IT() if(ovr) { flash_it = 0; ovr->color[0] = original_color[0]; ovr->color[1] = original_color[1]; ovr->color[2] = original_color[2]; }
+#define UNFLASH_IT() if(ovr) { flash_it = 0; ovr->color[0] = original_color[0]; ovr->color[1] = original_color[1]; ovr->color[2] = original_color[2]; ovr->updated = 1; }
 
 		if ( 0 == qdx_4imgui_light_picking_count() )
 		{
@@ -258,7 +258,14 @@ static void do_draw()
 		int *selected_aabb = qdx_4imgui_surface_aabb_selection( &total_aabbs );
 		ImGui::Text( "Hint: Press <Draw AABBs> then switch shaders +/-" );
 		ImGui::Text( " after <Separate>, reload map to see results" );
+		static int prev_shader = -1;
 		static int shader_dir = 0;
+		static bool all_aabb_sizes = 0;
+		if ( r_showaabbs->integer > 1 )
+		{
+			all_aabb_sizes = 1;
+		}
+
 		if ( shader_dir != 0 )
 		{
 			if ( shader_name[0] != 0 )
@@ -275,26 +282,40 @@ static void do_draw()
 				selected_shader = selected_shader + shader_dir;
 			}
 		}
-		if ( ImGui::Button( "Draw nearby AABBs" ) )
+
+		ImGui::Text( "Draw AABBs:" );
+		ImGui::SameLine();
+
+		if ( ImGui::Button( "nearby" ) )
 		{
-			std::string cmd = "r_showaabbs 1; r_nobackfacecull 1; r_clear 2";
+			std::string cmd = "r_nobackfacecull 1; r_clear 2";
+			if ( r_showaabbs->integer == 0 )
+			{
+				cmd.append( "; r_showaabbs " );
+				cmd.append( all_aabb_sizes ? "2" : "1" );
+			}
 			if ( r_novis->integer != 0 )
 				cmd.append("; r_novis 0");
 			if ( r_nocull->integer != 0 )
 				cmd.append("; r_nocull 0");
 			if ( r_ignoreFastPath->integer == 0 )
 			{
-				cmd.append( "; r_ignoreFastPath 1; vid_restart" );
-				g_visible = FALSE;
-				exchange_wndproc_and_mouse( WNDPROC_RESTORE_WOLF );
+				cmd.append( "; r_ignoreFastPath 1; echo You need vid_restart to apply changes!" );
+				//g_visible = FALSE;
+				//exchange_wndproc_and_mouse( WNDPROC_RESTORE_WOLF );
 			}
 			ri.Cmd_ExecuteText( EXEC_APPEND, cmd.c_str() );
 		}
-		ImGui::SetItemTooltip("with novis/nocull 0");
+		ImGui::SetItemTooltip("novis/nocull 0");
 		ImGui::SameLine();
-		if ( ImGui::Button( "Draw all AABBs" ) )
+		if ( ImGui::Button( "complete" ) )
 		{
-			std::string cmd = "r_showaabbs 1; r_nobackfacecull 1; r_clear 2";
+			std::string cmd = "r_nobackfacecull 1; r_clear 2";
+			if ( r_showaabbs->integer == 0 )
+			{
+				cmd.append( "; r_showaabbs " );
+				cmd.append( all_aabb_sizes ? "2" : "1" );
+			}
 			if ( r_novis->integer == 0 )
 				cmd.append("; r_novis 1");
 			if ( r_nocull->integer == 0 )
@@ -307,14 +328,38 @@ static void do_draw()
 			}
 			ri.Cmd_ExecuteText( EXEC_APPEND, cmd.c_str() );
 		}
-		ImGui::SetItemTooltip("with novis/nocull 1");
+		ImGui::SetItemTooltip("novis/nocull 1");
+		ImGui::SameLine();
+		if ( ImGui::Checkbox( "all sizes", &all_aabb_sizes ) )
+		{
+			if ( all_aabb_sizes )
+			{
+				if ( r_showaabbs->integer == 1 )
+				{
+					ri.Cvar_Set( "r_showaabbs", "2" );
+					qdx_surface_aabb_clearall();
+				}
+			}
+			else
+			{
+				if ( r_showaabbs->integer > 1 )
+				{
+					ri.Cvar_Set( "r_showaabbs", "1" );
+					qdx_surface_aabb_clearall();
+				}
+			}
+		}
+		ImGui::SetItemTooltip("show unmerged AABBs for all small surfaces");
 		ImGui::Text( "Shader: %d out of: %d", selected_shader, total_shaders );
 		ImGui::Text( "Shader name: %s", shader_name );
 		ImGui::Text( "Shader info: %d", shader_info );
-		if ( ImGui::Button( " Reset ##AABB" ) )
+		ImGui::Text( "Filter:" );
+		ImGui::SameLine();
+		if ( ImGui::Button( " None " ) )
 		{
 			*selected_aabb = 0;
 			shader_dir = 0;
+			prev_shader = selected_shader;
 			selected_shader = -1;
 			qdx_surface_store_shader_info( "", -99 );
 		}
@@ -322,6 +367,7 @@ static void do_draw()
 		if ( ImGui::Button( " Shader- " ) )
 		{
 			*selected_aabb = 0;
+			prev_shader = selected_shader;
 			if ( selected_shader == -1 )
 			{
 				shader_dir = -1;
@@ -339,6 +385,7 @@ static void do_draw()
 		if ( ImGui::Button( " Shader+ " ) )
 		{
 			*selected_aabb = 0;
+			prev_shader = selected_shader;
 			if ( selected_shader + 1 == total_shaders )
 			{
 				shader_dir = 0;
@@ -353,14 +400,25 @@ static void do_draw()
 			}
 		}
 		ImGui::SameLine();
+		ImGui::SetNextItemWidth( 50 );
 		int input0 = selected_shader;
 		if ( ImGui::InputInt( "##ManualInputSelectedShader", &input0, 0, 0, ImGuiInputTextFlags_AutoSelectAll ) )
 		{
 			if ( input0 >= -1 && input0 +1 < total_shaders )
 			{
 				shader_dir = 1;
+				//prev_shader = selected_shader;
 				selected_shader = input0;
 				qdx_surface_store_shader_info( "", -99 );
+			}
+		}
+		ImGui::SameLine();
+		{
+			char prev_txt[12];
+			snprintf( prev_txt, sizeof( prev_txt ), "Prev: %d", prev_shader );
+			if ( ImGui::Button( prev_txt ) )
+			{
+				selected_shader = prev_shader;
 			}
 		}
 		ImGui::SliderInt( "Selection", selected_aabb, 0, total_aabbs );
@@ -372,9 +430,13 @@ static void do_draw()
 			ri.Cvar_Set( "r_aabb_mergedist", value );
 			qdx_surface_aabb_clearall();
 		}
+		static char savehint[128] = { 0 };
+		const char *savehint_hint = "Write this text to the ini, for easy reference";
+		ImGui::InputTextWithHint( "INI Hint", savehint_hint,	savehint, sizeof( savehint ) );
+		ImGui::SetItemTooltip(savehint_hint);
 		if ( ImGui::Button( "Separate" ) )
 		{
-			qdx_4imgui_surface_aabb_saveselection();
+			qdx_4imgui_surface_aabb_saveselection(savehint);
 		}
 		if ( selected_shader != r_draw1shader->integer )
 		{
