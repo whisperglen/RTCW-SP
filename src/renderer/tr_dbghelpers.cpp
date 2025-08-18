@@ -24,115 +24,115 @@ byte helper_values_initialised[MAX_HELPER_VALUES] = { 0 };
 typedef char helper_string_t[MAX_HELPER_STRINGSIZE];
 static helper_string_t helper_strings[1] = { 0 };
 
-inputs_t prevstate = { 0 };
-inputs_t prevstate_upd = { 0 };
+static inputs_t keystate = { 0 };
+static inputs_t pressed = { 0 };
+static bool new_frame = true;
 
 #define IS_PRESSED(X) (((X) & 0x8000) != 0)
 
 #define HANDLE_KEY(KEY, var) \
 	if (IS_PRESSED(GetAsyncKeyState(KEY))) \
 	{ \
-		if ( prevstate.var == 0 ) \
+		if ( keystate.var == 0 ) \
 		{ \
-			ret.var = 1; \
-			prevstate_upd.var = 1; \
+			pressed.var = 1; \
+			keystate.var = 1; \
 		} \
 	} \
 	else \
 	{ \
-		prevstate.var = 0; \
+		keystate.var = 0; \
 	}
 
 extern "C" inputs_t get_keypressed()
 {
-	inputs_t ret = { 0 };
+	if ( new_frame )
+	{
+		new_frame = false;
 
-	bool isShift = false;
+		bool isShift = false;
+		///
+		if ( IS_PRESSED( GetAsyncKeyState( VK_SHIFT ) ) )
+		{
+			isShift = true;
+		}
+		///
+		if ( IS_PRESSED( GetAsyncKeyState( VK_CONTROL ) ) )
+		{
+			pressed.ctrl = 1;
+		}
+		/// ALT
+		if ( IS_PRESSED( GetAsyncKeyState( VK_MENU ) ) )
+		{
+			pressed.alt = 1;
+		}
+		///
+		if ( IS_PRESSED( GetAsyncKeyState( VK_UP ) ) )
+		{
+			if ( keystate.updown == 0 || isShift )
+			{
+				pressed.updown = 1;
+				keystate.updown = 1;
+			}
+		}
+		else if ( IS_PRESSED( GetAsyncKeyState( VK_DOWN ) ) )
+		{
+			if ( keystate.updown == 0 || isShift )
+			{
+				pressed.updown = -1;
+				keystate.updown = -1;
+			}
+		}
+		else
+		{
+			keystate.updown = 0;
+		}
+		///
+		if ( IS_PRESSED( GetAsyncKeyState( VK_LEFT ) ) )
+		{
+			if ( keystate.leftright == 0 || isShift )
+			{
+				pressed.leftright = -1;
+				keystate.leftright = -1;
+			}
+		}
+		else if ( IS_PRESSED( GetAsyncKeyState( VK_RIGHT ) ) )
+		{
+			if ( keystate.leftright == 0 || isShift )
+			{
+				pressed.leftright = 1;
+				keystate.leftright = 1;
+			}
+		}
+		else
+		{
+			keystate.leftright = 0;
+		}
+		///
+		HANDLE_KEY( 'X', x );
+		///
+		HANDLE_KEY( 'Y', y );
+		///
+		HANDLE_KEY( 'Z', z );
+		///
+		HANDLE_KEY( 'I', i );
+		///
+		HANDLE_KEY( 'O', o );
+		///
+		HANDLE_KEY( 'U', u );
+		///
+		HANDLE_KEY( 'C', c );
+		///
+		HANDLE_KEY( VK_F8, imgui );
+	}
 
-	///
-	if (IS_PRESSED(GetAsyncKeyState(VK_SHIFT)))
-	{
-		isShift = true;
-	}
-	///
-	if (IS_PRESSED(GetAsyncKeyState(VK_CONTROL)))
-	{
-		ret.ctrl = 1;
-	}
-	/// ALT
-	if (IS_PRESSED(GetAsyncKeyState(VK_MENU)))
-	{
-		ret.alt = 1;
-	}
-	///
-	if (IS_PRESSED(GetAsyncKeyState(VK_UP)))
-	{
-		if ( prevstate.updown == 0 || isShift )
-		{
-			ret.updown = 1;
-			prevstate_upd.updown = 1;
-		}
-	}
-	else if (IS_PRESSED(GetAsyncKeyState(VK_DOWN)))
-	{
-		if ( prevstate.updown == 0 || isShift )
-		{
-			ret.updown = -1;
-			prevstate_upd.updown = 1;
-		}
-	}
-	else
-	{
-		prevstate.updown = 0;
-	}
-	///
-	if (IS_PRESSED(GetAsyncKeyState(VK_LEFT)))
-	{
-		if ( prevstate.leftright == 0 || isShift )
-		{
-			ret.leftright = -1;
-			prevstate_upd.leftright = 1;
-		}
-	}
-	else if (IS_PRESSED(GetAsyncKeyState(VK_RIGHT)))
-	{
-		if ( prevstate.leftright == 0 || isShift )
-		{
-			ret.leftright = 1;
-			prevstate_upd.leftright = 1;
-		}
-	}
-	else
-	{
-		prevstate.leftright = 0;
-	}
-	///
-	HANDLE_KEY( 'X', x );
-	///
-	HANDLE_KEY( 'Y', y );
-	///
-	HANDLE_KEY( 'Z', z );
-	///
-	HANDLE_KEY( 'I', i );
-	///
-	HANDLE_KEY( 'O', o );
-	///
-	HANDLE_KEY( 'U', u );
-	///
-	HANDLE_KEY( 'C', c );
-	///
-	HANDLE_KEY( VK_F8, imgui );
-
-	return ret;
+	return pressed;
 }
 
 extern "C" void keypress_frame_ended()
 {
-	if ( prevstate_upd.all )
-	{
-		prevstate.all = prevstate.all | prevstate_upd.all;
-		prevstate_upd.all = 0;
-	}
+	new_frame = true;
+	pressed.all = 0;
 }
 
 extern "C" void function_called(const char *name)
@@ -206,26 +206,100 @@ extern "C" void helper_value_str_store( unsigned int index, const char *str )
 	}
 }
 
-void bitmask_set( uint32_t bitnum, uint32_t* storage, uint32_t storagesz )
-{
-	uint32_t slot = bitnum >> 5;
-	uint32_t mask = 1 << (bitnum & 0x1F);
+const size_t bitmask_alloc_ex = 255;
+inline size_t bitmask_alloc_calc_sz(size_t in) { return ((in + bitmask_alloc_ex) & ~bitmask_alloc_ex); }
 
-	if ( slot < storagesz )
+extern "C" void bitmask_alloc( bitmask_t* bm, size_t numbits )
+{
+	if (bm)
 	{
-		storage[slot] |= mask;
+		size_t numbytes = numbits / 8;
+		void* p = malloc(numbytes);
+		if (p)
+		{
+			bm->ptr = (uint32_t*)p;
+			bm->size = numbytes / sizeof(uint32_t);
+			bitmask_clear(bm);
+		}
 	}
 }
 
-uint32_t bitmask_is_set( uint32_t bitnum, uint32_t* storage, uint32_t storagesz )
+extern "C" void bitmask_realloc(bitmask_t* bm, size_t numbits)
 {
-	uint32_t slot = bitnum >> 5;
-	uint32_t mask = 1 << (bitnum & 0x1F);
-
-	if ( slot < storagesz )
+	if (bm)
 	{
-		return (0 != (storage[slot] & mask));
+		if (bm->ptr)
+		{
+			size_t numslots = numbits / 32;
+			if (numslots > bm->size)
+			{
+				void* p = realloc(bm->ptr, numbits / 8);
+				if (p)
+				{
+					memset((uint32_t*)p + bm->size, 0, (numslots - bm->size) * sizeof(uint32_t));
+					bm->ptr = (uint32_t*)p;
+					bm->size = numslots;
+				}
+			}
+		}
+		else
+		{
+			bitmask_alloc(bm, numbits);
+		}
+	}
+}
+
+extern "C" void bitmask_free(bitmask_t* bm)
+{
+	if (bm)
+	{
+		if (bm->ptr)
+		{
+			free(bm->ptr);
+		}
+		bm->ptr = NULL;
+		bm->size = 0;
+	}
+}
+
+extern "C" void bitmask_clear(bitmask_t* bm)
+{
+	if (bm && bm->ptr)
+	{
+		memset(bm->ptr, 0, bm->size * sizeof(uint32_t));
+	}
+}
+
+extern "C" void bitmask_set( bitmask_t* bm, uint32_t bitnum)
+{
+	if (bm)
+	{
+		uint32_t slot = bitnum >> 5;
+		uint32_t mask = 1 << (bitnum & 0x1F);
+
+		if(slot >= bm->size)
+			bitmask_realloc(bm, bitmask_alloc_calc_sz(bitnum + 1) );
+
+		if (slot < bm->size)
+		{
+			bm->ptr[slot] |= mask;
+		}
+	}
+}
+
+extern "C" uint32_t bitmask_is_set( bitmask_t* bm, uint32_t bitnum)
+{
+	uint32_t ret = 0;
+	if (bm)
+	{
+		uint32_t slot = bitnum >> 5;
+		uint32_t mask = 1 << (bitnum & 0x1F);
+
+		if (slot < bm->size)
+		{
+			ret = (0 != (bm->ptr[slot] & mask));
+		}
 	}
 
-	return 0;
+	return ret;
 }

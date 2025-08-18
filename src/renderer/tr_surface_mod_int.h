@@ -4,6 +4,7 @@
 
 #include "tr_surface_mod.h"
 #include "mINI/ini.h"
+#include "tr_debughelpers.h"
 
 #ifdef __cplusplus
 
@@ -14,7 +15,9 @@
 typedef struct aabb_group_s
 {
 	std::vector<aabb_store_t> storage;
-	std::map<const void*, int> indexes;
+	std::map<const void*, uint32_t> indexes;
+	bitmaskx_t marked_indexes;
+	size_t num_marks;
 }  aabb_group_t;
 
 void qdx_surface_aabb_prune_storage( aabb_group_t* grp );

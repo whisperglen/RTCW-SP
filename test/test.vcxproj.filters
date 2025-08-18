@@ -16,6 +16,9 @@
     <Filter Include="Source Files\tools">
       <UniqueIdentifier>{14adc973-a232-43ec-83c2-d66204309235}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\extras">
+      <UniqueIdentifier>{b2ec60cb-54f8-4ccf-a170-518f9a0ba27d}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="_test.c">
@@ -56,6 +59,9 @@
     </ClCompile>
     <ClCompile Include="surface.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\renderer\tr_dbghelpers.cpp">
+      <Filter>Source Files\extras</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

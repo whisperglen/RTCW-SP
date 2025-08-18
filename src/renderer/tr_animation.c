@@ -78,7 +78,7 @@ static int p0, p1, p2;
 static qboolean isTorso, fullTorso;
 static vec4_t m1[4], m2[4];
 //static  vec4_t m3[4], m4[4], tmp1[4], tmp2[4]; // TTimo: unused
-static vec3_t t;
+//static vec3_t t;
 static refEntity_t lastBoneEntity;
 
 static int totalrv, totalrt, totalv, totalt;    //----(SA)
@@ -999,6 +999,7 @@ void R_CalcBones( mdsHeader_t *header, const refEntity_t *refent, int *boneList,
 	int i;
 	int     *boneRefs;
 	float torsoWeight;
+	vec3_t t;
 
 	//
 	// if the entity has changed since the last time the bones were built, reset them

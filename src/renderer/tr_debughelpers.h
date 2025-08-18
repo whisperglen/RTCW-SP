@@ -1,7 +1,6 @@
 
 #ifndef _TR_DEBUGHELPERS_H
 #define _TR_DEBUGHELPERS_H
-#endif
 
 #ifdef __cplusplus
 extern "C" {
@@ -13,7 +12,7 @@ extern "C" {
 void function_called(const char *name);
 void functions_dump();
 
-typedef union inputs
+union inputs_u
 {
 	struct {
 		int updown : 2;
@@ -30,7 +29,8 @@ typedef union inputs
 		unsigned int imgui : 1;
 	};
 	unsigned int all;
-} inputs_t;
+};
+typedef union inputs_u inputs_t;
 
 inputs_t get_keypressed();
 void keypress_frame_ended();
@@ -79,9 +79,36 @@ inline int helper_value_clamp( unsigned int index, int lower, int upper )
 	return val;
 }
 
-void bitmask_set( uint32_t bitnum, uint32_t* storage, uint32_t storagesz );
-uint32_t bitmask_is_set( uint32_t bitnum, uint32_t* storage, uint32_t storagesz );
+struct bitmask_s
+{
+	uint32_t* ptr;
+	size_t size;
+};
+typedef struct bitmask_s bitmask_t;
+
+void bitmask_alloc( bitmask_t* bm, size_t numbits );
+void bitmask_realloc(bitmask_t* bm, size_t numbits);
+void bitmask_free( bitmask_t* bm );
+void bitmask_set( bitmask_t* bm, uint32_t bitnum );
+uint32_t bitmask_is_set( bitmask_t* bm, uint32_t bitnum );
+void bitmask_clear(bitmask_t* bm);
+
+#ifdef __cplusplus
+struct bitmaskx_s : public bitmask_t
+{
+	bitmaskx_s() { ptr = NULL; size = 0; }
+	~bitmaskx_s() { bitmask_free(this); }
+	void alloc(size_t numbits) { bitmask_alloc(this, numbits); }
+	void realloc(size_t numbits) { bitmask_realloc(this, numbits); }
+	void free() { bitmask_free(this); }
+	void set(uint32_t bitnum) { bitmask_set(this, bitnum); }
+	uint32_t is_set(uint32_t bitnum) { return bitmask_is_set(this, bitnum); }
+	void clear() { bitmask_clear(this); }
+};
+typedef struct bitmaskx_s bitmaskx_t;
+#endif
 
 #ifdef __cplusplus
 }
+#endif
 #endif

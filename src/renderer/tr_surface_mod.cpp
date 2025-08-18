@@ -34,10 +34,12 @@ void qdx_surface_replacement_save( const char *hint, const char *name, int val, 
 
 void qdx_surface_aabb_clearall()
 {
-	for ( int i = 0; i < ARRAYSIZE( g_aabb_groups ); i++ )
+	aabb_group_t* grp = &g_aabb_groups[0];
+	for ( int i = 0; i < ARRAYSIZE( g_aabb_groups ); i++, grp++ )
 	{
-		g_aabb_groups[i].indexes.clear();
-		g_aabb_groups[i].storage.clear();
+		grp->indexes.clear();
+		grp->storage.clear();
+		grp->marked_indexes.clear();
 	}
 
 	g_shader_replacements.clear();
@@ -79,14 +81,31 @@ void qdx_surface_aabb_prune_storage(aabb_group_t* grp)
 	}
 }
 
+int qdx_surface_aabb_validate_mapping(aabb_group_t* grp)
+{
+	int maxindex = grp->indexes.size();
+
+	for (auto it = grp->indexes.begin(); it != grp->indexes.end(); it++)
+	{
+		int index = it->second;
+		qassert(index < maxindex);
+		qassert(grp->storage[index].usage_count != 0);
+		if (index >= maxindex || grp->storage[index].usage_count == 0)
+		{
+			__debugbreak();
+			return index;
+		}
+	}
+
+	return -1;
+}
+
 void qdx_surface_aabb_switch_indexes( aabb_group_t* grp, int from, int to )
 {
-	for ( auto it1 = grp->indexes.begin(); it1 != grp->indexes.end(); it1++ )
+	for (auto it = grp->indexes.begin(); it != grp->indexes.end(); it++)
 	{
-		if ( it1->second == from )
-		{
-			it1->second = to;
-		}
+		if (it->second == from)
+			it->second = to;
 	}
 }
 
@@ -140,18 +159,113 @@ int qdx_surface_aabb_generate( const void* surface, aabb_store_t* aabb )
 	return ret;
 }
 
-int qdx_surface_aabb_get_index( int grpid, const void *surf, int dbgpoi )
+static char printed[128] = { 0 };
+
+void qdx_surface_aabb_mark_index( int grpid, int aabb_index )
 {
 	aabb_group_t* grp = &g_aabb_groups[grpid];
-	const surfaceType_t* surface = (const surfaceType_t*)surf;
 
-	if ( *surface != SF_FACE && *surface != SF_GRID && *surface != SF_TRIANGLES && *surface != SF_POLY )
+	if (r_logFile->integer && (r_logFileTypes->integer & RLOGFILE_AABB))
+	{
+		snprintf(printed, sizeof(printed), "mrk +:%d grp:%d idx:%d\n", !grp->marked_indexes.is_set(aabb_index), grpid, aabb_index);
+		GPUimp_LogComment(printed);
+	}
+
+	grp->marked_indexes.set(aabb_index);
+	grp->num_marks++;
+}
+
+qboolean qdx_surface_aabb_is_index_marked( int grpid, int aabb_index )
+{
+	qboolean ret = qfalse;
+
+	aabb_group_t* grp = &g_aabb_groups[grpid];
+
+	if(grp->marked_indexes.is_set(aabb_index))
+	{
+		ret = qtrue;
+	}
+
+	return ret;
+}
+
+static size_t g_num_starting_surfs_this_round = 0;
+static size_t g_num_extra_surfs_this_round = 0;
+static size_t g_num_total_marks_this_round = 0;
+
+void qdx_surface_aabb_get_stats(size_t* data, int sz)
+{
+	if (sz >= 3)
+	{
+		data[0] = g_num_starting_surfs_this_round;
+		data[1] = g_num_extra_surfs_this_round;
+		data[2] = g_num_total_marks_this_round;
+	}
+}
+
+void qdx_surface_aabb_add_all_marked_surfs()
+{
+	g_num_starting_surfs_this_round = tr.refdef.numDrawSurfs;
+
+	aabb_group_t* grp = &g_aabb_groups[0];
+	for (int i = 0; i < ARRAYSIZE(g_aabb_groups); i++, grp++)
+	{
+		bool grp1st = true;
+		g_num_total_marks_this_round += grp->num_marks;
+		auto it = grp->indexes.begin();
+		while (it != grp->indexes.end())
+		{
+			if (grp->marked_indexes.is_set(it->second))
+			{
+				msurface_t* surf = (msurface_t*)it->first;
+
+				if (r_logFile->integer && (r_logFileTypes->integer & RLOGFILE_AABB))
+				{
+					if (grp1st)
+					{
+						grp1st = false;
+						GPUimp_LogComment(surf->shader->name);
+					}
+					snprintf(printed, sizeof(printed), "add %p +:%d grp:%d idx:%d\n", surf, (surf->viewCount != tr.viewCount), i, it->second);
+					GPUimp_LogComment(printed);
+				}
+				if (surf->viewCount != tr.viewCount) {
+					surf->viewCount = tr.viewCount;
+					R_AddDrawSurfEx(surf->data, surf->shader, it->second, surf->fogIndex, 0, ATI_TESS_NONE);
+					g_num_extra_surfs_this_round++;
+				}
+			}
+			it++;
+		}
+	}
+}
+
+void qdx_surface_aabb_clear_marked_indexes()
+{
+	aabb_group_t* grp = &g_aabb_groups[0];
+	for (int i = 0; i < ARRAYSIZE(g_aabb_groups); i++, grp++)
+	{
+		grp->marked_indexes.clear();
+		grp->num_marks = 0;
+	}
+
+	g_num_starting_surfs_this_round = 0;
+	g_num_extra_surfs_this_round = 0;
+	g_num_total_marks_this_round = 0;
+}
+
+int qdx_surface_aabb_get_index( int grpid, const struct msurface_s *msurf, int dbgpoi )
+{
+	const surfaceType_t* surfdata = msurf->data;
+
+	if ( *surfdata != SF_FACE && *surfdata != SF_GRID && *surfdata != SF_TRIANGLES && *surfdata != SF_POLY )
 	{
 		return -1;
 	}
 
+	aabb_group_t* grp = &g_aabb_groups[grpid];
 	{
-		auto it = grp->indexes.find( surface );
+		auto it = grp->indexes.find(msurf);
 		if ( it != grp->indexes.end() )
 		{
 			return it->second;
@@ -160,7 +274,7 @@ int qdx_surface_aabb_get_index( int grpid, const void *surf, int dbgpoi )
 
 	aabb_store_t aabb_local, *aabb = &aabb_local;
 	BOOL merged = FALSE;
-	if ( qdx_surface_aabb_generate( surface, aabb ) )
+	if ( qdx_surface_aabb_generate( surfdata, aabb ) )
 	{
 		int i = 0, index = -1;
 		for ( auto it = grp->storage.begin(); it != grp->storage.end(); i++, it++ )
@@ -169,29 +283,35 @@ int qdx_surface_aabb_get_index( int grpid, const void *surf, int dbgpoi )
 			{
 				index = i;
 				qdx_surface_aabb_merge( aabb, it._Ptr, it._Ptr );
-				grp->indexes[surface] = index;
+				grp->indexes[msurf] = index;
 				aabb = it._Ptr;
 				merged = TRUE;
 				break;
 			}
 		}
 
+		//when aabb is unique, add it to the list and finish
 		if ( merged == FALSE || r_showaabbs->integer > 1 )
 		{   //insert new
 			index = grp->storage.size();
 			grp->storage.push_back( aabb_local );
-			grp->indexes[surface] = index;
-			if( merged == FALSE )
-				return index;
+			grp->indexes[msurf] = index;
+			return index;
+		}
+		//r_showaabbs > 1 keeps all aabbs even if merged to aid surf separation
+		if (r_showaabbs->integer > 1)
+		{   //insert dummy aabb
+			aabb_local.usage_count = 0;
+			grp->storage.push_back(aabb_local);
 		}
 
-		//compound merges
+		//now that aabb was merged we need to compound merges, i.e. this new aabb might merge two or more pre-existing aabbs
 		do {
 			merged = FALSE;
 			i = 0;
 			for ( auto it = grp->storage.begin(); it != grp->storage.end(); i++, it++ )
 			{
-				//skip over our own index
+				//skip over our own index and over dummy aabbs
 				if ( i != index && it->usage_count && qdx_surface_aabb_intersect( it._Ptr, aabb ) )
 				{
 					//if ( i < index )
@@ -207,15 +327,22 @@ int qdx_surface_aabb_get_index( int grpid, const void *surf, int dbgpoi )
 						qdx_surface_aabb_merge( aabb, it._Ptr, aabb );
 						it->usage_count = 0;
 						qdx_surface_aabb_switch_indexes( grp, i, index );
+						qdx_surface_aabb_validate_mapping(grp);
 					}
-					//in case of a merge, go back to the list begining and recheck
+					//in case of a merge, go back to the begining and recheck
 					merged = TRUE;
 					break;
 				}
 			}
 		} while ( merged );
 
-		//qdx_surface_aabb_prune_storage(grp);
+		if (r_showaabbs->integer <= 1)
+		{
+			//this looks expensive
+			//qdx_surface_aabb_prune_storage(grp);
+		}
+
+		qdx_surface_aabb_validate_mapping(grp);
 
 		return index; 
 	}
@@ -228,7 +355,7 @@ int qdx_surface_aabb_get_index0( int grpid, const void *surf, int dbgpoi )
 	aabb_group_t* grp = &g_aabb_groups[grpid];
 	const surfaceType_t* surface = (const surfaceType_t*)surf;
 
-	if ( *surface != SF_FACE && *surface == SF_GRID && *surface == SF_TRIANGLES /*&& *surface == SF_POLY*/ )
+	if ( *surface != SF_FACE && *surface == SF_GRID && *surface == SF_TRIANGLES /*&& *surfdata == SF_POLY*/ )
 	{
 		return -1;
 	}
@@ -311,7 +438,7 @@ int qdx_surface_aabb_intersect ( const aabb_store_t* boxa, const aabb_store_t* b
 		);
 }
 
-int qdx_surface_aabb_contains_point( const aabb_store_t* box, vec3_t point )
+int qdx_surface_aabb_contains_point( const aabb_store_t* box, float point[3])
 {
 	return (
 		point[0] >= box->vmin[0] && point[0] <= box->vmax[0] &&
@@ -329,7 +456,7 @@ int qdx_surface_aabb_contains_box( const aabb_store_t* boxo, const aabb_store_t*
 		);
 }
 
-int qdx_surface_aabb_intersect_sphere( const aabb_store_t* box, vec3_t center, float radius )
+int qdx_surface_aabb_intersect_sphere( const aabb_store_t* box, float center[3], float radius )
 {
 	const float p0 = max( box->vmin[0], min( center[0], box->vmax[0] ) );
 	const float p1 = max( box->vmin[1], min( center[1], box->vmax[1] ) );
@@ -339,7 +466,7 @@ int qdx_surface_aabb_intersect_sphere( const aabb_store_t* box, vec3_t center, f
 	const float d1 = p1 - center[1];
 	const float d2 = p2 - center[2];
 
-	const float distance = p0 * p0 + p1 * p1 + p2 * p2;
+	const float distance = d0 * d0 + d1 * d1 + d2 * d2;
 
 	return (distance < radius * radius);
 }
@@ -575,7 +702,7 @@ void qdx_surface_replacements_load( mINI::INIStructure &ini, const char *mapname
 
 			char match_name[128];
 			qdx_readmapconfstr( repname.c_str(), "shader_name", match_name, sizeof( match_name ) );
-			int match_val = qdx_readmapconf( repname.c_str(), "shader_val" );
+			int match_val = qdx_readmapconf( repname.c_str(), "shader_val", 0 );
 			
 			uint32_t genhash = fnv_32a_str( match_name, match_val );
 

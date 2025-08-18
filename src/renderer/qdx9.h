@@ -285,6 +285,16 @@ enum light_type_e
 void qdx_light_add(int light_type_e, int ord, const float *position, const float *direction, const float *color, float radius);
 void qdx_lights_clear(unsigned int light_types);
 
+enum r_logfiletypes_e
+{
+	RLOGFILE_TEXT = 1,
+	RLOGFILE_VERTEX = 1 << 1,
+	RLOGFILE_TEXTURE = 1 << 2,
+	RLOGFILE_MATRIX = 1 << 3,
+	RLOGFILE_VATTSET = 1 << 4,
+	RLOGFILE_AABB = 1 << 5,
+};
+
 void qdx_screen_getxyz( float *xyz );
 
 HRESULT qdx_compress_texture(int width, int height, const void *indata, void *outdata, int inbits, int outpitch);

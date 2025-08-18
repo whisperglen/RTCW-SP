@@ -139,7 +139,7 @@ static void do_draw()
 	if ( ImGui::CollapsingHeader( "Light Override" ) )
 	{
 		static int light_type = 0;
-		const light_type_e map_light_type[] = { LIGHT_DYNAMIC, LIGHT_CORONA };
+		const light_type_e map_light_type[] = { LIGHT_DYNAMIC, LIGHT_CORONA, LIGHT_NEW };
 		static int32_t selected_index = 0;
 		static bool flash_it = false;
 		uint64_comp_t idval;
@@ -155,7 +155,7 @@ static void do_draw()
 		}
 
 		ImGui::Text( "Hint: Select type, then Scan for closest lights" );
-		if ( ImGui::Combo( "##11", &light_type, "Scan DynamicLights\0Scan Coronas\0\0" ) )
+		if ( ImGui::Combo( "##11", &light_type, "Scan DynamicLights\0Scan Coronas\0Scan NewLights\0\0" ) )
 		{
 			//require a Scan after this changes
 			if ( flash_it )
@@ -444,6 +444,39 @@ static void do_draw()
 			snprintf( value, sizeof( value ), "%d", selected_shader );
 			ri.Cvar_Set( "r_draw1shader", value );
 		}
+	}
+
+
+	if (ImGui::CollapsingHeader("AABB Stats"))
+	{
+		size_t stats[3];
+
+		qdx_surface_aabb_get_stats(stats, ARRAYSIZE(stats));
+
+		ImGui::Text("starting %d", stats[0]);
+		ImGui::Text("extra %d", stats[1]);
+		ImGui::Text("marks %d", stats[2]);
+	}
+
+	if (ImGui::CollapsingHeader("Frustum Debug"))
+	{
+		ImGui::Checkbox("Active##FRU", (bool*)qdx_4imgui_frustumoverride());
+		ImGui::SliderInt("Type##FRU", qdx_4imgui_frustumdebug(), 0, 2);
+		ImGui::NewLine();
+
+		ImGui::SliderFloat3("Plane 0", qdx_4imgui_frustrumplane(0), -1, 1);
+		ImGui::SliderFloat("Dist 0", qdx_4imgui_frustumdist(0), -3000, 3000);
+
+		ImGui::SliderFloat3("Plane 1", qdx_4imgui_frustrumplane(1), -1, 1);
+		ImGui::SliderFloat("Dist 1", qdx_4imgui_frustumdist(1), -3000, 3000);
+
+		ImGui::NewLine();
+
+		ImGui::SliderFloat3("Plane 2", qdx_4imgui_frustrumplane(2), -1, 1);
+		ImGui::SliderFloat("Dist 2", qdx_4imgui_frustumdist(2), -3000, 3000);
+
+		ImGui::SliderFloat3("Plane 3", qdx_4imgui_frustrumplane(3), -1, 1);
+		ImGui::SliderFloat("Dist 3", qdx_4imgui_frustumdist(3), -3000, 3000);
 	}
 
 	/*==========================

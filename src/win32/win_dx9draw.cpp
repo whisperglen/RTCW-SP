@@ -16,15 +16,6 @@ extern "C"
 #include <vector>
 #include <map>
 
-enum r_logfiletypes_e
-{
-	RLOGFILE_TEXT = 1,
-	RLOGFILE_VERTEX = 1 << 1,
-	RLOGFILE_TEXTURE = 1 << 2,
-	RLOGFILE_MATRIX = 1 << 3,
-	RLOGFILE_VATTSET = 1 << 4,
-};
-
 typedef struct entity_bone_transforms_s
 {
 	mdsBoneFrame_t transf[MDS_MAX_BONES];
@@ -2254,9 +2245,9 @@ int qdx_readsetting( const char* valname, int default )
 	return default;
 }
 
-intptr_t qdx_readmapconf_ex(const char* base, const char* valname, int radix)
+intptr_t qdx_readmapconf_ex(const char* base, const char* valname, int radix, int defval)
 {
-	intptr_t ret = 0;
+	intptr_t ret = defval;
 	int tries = 0;
 	std::string section( base );
 	section.append( "." );
@@ -2287,14 +2278,14 @@ intptr_t qdx_readmapconf_ex(const char* base, const char* valname, int radix)
 	return ret;
 }
 
-int qdx_readmapconf( const char* base, const char* valname )
+int qdx_readmapconf( const char* base, const char* valname, int defval)
 {
-	return (int) qdx_readmapconf_ex( base, valname, 10 );
+	return (int) qdx_readmapconf_ex( base, valname, 10, defval);
 }
 
 void* qdx_readmapconfptr( const char* base, const char* valname)
 {
-	return (void*) qdx_readmapconf_ex( base, valname, 16 );
+	return (void*) qdx_readmapconf_ex( base, valname, 16, NULL );
 }
 
 float qdx_readmapconfflt(const char* base, const char* valname, float default)
@@ -2477,7 +2468,7 @@ void qdx_begin_loading_map(const char* mapname)
 			{
 				const char* key = it->first.c_str();
 				const char* value = it->second.c_str();
-				if ( map_opts->has( key ) )
+				if ( map_opts && map_opts->has( key ) )
 				{
 					value = map_opts->operator[](key).c_str();
 				}

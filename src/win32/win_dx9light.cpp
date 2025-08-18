@@ -19,7 +19,7 @@ extern "C"
 #define LIGHTS_DYNAMIC_SZ 15
 #define MAX_LIGHTS_DX9 8
 
-typedef struct light_data
+typedef struct light_data_s
 {
 	//uint8_t dataValid; //moved as bitfield to g_lights_dynamic_bitmap
 	uint8_t updatedThisFrame;
@@ -34,6 +34,12 @@ typedef struct light_data
 	vec3_t pos;
 	vec3_t color;
 } light_data_t;
+
+typedef struct light_new_bundle_s
+{
+	struct light_data_s ldata;
+	struct light_override_s lovrd;
+} light_new_bundle_t;
 
 union rmx_light_picking_id
 {
@@ -62,7 +68,7 @@ static light_override_t* qdx_light_find_override( uint64_t hash );
 static light_data_t g_lights_dynamic[LIGHTS_DYNAMIC_SZ] = { 0 };
 static uint32_t g_lights_dynamic_bitmap = 0;
 static std::map<uint64_t, light_data_t> g_lights_coronas;
-static std::map<uint64_t, light_data_t> g_lights_new;
+static std::map<uint64_t, light_new_bundle_t> g_lights_new;
 static remixapi_LightHandle g_flashlight_handle[NUM_FLASHLIGHT_HND] = { 0 };
 #define FLASHLIGHT_HASH 0xF1A581168700ULL
 static std::vector<struct color_override_data_s> g_color_overrides;
@@ -140,6 +146,7 @@ light_override_t* qdx_4imgui_light_get_override( uint64_t hash, light_type_e typ
 		local.color[0] = 1.0f;
 		local.color[1] = 1.0f;
 		local.color[2] = 1.0f;
+		local.type = type;
 		if ( type == LIGHT_DYNAMIC )
 		{
 			uint32_t keep_searching = g_lights_dynamic_bitmap;
@@ -180,22 +187,13 @@ light_override_t* qdx_4imgui_light_get_override( uint64_t hash, light_type_e typ
 		}
 		else if ( type == LIGHT_NEW )
 		{
-			static light_override_t newlight;
-			ZeroMemory( &newlight, sizeof( newlight ) );
 			for ( auto it = g_lights_new.begin(); it != g_lights_new.end(); it++ )
 			{
-				if ( it->second.hash == hash )
+				if ( it->second.ldata.hash == hash )
 				{
-					newlight.color[0] = it->second.color[0];
-					newlight.color[1] = it->second.color[1];
-					newlight.color[2] = it->second.color[2];
-					break;
+					return &it->second.lovrd;
 				}
 			}
-			newlight.radiance_base = LIGHT_RADIANCE_CORONAS;
-			newlight.radius_base = LIGHT_RADIUS[1];
-
-			return &newlight;
 		}
 
 		ret = &g_light_overrides[hash];
@@ -274,8 +272,8 @@ void qdx_light_scan_closest_lights(light_type_e type)
 	{
 		for ( auto it = g_lights_new.begin(); it != g_lights_new.end(); it++ )
 		{
-			vec3_t position = { it->second.pos[0], it->second.pos[1], it->second.pos[2] };
-			light_override_t* ovr = qdx_light_find_override( it->second.hash );
+			vec3_t position = { it->second.ldata.pos[0], it->second.ldata.pos[1], it->second.ldata.pos[2] };
+			light_override_t* ovr = &it->second.lovrd;
 			if ( ovr )
 			{
 				position[0] += ovr->position_offset[0];
@@ -283,7 +281,7 @@ void qdx_light_scan_closest_lights(light_type_e type)
 				position[2] += ovr->position_offset[2];
 			}
 			float dist = Distance( FLASHLIGHT_POSITION_CACHE, position ); //use the flashlight cache since we have it
-			distvhash.push_back( std::make_pair( dist, it->second.hash ) );
+			distvhash.push_back( std::make_pair( dist, it->second.ldata.hash ) );
 		}
 	}
 
@@ -315,6 +313,8 @@ static light_override_t* qdx_light_find_override( uint64_t hash )
 #define SECTION_LIGHT_OVERRIDE "lightovrd"
 #define SECTION_LIGHT_OVERRIDE_PRINT "lightovrd.0x%x%x"
 #define SECTION_LIGHTS_COLOR_OVERRIDE "lights_color_override"
+#define SECTION_LIGHT_NEW "lightnew"
+#define SECTION_LIGHT_NEW_PRINT "lightnew.0x%x%x"
 
 void qdx_flashlight_save()
 {
@@ -361,12 +361,8 @@ void qdx_radiance_save( bool inGlobal )
 	qdx_save_iniconf();
 }
 
-void qdx_light_override_save( light_override_t* ovr, bool writeOut )
+static void qdx_light_save_section( const char* section, light_override_t* ovr )
 {
-	char section[64];
-	uint64_comp_t idval;
-	idval.ll = ovr->hash;
-	snprintf( section, sizeof( section ), SECTION_LIGHT_OVERRIDE_PRINT, idval.u32[1], idval.u32[0] );
 	qdx_storemapconfflt( section, "PositionOffset0", ovr->position_offset[0], FALSE );
 	qdx_storemapconfflt( section, "PositionOffset1", ovr->position_offset[1], FALSE );
 	qdx_storemapconfflt( section, "PositionOffset2", ovr->position_offset[2], FALSE );
@@ -378,6 +374,39 @@ void qdx_light_override_save( light_override_t* ovr, bool writeOut )
 	qdx_storemapconfflt( section, "Radius", ovr->radius_base, FALSE );
 	qdx_storemapconfflt( section, "RadiusScale", ovr->radius_scale, FALSE );
 	qdx_storemapconfflt( section, "Volumetric", ovr->volumetric_scale, FALSE );
+}
+
+void qdx_light_override_save( light_override_t* ovr, bool writeOut )
+{
+	char section[64];
+	uint64_comp_t idval;
+	if ( ovr->type != LIGHT_NEW )
+	{
+		idval.ll = ovr->hash;
+		snprintf( section, sizeof( section ), SECTION_LIGHT_OVERRIDE_PRINT, idval.u32[1], idval.u32[0] );
+		qdx_light_save_section( section, ovr );
+	}
+	else
+	{
+		//for new light, merge the override with the light info and remove the override
+		auto it = g_lights_new.find( ovr->hash );
+		if ( it != g_lights_new.end() )
+		{
+			float* pos = it->second.ldata.pos;
+			for ( int i = 0; i < 3; i++ )
+				ovr->position_offset[i] += pos[i];
+			idval.ll = ovr->hash;
+			snprintf( section, sizeof( section ), SECTION_LIGHT_NEW_PRINT, idval.u32[1], idval.u32[0] );
+			qdx_light_save_section( section, ovr );
+			qdx_4imgui_light_clear_override( ovr->hash );
+			if (it->second.ldata.isRemix)
+			{
+				if( it->second.ldata.handle )
+					remixInterface.DestroyLight(it->second.ldata.handle);
+			}
+			g_lights_new.erase( it );
+		}
+	}
 
 	if ( writeOut )
 	{
@@ -395,12 +424,12 @@ void qdx_light_override_save_all()
 	qdx_save_iniconf();
 }
 
-void qdx_light_override_load( uint64_t hash, light_override_t* ovr )
+void qdx_light_override_load( uint64_t hash, const char *secname, light_override_t* ovr )
 {
 	char section[64];
 	uint64_comp_t idval;
 	idval.ll = hash;
-	snprintf( section, sizeof( section ), SECTION_LIGHT_OVERRIDE_PRINT, idval.u32[1], idval.u32[0] );
+	snprintf( section, sizeof( section ), secname, idval.u32[1], idval.u32[0] );
 	ovr->hash = hash;
 	ovr->position_offset[0] = qdx_readmapconfflt( section, "PositionOffset0", 0.0f );
 	ovr->position_offset[1] = qdx_readmapconfflt( section, "PositionOffset1", 0.0f );
@@ -489,8 +518,20 @@ void qdx_lights_load( mINI::INIStructure &ini, const char *mapname )
 			if ( hash )
 			{
 				light_override_t ovr;
-				qdx_light_override_load( hash, &ovr );
+				qdx_light_override_load( hash, SECTION_LIGHT_OVERRIDE_PRINT, &ovr );
 				g_light_overrides[hash] = ovr;
+			}
+		}
+
+		if ( str_starts_with( section, SECTION_LIGHT_NEW ) && str_ends_with( section, qdx_get_active_map() ) )
+		{
+			const char* hashstart = section.c_str() + sizeof( SECTION_LIGHT_NEW ) + 2;
+			uint64_t hash = _strtoui64( hashstart, NULL, 16 );
+			if ( hash )
+			{
+				light_override_t ovr;
+				qdx_light_override_load( hash, SECTION_LIGHT_NEW_PRINT, &ovr );
+				qdx_light_add( LIGHT_NEW, 0, ovr.position_offset, NULL, ovr.color, 0 );
 			}
 		}
 	}
@@ -522,6 +563,14 @@ static void qdx_light_color_to_radiance(remixapi_Float3D* rad, int light_type, c
 				return;
 			}
 		}
+
+		rad->x = radiance * color[0];
+		rad->y = radiance * color[1];
+		rad->z = radiance * color[2];
+	}
+	else if (light_type == LIGHT_NEW)
+	{
+		radiance = LIGHT_RADIANCE_CORONAS;
 
 		rad->x = radiance * color[0];
 		rad->y = radiance * color[1];
@@ -644,10 +693,6 @@ void qdx_lights_clear(unsigned int light_types)
 						if( l->handle )
 							remixInterface.DestroyLight( l->handle );
 					}
-					else
-					{
-						qdx.device->LightEnable( l->number, FALSE );
-					}
 					g_lights_dynamic_bitmap &= ~bit;
 					keep_searching &= ~bit;
 				}
@@ -662,10 +707,6 @@ void qdx_lights_clear(unsigned int light_types)
 					if( it->second.handle )
 						remixInterface.DestroyLight(it->second.handle);
 				}
-				else
-				{
-					qdx.device->LightEnable(it->second.number, FALSE);
-				}
 			}
 			g_lights_coronas.clear();
 		}
@@ -673,14 +714,10 @@ void qdx_lights_clear(unsigned int light_types)
 		{
 			for (auto it = g_lights_new.begin(); it != g_lights_new.end(); it++)
 			{
-				if (it->second.isRemix)
+				if (it->second.ldata.isRemix)
 				{
-					if( it->second.handle )
-						remixInterface.DestroyLight(it->second.handle);
-				}
-				else
-				{
-					qdx.device->LightEnable(it->second.number, FALSE);
+					if( it->second.ldata.handle )
+						remixInterface.DestroyLight(it->second.ldata.handle);
 				}
 			}
 			g_lights_new.clear();
@@ -746,7 +783,7 @@ void qdx_lights_draw()
 	}
 	for ( auto it = g_lights_new.begin(); it != g_lights_new.end(); it++ )
 	{
-		remixInterface.DrawLightInstance( it->second.handle );
+		remixInterface.DrawLightInstance( it->second.ldata.handle );
 	}
 	if ( r_rmx_flashlight->integer )
 	{
@@ -760,8 +797,6 @@ void qdx_lights_draw()
 	}
 }
 
-#define DYNAMIC_LIGHTS_USE_DX9 0
-
 void qdx_light_add(int light_type, int ord, const float *position, const float *direction, const float *color, float radius)
 {
 	remixapi_ErrorCode rercd;
@@ -769,6 +804,7 @@ void qdx_light_add(int light_type, int ord, const float *position, const float *
 	uint64_t hashpos = 0;
 	uint64_t hashcolor = 0;
 	uint64_t hashord = 0;
+	light_override_t* ovr = NULL;
 
 	//remixOnline = false;
 
@@ -778,11 +814,8 @@ void qdx_light_add(int light_type, int ord, const float *position, const float *
 
 	if (light_type == LIGHT_DYNAMIC)
 	{
-#if DYNAMIC_LIGHTS_USE_DX9
-		hash = hashord;
-#else
 		hash = hashpos;
-#endif
+		ovr = qdx_light_find_override( hash );
 	}
 	if (light_type == LIGHT_CORONA)
 	{
@@ -791,12 +824,27 @@ void qdx_light_add(int light_type, int ord, const float *position, const float *
 		if (itm != g_lights_coronas.end())
 		{
 			//flare already exists
-			light_override_t* ovr = qdx_light_find_override( hash );
+			ovr = qdx_light_find_override( hash );
 			if ( ovr == NULL || ovr->updated == 0 )
 			{
 				return;
 			}
 			//clear flag and readd flare with updated overrides
+			ovr->updated = 0;
+		}
+	}
+	if (light_type == LIGHT_NEW)
+	{
+		hash = hashpos;
+		auto itm = g_lights_new.find(hash);
+		if (itm != g_lights_new.end())
+		{
+			ovr = &itm->second.lovrd;
+			if ( ovr == NULL || ovr->updated == 0 )
+			{
+				return;
+			}
+			//clear flag and re-add flare with updated overrides
 			ovr->updated = 0;
 		}
 	}
@@ -876,55 +924,8 @@ void qdx_light_add(int light_type, int ord, const float *position, const float *
 		return;
 	}
 
-#if DYNAMIC_LIGHTS_USE_DX9
-	if (light_type == LIGHT_DYNAMIC)
-	{
-		D3DLIGHT9 light;
-		ZeroMemory(&light, sizeof(light));
-
-		light.Type = D3DLIGHT_POINT;
-		light.Diffuse.r = color[0];
-		light.Diffuse.g = color[1];
-		light.Diffuse.b = color[2];
-		light.Diffuse.a = 1.0f;
-		light.Specular.r = 1.0f;
-		light.Specular.g = 1.0f;
-		light.Specular.b = 1.0f;
-		light.Specular.a = 1.0f;
-		light.Ambient.r = 1.0f;
-		light.Ambient.g = 1.0f;
-		light.Ambient.b = 1.0f;
-		light.Ambient.a = 1.0f;
-		light.Position.x = position[0];
-		light.Position.y = position[1];
-		light.Position.z = position[2];
-
-		light.Range = 2 * radius;
-		light.Attenuation0 = 1.75f;
-		light.Attenuation1 = scale;
-		light.Attenuation2 = 0.0f;
-
-		qdx.device->SetLight(ord, &light);
-		qdx.device->LightEnable(ord, TRUE);
-
-		light_data_t *light_store = qdx_dynamiclight_get_slot(hash);
-		if ( light_store )
-		{
-			light_store->isRemix = false;
-			light_store->number = ord;
-			light_store->pos[0] = position[0];
-			light_store->pos[1] = position[1];
-			light_store->pos[2] = position[2];
-		}
-
-		return;
-	}
-#endif
-
 	if (remixOnline)
 	{
-		light_override_t* ovr = qdx_light_find_override( hash );
-
 		remixapi_LightInfoSphereEXT light_sphere;
 		ZeroMemory( &light_sphere, sizeof(light_sphere) );
 		//remixapi_InstanceInfoObjectPickingEXT obj_pick;
@@ -981,6 +982,9 @@ void qdx_light_add(int light_type, int ord, const float *position, const float *
 		case LIGHT_CORONA:
 			light_store = &g_lights_coronas[hash];
 			break;
+		case LIGHT_NEW:
+			light_store = &g_lights_new[hash].ldata;
+			break;
 		default:
 			qassert(FALSE && "Unknown light type");
 		}
@@ -1003,48 +1007,5 @@ void qdx_light_add(int light_type, int ord, const float *position, const float *
 			light_store->color[1] = color[1];
 			light_store->color[2] = color[2];
 		}
-	}
-	else
-	{
-		//D3DLIGHT9 light;
-		//ZeroMemory(&light, sizeof(light));
-
-		//light.Type = D3DLIGHT_POINT;
-		//light.Diffuse.r = color[0];
-		//light.Diffuse.g = color[1];
-		//light.Diffuse.b = color[2];
-		//light.Diffuse.a = 1.0f;
-		//light.Specular.r = 1.0f;
-		//light.Specular.g = 1.0f;
-		//light.Specular.b = 1.0f;
-		//light.Specular.a = 1.0f;
-		//light.Ambient.r = 1.0f;
-		//light.Ambient.g = 1.0f;
-		//light.Ambient.b = 1.0f;
-		//light.Ambient.a = 1.0f;
-		//light.Position.x = transformed[0];
-		//light.Position.y = transformed[1];
-		//light.Position.z = transformed[2];
-
-		//switch (light_type)
-		//{
-		//case LIGHT_DYNAMIC:
-		//	light.Range = 2 * radius;
-		//	light.Attenuation0 = 0.5f;
-		//	light.Attenuation1 = scale;
-		//	light.Attenuation2 = 0.01f;
-
-		//	break;
-		//case LIGHT_CORONA:
-		//	light.Range = 6;
-		//	light.Attenuation0 = 1.5f;
-		//	light.Attenuation1 = 0.5;
-		//	light.Attenuation2 = 0.0f;
-
-		//	break;
-		//}
-
-		//qdx.device->SetLight(light_num, &light);
-		//qdx.device->LightEnable(light_num, TRUE);
 	}
 }

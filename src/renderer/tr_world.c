@@ -281,7 +281,7 @@ static int R_DlightSurface( msurface_t *surf, int dlightBits ) {
 R_AddWorldSurface
 ======================
 */
-static void R_AddWorldSurface( msurface_t *surf, int dlightBits ) {
+static void R_AddWorldSurface( msurface_t *surf, int dlightBits, qboolean inpvs ) {
 	if ( surf->viewCount == tr.viewCount ) {
 		return;     // already in this view
 	}
@@ -304,8 +304,12 @@ static void R_AddWorldSurface( msurface_t *surf, int dlightBits ) {
 	if ( *(surf->data) == SF_FACE || *(surf->data) == SF_GRID || *(surf->data) == SF_TRIANGLES )
 	{
 		//prime aabbs
-		aabb_index = qdx_surface_aabb_get_index( surf->shader->sortedIndex, surf->data, 0);
+		aabb_index = qdx_surface_aabb_get_index( surf->shader->sortedIndex, surf, 0);
 		//qassert( aabb_index != -1 );
+		if ( inpvs && aabb_index >= 0 )
+		{
+			qdx_surface_aabb_mark_index( surf->shader->sortedIndex, aabb_index );
+		}
 	}
 
 // GR - not tessellated
@@ -395,7 +399,7 @@ void R_AddBrushModelSurfaces( trRefEntity_t *ent ) {
 
 	for ( i = 0 ; i < bmodel->numSurfaces ; i++ ) {
 		( bmodel->firstSurface + i )->fogIndex = fognum;
-		R_AddWorldSurface( bmodel->firstSurface + i, 0/*tr.currentEntity->needDlights*/ );
+		R_AddWorldSurface( bmodel->firstSurface + i, 0/*tr.currentEntity->needDlights*/, qtrue );
 	}
 //----(SA) end
 }
@@ -415,14 +419,18 @@ void R_AddBrushModelSurfaces( trRefEntity_t *ent ) {
 R_RecursiveWorldNode
 ================
 */
-static void R_RecursiveWorldNode( mnode_t *node, int planeBits, int dlightBits ) {
+static void R_RecursiveWorldNode( mnode_t *node, int planeBits, int dlightBits, qboolean inpvs ) {
 
 	do {
 		int newDlights[2];
 
 		// if the node wasn't marked as potentially visible, exit
 		if ( node->visframe != tr.visCount ) {
-			return;
+			inpvs = qfalse;
+			if ( r_aabb_culling->integer == 0 )
+			{
+				return;
+			}
 		}
 
 		// if the bounding volume is outside the frustum, nothing
@@ -506,7 +514,7 @@ static void R_RecursiveWorldNode( mnode_t *node, int planeBits, int dlightBits )
 		}
 */
 		// recurse down the children, front side first
-		R_RecursiveWorldNode( node->children[0], planeBits, newDlights[0] );
+		R_RecursiveWorldNode( node->children[0], planeBits, newDlights[0], inpvs );
 
 		// tail recurse
 		node = node->children[1];
@@ -551,7 +559,7 @@ static void R_RecursiveWorldNode( mnode_t *node, int planeBits, int dlightBits )
 			// the surface may have already been added if it
 			// spans multiple leafs
 			surf = *mark;
-			R_AddWorldSurface( surf, dlightBits );
+			R_AddWorldSurface( surf, dlightBits, inpvs );
 			mark++;
 		}
 	}
@@ -714,5 +722,8 @@ void R_AddWorldSurfaces( void ) {
 	if ( tr.refdef.num_dlights > 32 ) {
 		tr.refdef.num_dlights = 32 ;
 	}
-	R_RecursiveWorldNode( tr.world->nodes, 15, ( 1 << tr.refdef.num_dlights ) - 1 );
+
+	qdx_surface_aabb_clear_marked_indexes();
+	R_RecursiveWorldNode( tr.world->nodes, 15, ( 1 << tr.refdef.num_dlights ) - 1, qtrue );
+	qdx_surface_aabb_add_all_marked_surfs();
 }

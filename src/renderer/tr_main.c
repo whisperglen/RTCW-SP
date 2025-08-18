@@ -905,6 +905,12 @@ void R_SetupProjection(void) {
 	tr.viewParms.projectionMatrix[15] = 0;
 }
 
+vec3_t frustumnormals[4] = { 0 };
+float frustumdist[4] = { 0 };
+int frustumdebug = 0;
+int frustumoverride = 0;
+static void R_SetupFrustum_Debug1(void);
+static void R_SetupFrustum_Debug2(void);
 /*
 =================
 R_SetupFrustum
@@ -916,6 +922,20 @@ void R_SetupFrustum(void) {
 	int i;
 	float xs, xc;
 	float ang;
+
+	if (frustumdebug)
+	{
+		if (frustumdebug == 1)
+		{
+			R_SetupFrustum_Debug1();
+			return;
+		}
+		if (frustumdebug == 2)
+		{
+			R_SetupFrustum_Debug2();
+			return;
+		}
+	}
 
 	ang = tr.viewParms.fovX / 180 * M_PI * 0.5f;
 	xs = sin(ang);
@@ -944,6 +964,116 @@ void R_SetupFrustum(void) {
 	}
 }
 
+float* qdx_4imgui_frustrumplane(int idx) { return frustumnormals[idx]; }
+float* qdx_4imgui_frustumdist(int idx) { return &frustumdist[idx]; }
+int* qdx_4imgui_frustumdebug() { return &frustumdebug; }
+int* qdx_4imgui_frustumoverride() { return &frustumoverride;  }
+
+void R_SetupFrustum_Debug1(void) {
+	int i;
+	float xs, xc;
+	float ang;
+
+	ang = tr.viewParms.fovX / 180 * M_PI * 0.5f;
+	if (frustumoverride)
+	{
+		xs = 0;
+		xc = 1;
+	}
+	else
+	{
+		xs = sin(ang);
+		xc = cos(ang);
+	}
+
+	VectorScale(tr.viewParms. or .axis[0], xs, tr.viewParms.frustum[0].normal);
+	VectorMA(tr.viewParms.frustum[0].normal, xc, tr.viewParms. or .axis[1], tr.viewParms.frustum[0].normal);
+
+	VectorScale(tr.viewParms. or .axis[0], xs, tr.viewParms.frustum[1].normal);
+	VectorMA(tr.viewParms.frustum[1].normal, -xc, tr.viewParms. or .axis[1], tr.viewParms.frustum[1].normal);
+
+	ang = tr.viewParms.fovY / 180 * M_PI * 0.5f;
+	if (frustumoverride)
+	{
+		xs = 0;
+		xc = 1;
+	}
+	else
+	{
+		xs = sin(ang);
+		xc = cos(ang);
+	}
+
+	VectorScale(tr.viewParms. or .axis[0], xs, tr.viewParms.frustum[2].normal);
+	VectorMA(tr.viewParms.frustum[2].normal, xc, tr.viewParms. or .axis[2], tr.viewParms.frustum[2].normal);
+
+	VectorScale(tr.viewParms. or .axis[0], xs, tr.viewParms.frustum[3].normal);
+	VectorMA(tr.viewParms.frustum[3].normal, -xc, tr.viewParms. or .axis[2], tr.viewParms.frustum[3].normal);
+
+
+	for (i = 0; i < 4; i++)
+	{
+
+		if (frustumoverride)
+		{
+			VectorCopy(frustumnormals[i], tr.viewParms.frustum[i].normal);
+		}
+		else
+		{
+			VectorCopy(tr.viewParms.frustum[i].normal, frustumnormals[i]);
+		}
+	}
+
+	for (i = 0; i < 4; i++) {
+		tr.viewParms.frustum[i].type = PLANE_NON_AXIAL;
+		tr.viewParms.frustum[i].dist = DotProduct(tr.viewParms. or .origin, tr.viewParms.frustum[i].normal);
+		if (frustumoverride)
+		{
+			tr.viewParms.frustum[i].dist = frustumdist[i];
+		}
+		else
+		{
+			frustumdist[i] = tr.viewParms.frustum[i].dist;
+		}
+		SetPlaneSignbits(&tr.viewParms.frustum[i]);
+	}
+}
+
+void R_SetupFrustum_Debug2(void) {
+	int i;
+
+	const vec3_t vert_l = { 0, 1, 0 };
+	const vec3_t vert_r = { 0, -1, 0 };
+
+	VectorCopy(vert_l, tr.viewParms.frustum[0].normal);
+	VectorCopy(vert_r, tr.viewParms.frustum[1].normal);
+
+	const vec3_t horiz_t = { 0, 0, -1 };
+	const vec3_t horiz_b = { 0, 0, 1 };
+
+	VectorCopy(horiz_t, tr.viewParms.frustum[2].normal);
+	VectorCopy(horiz_b, tr.viewParms.frustum[3].normal);
+
+	for (i = 0; i < 4; i++)
+	{
+		VectorCopy(tr.viewParms.frustum[i].normal, frustumnormals[i]);
+	}
+
+	for (i = 0; i < 4; i++) {
+		tr.viewParms.frustum[i].type = PLANE_NON_AXIAL;
+		tr.viewParms.frustum[i].dist = DotProduct(tr.viewParms. or .origin, tr.viewParms.frustum[i].normal);
+
+		if (frustumoverride)
+		{
+			tr.viewParms.frustum[i].dist += frustumdist[i];
+		}
+		else
+		{
+			frustumdist[i] = tr.viewParms.frustum[i].dist;
+		}
+		SetPlaneSignbits(&tr.viewParms.frustum[i]);
+	}
+}
 
 /*
 =================
