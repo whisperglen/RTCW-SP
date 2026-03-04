@@ -89,7 +89,7 @@ typedef struct bitmask_s bitmask_t;
 void bitmask_alloc( bitmask_t* bm, size_t numbits );
 void bitmask_realloc(bitmask_t* bm, size_t numbits);
 void bitmask_free( bitmask_t* bm );
-void bitmask_set( bitmask_t* bm, uint32_t bitnum );
+int  bitmask_set( bitmask_t* bm, uint32_t bitnum );
 uint32_t bitmask_is_set( bitmask_t* bm, uint32_t bitnum );
 void bitmask_clear(bitmask_t* bm);
 
@@ -101,7 +101,7 @@ struct bitmaskx_s : public bitmask_t
 	void alloc(size_t numbits) { bitmask_alloc(this, numbits); }
 	void realloc(size_t numbits) { bitmask_realloc(this, numbits); }
 	void free() { bitmask_free(this); }
-	void set(uint32_t bitnum) { bitmask_set(this, bitnum); }
+	int  set(uint32_t bitnum) { return bitmask_set(this, bitnum); }
 	uint32_t is_set(uint32_t bitnum) { return bitmask_is_set(this, bitnum); }
 	void clear() { bitmask_clear(this); }
 };

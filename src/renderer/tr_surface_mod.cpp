@@ -171,8 +171,8 @@ void qdx_surface_aabb_mark_index( int grpid, int aabb_index )
 		GPUimp_LogComment(printed);
 	}
 
-	grp->marked_indexes.set(aabb_index);
-	grp->num_marks++;
+	if(grp->marked_indexes.set(aabb_index) == 0)
+		grp->num_marks++;
 }
 
 qboolean qdx_surface_aabb_is_index_marked( int grpid, int aabb_index )

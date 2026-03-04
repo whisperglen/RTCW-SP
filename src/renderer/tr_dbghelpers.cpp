@@ -270,8 +270,10 @@ extern "C" void bitmask_clear(bitmask_t* bm)
 	}
 }
 
-extern "C" void bitmask_set( bitmask_t* bm, uint32_t bitnum)
+extern "C" int bitmask_set( bitmask_t* bm, uint32_t bitnum)
 {
+	int ret = 0;
+
 	if (bm)
 	{
 		uint32_t slot = bitnum >> 5;
@@ -282,9 +284,12 @@ extern "C" void bitmask_set( bitmask_t* bm, uint32_t bitnum)
 
 		if (slot < bm->size)
 		{
+			ret = (bm->ptr[slot] & mask) != 0;
 			bm->ptr[slot] |= mask;
 		}
 	}
+
+	return ret;
 }
 
 extern "C" uint32_t bitmask_is_set( bitmask_t* bm, uint32_t bitnum)

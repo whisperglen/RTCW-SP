@@ -809,7 +809,7 @@ void qdx_vatt_set_buffer(vatt_param_t param, const void *buffer, UINT elems, UIN
 	if (r_logFile->integer && (r_logFileTypes->integer & RLOGFILE_VATTSET))
 		qdx_log_comment(__FUNCTION__, param, buffer);
 
-	switch (param)
+	switch (int(param))
 	{
 	case VATT_VERTEX:
 		g_vattribs.vertexes = (float*)buffer;
@@ -2052,7 +2052,7 @@ std::stack<D3DXMATRIX> g_matworld_stack;
 
 void qdx_matrix_set(D3DTRANSFORMSTATETYPE type, const float *matrix)
 {
-	switch (type)
+	switch (int(type))
 	{
 	case D3DTS_VIEW:
 		qdx_mats.view = D3DXMATRIX(matrix);
@@ -2068,7 +2068,7 @@ void qdx_matrix_set(D3DTRANSFORMSTATETYPE type, const float *matrix)
 
 void qdx_matrix_mul(D3DTRANSFORMSTATETYPE type, const D3DMATRIX *matrix)
 {
-	switch (type)
+	switch (int(type))
 	{
 	case D3DTS_VIEW:
 		qdx_mats.view = D3DXMATRIX(*matrix) * qdx_mats.view;
@@ -2084,7 +2084,7 @@ void qdx_matrix_mul(D3DTRANSFORMSTATETYPE type, const D3DMATRIX *matrix)
 
 void qdx_matrix_push(D3DTRANSFORMSTATETYPE type)
 {
-	switch (type)
+	switch (int(type))
 	{
 	case D3DTS_VIEW:
 		g_matview_stack.push(qdx_mats.view);
@@ -2100,7 +2100,7 @@ void qdx_matrix_push(D3DTRANSFORMSTATETYPE type)
 
 void qdx_matrix_pop(D3DTRANSFORMSTATETYPE type)
 {
-	switch (type)
+	switch (int(type))
 	{
 	case D3DTS_VIEW:
 		qdx_mats.view = g_matview_stack.top();
@@ -2128,7 +2128,8 @@ void qdx_matrix_apply(void)
 		qdx_log_matrix("world", (float*)qdx_mats.world.m);
 		qdx_log_matrix("view", (float*)qdx_mats.view.m);
 		qdx_log_matrix("proj", (float*)qdx_mats.proj.m);
-		qdx_log_matrix("all", (float*)(&(qdx_mats.world * qdx_mats.view * qdx_mats.proj))->m);
+		D3DXMATRIX all = qdx_mats.world * qdx_mats.view * qdx_mats.proj;
+		qdx_log_matrix("all", (float*)all.m);
 	}
 }
 

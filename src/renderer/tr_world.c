@@ -306,14 +306,15 @@ static void R_AddWorldSurface( msurface_t *surf, int dlightBits, qboolean inpvs 
 		//prime aabbs
 		aabb_index = qdx_surface_aabb_get_index( surf->shader->sortedIndex, surf, 0);
 		//qassert( aabb_index != -1 );
-		if ( inpvs && aabb_index >= 0 )
+		if ( inpvs && (aabb_index >= 0) )
 		{
 			qdx_surface_aabb_mark_index( surf->shader->sortedIndex, aabb_index );
 		}
 	}
 
 // GR - not tessellated
-	R_AddDrawSurfEx( surf->data, surf->shader, aabb_index, surf->fogIndex, dlightBits, ATI_TESS_NONE );
+	if(inpvs)
+		R_AddDrawSurfEx( surf->data, surf->shader, aabb_index, surf->fogIndex, dlightBits, ATI_TESS_NONE );
 }
 
 /*
@@ -427,7 +428,7 @@ static void R_RecursiveWorldNode( mnode_t *node, int planeBits, int dlightBits, 
 		// if the node wasn't marked as potentially visible, exit
 		if ( node->visframe != tr.visCount ) {
 			inpvs = qfalse;
-			if ( r_aabb_culling->integer == 0 )
+			if ( r_aabb_culling->integer == 0 || node->contents == CONTENTS_SOLID)
 			{
 				return;
 			}
