@@ -425,13 +425,16 @@ static void R_RecursiveWorldNode( mnode_t *node, int planeBits, int dlightBits, 
 	do {
 		int newDlights[2];
 
+		if (r_logFile->integer && (r_logFileTypes->integer & RLOGFILE_AABB))
+		{
+			if(node->nummarksurfaces)
+				GPUimp_LogComment(va("%p-%d %x\n", node->firstmarksurface, node->nummarksurfaces, node->contents));
+		}
+
 		// if the node wasn't marked as potentially visible, exit
 		if ( node->visframe != tr.visCount ) {
 			inpvs = qfalse;
-			if ( r_aabb_culling->integer == 0 || node->contents == CONTENTS_SOLID)
-			{
-				return;
-			}
+			return;
 		}
 
 		// if the bounding volume is outside the frustum, nothing
@@ -666,6 +669,16 @@ static void R_MarkLeaves( void ) {
 		return;
 	}
 
+	if (r_logFile->integer && (r_logFileTypes->integer & RLOGFILE_AABB))
+	{
+		GPUimp_LogComment("MarkLeaves START\n");
+		for (i = 0; i < tr.world->numnodes; i++) {
+			if(tr.world->nodes[i].nummarksurfaces)
+				GPUimp_LogComment(va("%p-%d %x\n", tr.world->nodes[i].firstmarksurface, tr.world->nodes[i].nummarksurfaces, tr.world->nodes[i].contents));
+		}
+		GPUimp_LogComment("MarkLeaves END\n");
+	}
+
 	vis = R_ClusterPVS( tr.viewCluster );
 
 	for ( i = 0,leaf = tr.world->nodes ; i < tr.world->numnodes ; i++, leaf++ ) {
@@ -724,7 +737,5 @@ void R_AddWorldSurfaces( void ) {
 		tr.refdef.num_dlights = 32 ;
 	}
 
-	qdx_surface_aabb_clear_marked_indexes();
 	R_RecursiveWorldNode( tr.world->nodes, 15, ( 1 << tr.refdef.num_dlights ) - 1, qtrue );
-	qdx_surface_aabb_add_all_marked_surfs();
 }

@@ -224,7 +224,7 @@ void qdx_surface_aabb_add_all_marked_surfs()
 					if (grp1st)
 					{
 						grp1st = false;
-						GPUimp_LogComment(surf->shader->name);
+						GPUimp_LogComment(va("%s\n", surf->shader->name));
 					}
 					snprintf(printed, sizeof(printed), "add %p +:%d grp:%d idx:%d\n", surf, (surf->viewCount != tr.viewCount), i, it->second);
 					GPUimp_LogComment(printed);

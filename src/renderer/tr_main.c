@@ -2065,9 +2065,14 @@ R_GenerateDrawSurfs
 ====================
 */
 void R_GenerateDrawSurfs(void) {
+
+	qdx_surface_aabb_clear_marked_indexes();
+
 	R_AddWorldSurfaces();
 
 	R_AddPolygonSurfaces();
+
+	qdx_surface_aabb_add_all_marked_surfs();
 
 	// set the projection matrix with the minimum zfar
 	// now that we have the world bounded
