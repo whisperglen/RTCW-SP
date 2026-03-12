@@ -1859,7 +1859,7 @@ void R_AddDrawSurfEx(surfaceType_t *surface, shader_t *shader, int aabb_index,
 		| (atiTess << QSORT_ATI_TESS_SHIFT)
 		| tr.shiftedEntityNum | (fogIndex << QSORT_FOGNUM_SHIFT) | (int)dlightMap;
 	tr.refdef.drawSurfs[index].sortex[0] = shader->sortedIndex;
-	tr.refdef.drawSurfs[index].sortex[1] = (aabb_index << QSORT_SHADERNUM_SHIFT)
+	tr.refdef.drawSurfs[index].sortex[1] = ((aabb_index & (MAX_SHADERS - 1)) << QSORT_SHADERNUM_SHIFT)
 		| (atiTess << QSORT_ATI_TESS_SHIFT)
 		| tr.shiftedEntityNum | (fogIndex << QSORT_FOGNUM_SHIFT) | (int)dlightMap;
 	tr.refdef.drawSurfs[index].surface = surface;
@@ -1893,6 +1893,11 @@ void R_DecomposeSortEx(drawSurf_t *surf, int *entityNum, shader_t **shader, int 
 	*dlightMap = surf->sort & 3;
 	//GR - extract tessellation flag
 	*atiTess = (surf->sort >> QSORT_ATI_TESS_SHIFT) & 1;
+}
+
+int R_DecomposeSort_GetAABBIndex(drawSurf_t* surf)
+{
+	return (surf->sortex[1] >> QSORT_SHADERNUM_SHIFT) & (MAX_SHADERS - 1);
 }
 
 /*

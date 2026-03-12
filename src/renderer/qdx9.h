@@ -288,11 +288,12 @@ void qdx_lights_clear(unsigned int light_types);
 enum r_logfiletypes_e
 {
 	RLOGFILE_TEXT = 1,
-	RLOGFILE_VERTEX = 1 << 1,
-	RLOGFILE_TEXTURE = 1 << 2,
-	RLOGFILE_MATRIX = 1 << 3,
-	RLOGFILE_VATTSET = 1 << 4,
-	RLOGFILE_AABB = 1 << 5,
+	RLOGFILE_VERTEX = 2,
+	RLOGFILE_TEXTURE = 4,
+	RLOGFILE_MATRIX = 8,
+	RLOGFILE_VATTSET = 16,
+	RLOGFILE_AABB = 32,
+	RLOGFILE_SURFID = 64
 };
 
 void qdx_screen_getxyz( float *xyz );

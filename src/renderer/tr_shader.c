@@ -2621,7 +2621,7 @@ shader_t *R_DupModShader( shader_t *source, image_t *newimg )
 
 	memcpy( &shader, source, sizeof( shader ) );
 	memset( &stages, 0, sizeof( stages ) );
-	strncpy( &shader.name, newimg->imgName, sizeof( shader.name ) );
+	strncpy( shader.name, newimg->imgName, sizeof( shader.name ) );
 	for ( i = 0; i < source->numUnfoggedPasses; i++ ) {
 		if ( !source->stages[i]->active ) {
 			break;

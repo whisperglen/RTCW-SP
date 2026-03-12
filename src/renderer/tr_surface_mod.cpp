@@ -231,7 +231,10 @@ void qdx_surface_aabb_add_all_marked_surfs()
 				}
 				if (surf->viewCount != tr.viewCount) {
 					surf->viewCount = tr.viewCount;
-					R_AddDrawSurfEx(surf->data, surf->shader, it->second, surf->fogIndex, 0, ATI_TESS_NONE);
+
+					int dlightBits = R_DlightSurface(surf, 0xffffffff);
+					dlightBits = (dlightBits != 0);
+					R_AddDrawSurfEx(surf->data, surf->shader, it->second, surf->fogIndex, dlightBits, ATI_TESS_NONE);
 					g_num_extra_surfs_this_round++;
 				}
 			}

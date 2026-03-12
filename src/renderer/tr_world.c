@@ -256,7 +256,7 @@ that is touched by one or more dlights, so try to throw out
 more dlights if possible.
 ====================
 */
-static int R_DlightSurface( msurface_t *surf, int dlightBits ) {
+int R_DlightSurface( msurface_t *surf, int dlightBits ) {
 	if ( *surf->data == SF_FACE ) {
 		dlightBits = R_DlightFace( (srfSurfaceFace_t *)surf->data, dlightBits );
 	} else if ( *surf->data == SF_GRID ) {
@@ -300,7 +300,7 @@ static void R_AddWorldSurface( msurface_t *surf, int dlightBits, qboolean inpvs 
 		dlightBits = ( dlightBits != 0 );
 	}
 
-	int aabb_index = 0;
+	int aabb_index = -1;
 	if ( *(surf->data) == SF_FACE || *(surf->data) == SF_GRID || *(surf->data) == SF_TRIANGLES )
 	{
 		//prime aabbs
@@ -313,7 +313,7 @@ static void R_AddWorldSurface( msurface_t *surf, int dlightBits, qboolean inpvs 
 	}
 
 // GR - not tessellated
-	if(inpvs)
+	if (inpvs)
 		R_AddDrawSurfEx( surf->data, surf->shader, aabb_index, surf->fogIndex, dlightBits, ATI_TESS_NONE );
 }
 

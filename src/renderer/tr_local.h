@@ -1282,6 +1282,7 @@ void R_DecomposeSort( unsigned sort, int *entityNum, shader_t **shader,
 					  int *fogNum, int *dlightMap, int *atiTess );
 void R_DecomposeSortEx( drawSurf_t *surf, int *entityNum, shader_t **shader, int *aabb_index,
 					  int *fogNum, int *dlightMap, int *atiTess );
+int R_DecomposeSort_GetAABBIndex(drawSurf_t* surf);
 
 // GR - add tessellation flag
 void R_AddDrawSurf( surfaceType_t *surface, shader_t *shader, int fogIndex, int dlightMap, int atiTess );
@@ -1583,7 +1584,7 @@ void R_DlightBmodel( bmodel_t *bmodel );
 void R_SetupEntityLighting( const trRefdef_t *refdef, trRefEntity_t *ent );
 void R_TransformDlights( int count, dlight_t * dl, orientationr_t * or );
 int R_LightForPoint( vec3_t point, vec3_t ambientLight, vec3_t directedLight, vec3_t lightDir );
-
+int R_DlightSurface(msurface_t* surf, int dlightBits);
 
 /*
 ============================================================

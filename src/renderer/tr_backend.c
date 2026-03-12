@@ -1062,12 +1062,20 @@ void RB_RenderDrawSurfList( drawSurf_t *drawSurfs, int numDrawSurfs ) {
 	backEnd.pc.c_surfaces += numDrawSurfs;
 
 	for ( i = 0, drawSurf = drawSurfs ; i < numDrawSurfs ; i++, drawSurf++ ) {
-		if ( drawSurf->sort == oldSort ) {
+		if ( (drawSurf->sort == oldSort) &&
+		       (
+				       (r_aabb_culling->integer == 0)
+			        || (r_aabb_culling->integer && (R_DecomposeSort_GetAABBIndex(drawSurf) == oldAabbIndex))
+			   )
+		   )
+		{
 			// fast path, same as previous sort
 			oldNumVerts = tess.numVertexes;
 			oldNumIndex = tess.numIndexes;
 
 			rb_surfaceTable[ *drawSurf->surface ]( drawSurf->surface );
+			if(r_logFile->integer && (r_logFileTypes->integer & RLOGFILE_SURFID))
+				GPUimp_LogComment(va("added surf: %p %d %d z\n", drawSurf, (shader ? shader->sortedIndex : -1), oldAabbIndex));
 /*
 			// RF, convert the newly created vertexes into dust particles, and overwrite
 			if (backEnd.currentEntity->e.reFlags & REFLAG_ZOMBIEFX) {
@@ -1084,9 +1092,6 @@ void RB_RenderDrawSurfList( drawSurf_t *drawSurfs, int numDrawSurfs ) {
 		//R_DecomposeSort( drawSurf->sort, &entityNum, &shader, &fogNum, &dlighted, &atiTess );
 		R_DecomposeSortEx( drawSurf, &entityNum, &shader, &aabbIndex, &fogNum, &dlighted, &atiTess );
 
-		//do aabbIndex stuff here
-		oldAabbIndex = aabbIndex;
-
 		//
 		// change the tess parameters if needed
 		// a "entityMergable" shader is a shader that can have surfaces from seperate
@@ -1094,7 +1099,8 @@ void RB_RenderDrawSurfList( drawSurf_t *drawSurfs, int numDrawSurfs ) {
 		if ( shader != oldShader || fogNum != oldFogNum || dlighted != oldDlighted
 // GR - force draw on tessellation flag change
 			 || ( atiTess != oldAtiTess )
-			 || ( entityNum != oldEntityNum && !shader->entityMergable)
+			 || ( entityNum != oldEntityNum && !shader->entityMergable )
+			 || ( r_aabb_culling->integer && aabbIndex != oldAabbIndex )
 			 ) {
 			if ( oldShader != NULL ) {
 #ifdef __MACOS__    // crutch up the mac's limited buffer queue size
@@ -1109,6 +1115,10 @@ void RB_RenderDrawSurfList( drawSurf_t *drawSurfs, int numDrawSurfs ) {
 // GR - pass tessellation flag to the shader command
 //		make sure to use oldAtiTess!!!
 				tess.ATI_tess = ( oldAtiTess == ATI_TESS_TRUFORM );
+
+				if (r_logFile->integer && (r_logFileTypes->integer & RLOGFILE_SURFID))
+					GPUimp_LogComment(va("draw break: sh %p %p, fg %d %d, dl %d %d, te %d %d, en %d %d z\n",
+						shader, oldShader, fogNum, oldFogNum, dlighted, oldDlighted, atiTess, oldAtiTess, entityNum, oldEntityNum));
 
 				RB_EndSurface();
 				if ( r_showaabbs->integer )
@@ -1125,6 +1135,7 @@ void RB_RenderDrawSurfList( drawSurf_t *drawSurfs, int numDrawSurfs ) {
 			oldDlighted = dlighted;
 // GR - update old tessellation flag
 			oldAtiTess = atiTess;
+			oldAabbIndex = aabbIndex;
 		}
 
 		//
@@ -1198,6 +1209,8 @@ void RB_RenderDrawSurfList( drawSurf_t *drawSurfs, int numDrawSurfs ) {
 
 		// add the triangles for this surface
 		rb_surfaceTable[ *drawSurf->surface ]( drawSurf->surface );
+		if (r_logFile->integer && (r_logFileTypes->integer & RLOGFILE_SURFID))
+			GPUimp_LogComment(va("added surf: %p %d %d x\n", drawSurf, (shader ? shader->sortedIndex : -1), aabbIndex));
 
 		// RF, convert the newly created vertexes into dust particles, and overwrite
 		if ( backEnd.currentEntity->e.reFlags & REFLAG_ZOMBIEFX ) {
