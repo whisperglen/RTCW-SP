@@ -2,7 +2,7 @@
 #include <iostream>
 #include <fstream>
 #include <string>
-#include <map>
+#include <unordered_map>
 #include <vector>
 #include <stdio.h>
 #include <string.h>
@@ -15,7 +15,7 @@ extern "C" {
 #include <WinUser.h>
 
 
-static std::map<std::string, int> occurences;
+static std::unordered_map<std::string, int> occurences;
 static std::vector<std::string> ordered_calls;
 
 static int helper_values[MAX_HELPER_VALUES] = { 0 };

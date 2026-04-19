@@ -23,9 +23,10 @@ typedef struct shader_replace_s
 	image_t *image;
 } shader_replace_t;
 
-static std::map<uint32_t, shader_replace_t> g_shader_replacements;
+static std::unordered_map<uint32_t, shader_replace_t> g_shader_replacements;
 
 static aabb_group_t g_aabb_groups[MAX_SHADERS];
+static int g_aabb_surfs_primed = 0;
 
 BOOL qdx_surface_aabb_intersect( const aabb_store_t* boxa, const aabb_store_t* boxb );
 void qdx_surface_aabb_merge( const aabb_store_t* boxa, const aabb_store_t* boxb, aabb_store_t* boxo );
@@ -42,7 +43,19 @@ void qdx_surface_aabb_clearall()
 		grp->marked_indexes.clear();
 	}
 
+	g_aabb_surfs_primed = 0;
+
 	g_shader_replacements.clear();
+}
+
+int qdx_surface_aabb_needs_priming()
+{
+	return (g_aabb_surfs_primed == 0);
+}
+
+void qdx_suface_aabb_set_primed()
+{
+	g_aabb_surfs_primed = 1;
 }
 
 void qdx_surface_aabb_prune_storage(aabb_group_t* grp)

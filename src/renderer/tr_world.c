@@ -281,7 +281,7 @@ int R_DlightSurface( msurface_t *surf, int dlightBits ) {
 R_AddWorldSurface
 ======================
 */
-static void R_AddWorldSurface( msurface_t *surf, int dlightBits, qboolean inpvs ) {
+static void R_AddWorldSurface( msurface_t *surf, int dlightBits, qboolean aabb_candidate ) {
 	if ( surf->viewCount == tr.viewCount ) {
 		return;     // already in this view
 	}
@@ -301,20 +301,22 @@ static void R_AddWorldSurface( msurface_t *surf, int dlightBits, qboolean inpvs 
 	}
 
 	int aabb_index = -1;
-	if ( *(surf->data) == SF_FACE || *(surf->data) == SF_GRID || *(surf->data) == SF_TRIANGLES )
+	if ( aabb_candidate )
 	{
-		//prime aabbs
-		aabb_index = qdx_surface_aabb_get_index( surf->shader->sortedIndex, surf, 0);
-		//qassert( aabb_index != -1 );
-		if ( inpvs && (aabb_index >= 0) )
+		if ( *(surf->data) == SF_FACE || *(surf->data) == SF_GRID || *(surf->data) == SF_TRIANGLES )
 		{
-			qdx_surface_aabb_mark_index( surf->shader->sortedIndex, aabb_index );
+			//prime aabbs
+			aabb_index = qdx_surface_aabb_get_index( surf->shader->sortedIndex, surf, 0 );
+			//qassert( aabb_index != -1 );
+			if ( aabb_index >= 0 )
+			{
+				qdx_surface_aabb_mark_index( surf->shader->sortedIndex, aabb_index );
+			}
 		}
 	}
 
 // GR - not tessellated
-	if (inpvs)
-		R_AddDrawSurfEx( surf->data, surf->shader, aabb_index, surf->fogIndex, dlightBits, ATI_TESS_NONE );
+	R_AddDrawSurfEx( surf->data, surf->shader, aabb_index, surf->fogIndex, dlightBits, ATI_TESS_NONE );
 }
 
 /*
@@ -400,7 +402,7 @@ void R_AddBrushModelSurfaces( trRefEntity_t *ent ) {
 
 	for ( i = 0 ; i < bmodel->numSurfaces ; i++ ) {
 		( bmodel->firstSurface + i )->fogIndex = fognum;
-		R_AddWorldSurface( bmodel->firstSurface + i, 0/*tr.currentEntity->needDlights*/, qtrue );
+		R_AddWorldSurface( bmodel->firstSurface + i, 0/*tr.currentEntity->needDlights*/, qfalse );
 	}
 //----(SA) end
 }
@@ -563,7 +565,7 @@ static void R_RecursiveWorldNode( mnode_t *node, int planeBits, int dlightBits, 
 			// the surface may have already been added if it
 			// spans multiple leafs
 			surf = *mark;
-			R_AddWorldSurface( surf, dlightBits, inpvs );
+			R_AddWorldSurface( surf, dlightBits, qtrue );
 			mark++;
 		}
 	}
@@ -660,7 +662,8 @@ static void R_MarkLeaves( void ) {
 	tr.visCount++;
 	tr.viewCluster = cluster;
 
-	if ( (r_novis->integer && !(tr.refdef.rdflags & RDF_SKYBOXPORTAL)) || tr.viewCluster == -1 ) {
+	if ( ((r_novis->integer || qdx_surface_aabb_needs_priming()) && !(tr.refdef.rdflags & RDF_SKYBOXPORTAL)) || tr.viewCluster == -1) {
+		qdx_suface_aabb_set_primed();
 		for ( i = 0 ; i < tr.world->numnodes ; i++ ) {
 			if ( tr.world->nodes[i].contents != CONTENTS_SOLID ) {
 				tr.world->nodes[i].visframe = tr.visCount;

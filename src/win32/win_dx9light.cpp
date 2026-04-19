@@ -12,7 +12,7 @@ extern "C"
 #include "fnv.h"
 
 #include <string>
-#include <map>
+#include <unordered_map>
 #include <list>
 
 
@@ -67,12 +67,12 @@ static light_override_t* qdx_light_find_override( uint64_t hash );
  */
 static light_data_t g_lights_dynamic[LIGHTS_DYNAMIC_SZ] = { 0 };
 static uint32_t g_lights_dynamic_bitmap = 0;
-static std::map<uint64_t, light_data_t> g_lights_coronas;
-static std::map<uint64_t, light_new_bundle_t> g_lights_new;
+static std::unordered_map<uint64_t, light_data_t> g_lights_coronas;
+static std::unordered_map<uint64_t, light_new_bundle_t> g_lights_new;
 static remixapi_LightHandle g_flashlight_handle[NUM_FLASHLIGHT_HND] = { 0 };
 #define FLASHLIGHT_HASH 0xF1A581168700ULL
 static std::vector<struct color_override_data_s> g_color_overrides;
-static std::map<uint64_t, light_override_t> g_light_overrides;
+static std::unordered_map<uint64_t, light_override_t> g_light_overrides;
 
 //no idea what to choose here
 #define DEFAULT_LIGHT_RADIANCE_DYNAMIC_BASE 150.0f

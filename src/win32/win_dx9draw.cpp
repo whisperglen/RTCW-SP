@@ -14,7 +14,7 @@ extern "C"
 
 #include <string>
 #include <vector>
-#include <map>
+#include <unordered_map>
 
 typedef struct entity_bone_transforms_s
 {
@@ -43,7 +43,7 @@ struct qdx_matrixes
 
 int qdx_scene_started = 0;
 
-static std::map<const void*, entity_bone_transforms_t> animation_mappings;
+static std::unordered_map<const void*, entity_bone_transforms_t> animation_mappings;
 
 void qdx_draw_init(void *hwnd, void *device)
 {
@@ -2157,7 +2157,7 @@ void qdx_depthrange(float znear, float zfar)
 	qdx.device->SetViewport(&vp);
 }
 
-static std::map<std::string, int> asserted_fns;
+static std::unordered_map<std::string, int> asserted_fns;
 #define ASSERT_MAX_PRINTS 5
 
 void qdx_assert_failed_str(const char* expression, const char* function, unsigned line, const char* file)

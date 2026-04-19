@@ -10,12 +10,12 @@
 
 #include <string>
 #include <vector>
-#include <map>
+#include <unordered_map>
 
 typedef struct aabb_group_s
 {
 	std::vector<aabb_store_t> storage;
-	std::map<const void*, uint32_t> indexes;
+	std::unordered_map<const void*, uint32_t> indexes;
 	bitmaskx_t marked_indexes;
 	size_t num_marks;
 }  aabb_group_t;

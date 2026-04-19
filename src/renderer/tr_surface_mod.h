@@ -24,6 +24,8 @@ int qdx_surface_aabb_contains_point( const aabb_store_t* box, float point[3] );
 int qdx_surface_aabb_contains_box( const aabb_store_t* boxo, const aabb_store_t* boxi );
 int qdx_surface_aabb_intersect_sphere( const aabb_store_t* box, float center[3], float radius );
 
+int qdx_surface_aabb_needs_priming();
+void qdx_suface_aabb_set_primed();
 void qdx_surface_aabb_clear_marked_indexes();
 void qdx_surface_aabb_mark_index( int grpid, int aabb_index );
 void qdx_surface_aabb_add_all_marked_surfs();
