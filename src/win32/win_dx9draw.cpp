@@ -31,11 +31,15 @@ typedef struct entity_bone_transforms_s
 static void iniconf_first_init();
 static void qdx_animationbuf_reset(BOOL release);
 
+#define MATRIX_TEX_NUM_SETS 2
 struct qdx_matrixes
 {
 	D3DXMATRIX view;
 	D3DXMATRIX proj;
 	D3DXMATRIX world;
+	D3DXMATRIX texture[MATRIX_TEX_NUM_SETS];
+	uint8_t texture_active_set;
+	uint8_t texture_used[MATRIX_TEX_NUM_SETS];
 	void init()
 	{
 		D3DXMatrixIdentity(&view);
@@ -45,6 +49,15 @@ struct qdx_matrixes
 		//	&D3DXVECTOR3(0.0f, 1.0f, 0.0f));    // the up direction
 		D3DXMatrixIdentity(&proj);
 		D3DXMatrixIdentity(&world);
+		for (int i = 0; i < MATRIX_TEX_NUM_SETS; i++)
+		{
+			D3DXMatrixIdentity(&texture[i]);
+		}
+		texture_active_set = 0;
+		for (int i = 0; i < MATRIX_TEX_NUM_SETS; i++)
+		{
+			texture_used[i] = 0;
+		}
 	}
 } qdx_mats;
 
@@ -401,6 +414,8 @@ void qdx_texobj_apply(int id, int sampler)
 		qdx.device->SetSamplerState(sampler_id, D3DSAMP_ADDRESSU, opt.wrap_u);
 		qdx.device->SetSamplerState(sampler_id, D3DSAMP_ADDRESSV, opt.wrap_v);
 		qdx.device->SetSamplerState(sampler_id, D3DSAMP_BORDERCOLOR, opt.border);
+
+		qdx_matrix_texture_apply(sampler_id);
 	}
 }
 
@@ -2119,6 +2134,44 @@ void qdx_matrix_pop(D3DTRANSFORMSTATETYPE type)
 		qdx_mats.world = g_matworld_stack.top();
 		g_matworld_stack.pop();
 		break;
+	}
+}
+
+void qdx_matrix_texture_reset()
+{
+	for (int i = 0; i < ARRAYSIZE(qdx_mats.texture); i++)
+	{
+		D3DXMatrixIdentity(&qdx_mats.texture[i]);
+		qdx_mats.texture_used[i] = 0;
+	}
+	qdx_mats.texture_active_set = 0;
+}
+
+void qdx_matrix_texture_active_set(int active_set)
+{
+	qdx_mats.texture_active_set = active_set;
+}
+
+void qdx_matrix_texture_mul(const D3DXMATRIX* matrix)
+{
+	D3DXMATRIX* texmat = &qdx_mats.texture[qdx_mats.texture_active_set];
+	D3DXMatrixMultiply(texmat, texmat, (D3DXMATRIX*)matrix);
+	qdx_mats.texture_used[qdx_mats.texture_active_set] = 1;
+}
+
+void qdx_matrix_texture_apply(int sampler)
+{
+	const D3DTRANSFORMSTATETYPE samp2mat[] = { D3DTS_TEXTURE0, D3DTS_TEXTURE1, D3DTS_TEXTURE2, D3DTS_TEXTURE3, D3DTS_TEXTURE4, D3DTS_TEXTURE5, D3DTS_TEXTURE6, D3DTS_TEXTURE7 };
+
+	if (qdx_mats.texture_used[sampler])
+	{
+		qdx.device->SetTextureStageState(sampler, D3DTSS_TEXTURETRANSFORMFLAGS, D3DTTFF_COUNT2);
+
+		qdx.device->SetTransform(samp2mat[sampler], &qdx_mats.texture[sampler]);
+	}
+	else
+	{
+		qdx.device->SetTextureStageState(sampler, D3DTSS_TEXTURETRANSFORMFLAGS, D3DTTFF_DISABLE);
 	}
 }
 

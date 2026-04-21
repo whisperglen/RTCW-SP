@@ -1041,6 +1041,8 @@ static void ComputeTexCoords( shaderStage_t *pStage ) {
 	for ( b = 0; b < NUM_TEXTURE_BUNDLES; b++ ) {
 		int tm;
 
+		qdx_matrix_texture_active_set(b);
+
 		//
 		// generate the texture coordinates
 		//
@@ -1195,6 +1197,8 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input ) {
 			break;
 		}
 
+		qdx_matrix_texture_reset();
+
 		ComputeColors( pStage );
 		ComputeTexCoords( pStage );
 
@@ -1287,6 +1291,8 @@ static void RB_IterateStagesGeneric( shaderCommands_t *input ) {
 			break;
 		}
 	}
+
+	qdx_matrix_texture_reset();
 }
 
 

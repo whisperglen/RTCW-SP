@@ -76,6 +76,10 @@ void qdx_matrix_push(D3DTRANSFORMSTATETYPE type);
 void qdx_matrix_pop(D3DTRANSFORMSTATETYPE type);
 void qdx_matrix_apply(void);
 int  qdx_matrix_equals(const float* a, const float* b);
+void qdx_matrix_texture_reset();
+void qdx_matrix_texture_active_set(int active_set);
+void qdx_matrix_texture_mul(const D3DXMATRIX* matrix);
+void qdx_matrix_texture_apply(int sampler);
 
 typedef LPDIRECT3DBASETEXTURE9 textureptr_t;
 typedef struct qdx_textureobject
