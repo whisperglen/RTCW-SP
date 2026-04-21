@@ -992,15 +992,28 @@ void RB_CalcFireRiseEnvTexCoords( float *st ) {
 ** RB_CalcSwapTexCoords
 */
 void RB_CalcSwapTexCoords( float *st ) {
-	int i;
-
-	for ( i = 0; i < tess.numVertexes; i++, st += 2 )
+	if (r_gpu_uv_trnsf->integer == 0)
 	{
-		float s = st[0];
-		float t = st[1];
+		int i;
 
-		st[0] = t;
-		st[1] = 1.0 - s;    // err, flaming effect needs this
+		for ( i = 0; i < tess.numVertexes; i++, st += 2 )
+		{
+			float s = st[0];
+			float t = st[1];
+
+			st[0] = t;
+			st[1] = 1.0 - s;    // err, flaming effect needs this
+		}
+	}
+	else
+	{
+		D3DXMATRIX matFlipV = {
+			1.0f,  0.0f,  0.0f,  0.0f, // Keep U as is
+			0.0f, -1.0f,  0.0f,  0.0f, // Scale V by -1
+			0.0f,  0.0f,  1.0f,  0.0f,
+			0.0f,  1.0f,  0.0f,  1.0f  // Translate V by +1
+		};
+		qdx_matrix_texture_mul(&matFlipV);
 	}
 }
 
@@ -1027,12 +1040,25 @@ void RB_CalcTurbulentTexCoords( const waveForm_t *wf, float *st ) {
 ** RB_CalcScaleTexCoords
 */
 void RB_CalcScaleTexCoords( const float scale[2], float *st ) {
-	int i;
-
-	for ( i = 0; i < tess.numVertexes; i++, st += 2 )
+	if (r_gpu_uv_trnsf->integer == 0)
 	{
-		st[0] *= scale[0];
-		st[1] *= scale[1];
+		int i;
+
+		for ( i = 0; i < tess.numVertexes; i++, st += 2 )
+		{
+			st[0] *= scale[0];
+			st[1] *= scale[1];
+		}
+	}
+	else
+	{
+		D3DXMATRIX matScale = {
+			scale[0], 0.0f,     0.0f, 0.0f,
+			0.0f,     scale[1], 0.0f, 0.0f,
+			0.0f,     0.0f,     1.0f, 0.0f,
+			0.0f,     0.0f,     0.0f, 1.0f
+		};
+		qdx_matrix_texture_mul(&matScale);
 	}
 }
 
@@ -1052,10 +1078,25 @@ void RB_CalcScrollTexCoords( const float scrollSpeed[2], float *st ) {
 	adjustedScrollS = adjustedScrollS - floor( adjustedScrollS );
 	adjustedScrollT = adjustedScrollT - floor( adjustedScrollT );
 
-	for ( i = 0; i < tess.numVertexes; i++, st += 2 )
+	if (r_gpu_uv_trnsf->integer == 0)
 	{
-		st[0] += adjustedScrollS;
-		st[1] += adjustedScrollT;
+		for ( i = 0; i < tess.numVertexes; i++, st += 2 )
+		{
+			st[0] += adjustedScrollS;
+			st[1] += adjustedScrollT;
+		}
+	}
+	else
+	{
+		float ds = adjustedScrollS;
+		float dt = adjustedScrollT;
+		D3DXMATRIX matScroll = {
+			1.0f, 0.0f, 0.0f, 0.0f,
+			0.0f, 1.0f, 0.0f, 0.0f,
+			0.0f, 0.0f, 1.0f, 0.0f,
+			ds,   dt,   0.0f, 1.0f
+		};
+		qdx_matrix_texture_mul(&matScroll);
 	}
 }
 
@@ -1063,15 +1104,28 @@ void RB_CalcScrollTexCoords( const float scrollSpeed[2], float *st ) {
 ** RB_CalcTransformTexCoords
 */
 void RB_CalcTransformTexCoords( const texModInfo_t *tmi, float *st  ) {
-	int i;
-
-	for ( i = 0; i < tess.numVertexes; i++, st += 2 )
+	if (r_gpu_uv_trnsf->integer == 0)
 	{
-		float s = st[0];
-		float t = st[1];
+		int i;
 
-		st[0] = s * tmi->matrix[0][0] + t * tmi->matrix[1][0] + tmi->translate[0];
-		st[1] = s * tmi->matrix[0][1] + t * tmi->matrix[1][1] + tmi->translate[1];
+		for ( i = 0; i < tess.numVertexes; i++, st += 2 )
+		{
+			float s = st[0];
+			float t = st[1];
+
+			st[0] = s * tmi->matrix[0][0] + t * tmi->matrix[1][0] + tmi->translate[0];
+			st[1] = s * tmi->matrix[0][1] + t * tmi->matrix[1][1] + tmi->translate[1];
+		}
+	}
+	else
+	{
+		D3DXMATRIX matTransform = {
+			tmi->matrix[0][0], tmi->matrix[0][1], 0.0f, 0.0f,
+			tmi->matrix[1][0], tmi->matrix[1][1], 0.0f, 0.0f,
+			0.0f,              0.0f,              1.0f, 0.0f,
+			tmi->translate[0], tmi->translate[1], 0.0f, 1.0f
+		};
+		qdx_matrix_texture_mul(&matTransform);
 	}
 }
 
