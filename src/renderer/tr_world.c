@@ -609,12 +609,61 @@ static mnode_t *R_PointInLeaf( vec3_t p ) {
 R_ClusterPVS
 ==============
 */
+
 static const byte *R_ClusterPVS( int cluster ) {
 	if ( !tr.world || !tr.world->vis || cluster < 0 || cluster >= tr.world->numClusters ) {
 		return tr.world->novis;
 	}
 
+#ifdef R_OLD_PVS_ALG
 	return tr.world->vis + cluster * tr.world->clusterBytes;
+#else
+	int i, c, hop;
+	int maxHops = r_pvs_maxhops->integer;
+	int pvsRowBytes = tr.world->clusterBytes;
+	const byte* retPVS;
+
+	static byte currentLayer[MAX_MAP_VISIBILITY]; // Clusters added in the current hop
+	static byte nextLayer[MAX_MAP_VISIBILITY];    // Clusters discovered for the next hop
+	static byte extPVS[MAX_MAP_VISIBILITY];
+
+	const byte* basePVS = retPVS = tr.world->vis + cluster * pvsRowBytes;
+	if (maxHops)
+	{
+		retPVS = extPVS;
+		Com_Memcpy(extPVS, basePVS, pvsRowBytes);
+		Com_Memcpy(currentLayer, basePVS, pvsRowBytes);
+
+		// breadth-first flood fill
+		for (hop = 0; hop < maxHops; hop++) {
+			Com_Memset(nextLayer, 0, pvsRowBytes);
+
+			// Iterate through every cluster in the world
+			for (c = 0; c < tr.world->numClusters; c++) {
+
+				// Check if cluster 'c' was marked visible in the current layer
+				if (currentLayer[c >> 3] & (1 << (c & 7))) {
+
+					// Grab what cluster 'c' can see
+					const byte* neighborPVS = tr.world->vis + c * pvsRowBytes;
+
+					// OR it into the overall extPVS, and queue it into the next layer
+					for (i = 0; i < pvsRowBytes; i++) {
+						extPVS[i] |= neighborPVS[i];
+						nextLayer[i] |= neighborPVS[i];
+					}
+				}
+			}
+
+			// Move the discovered clusters into the current layer for the next iteration
+			// (We mask it against what we've already found so we don't process clusters twice,
+			// though strictly OR-ing makes this optimization optional)
+			Com_Memcpy(currentLayer, nextLayer, pvsRowBytes);
+		}
+	}
+
+	return retPVS;
+#endif
 }
 
 

@@ -1254,6 +1254,7 @@ extern cvar_t  *r_nomeshanim;
 extern cvar_t  *r_gpuskinning;
 extern cvar_t  *r_aabb_mergedist;
 extern cvar_t  *r_aabb_culling;
+extern cvar_t  *r_pvs_maxhops;
 extern cvar_t  *r_gpu_uv_trnsf;
 
 extern cvar_t  *r_rmx_coronas;

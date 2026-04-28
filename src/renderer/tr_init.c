@@ -226,6 +226,7 @@ cvar_t  *r_nomeshanim;
 cvar_t  *r_gpuskinning;
 cvar_t  *r_aabb_mergedist;
 cvar_t  *r_aabb_culling;
+cvar_t  *r_pvs_maxhops;
 cvar_t  *r_gpu_uv_trnsf;
 
 cvar_t  *r_rmx_coronas;
@@ -1191,6 +1192,7 @@ void R_Register( void ) {
 	r_gpuskinning = ri.Cvar_Get( "r_gpuskinning", "0", CVAR_ARCHIVE );
 	r_aabb_mergedist = ri.Cvar_Get( "r_aabb_mergedist", "10", CVAR_ARCHIVE );
 	r_aabb_culling = ri.Cvar_Get( "r_aabb_culling", "0", CVAR_ARCHIVE );
+	r_pvs_maxhops = ri.Cvar_Get( "r_pvs_maxhops", "0", CVAR_ARCHIVE );
 	r_gpu_uv_trnsf = ri.Cvar_Get( "r_gpu_uv_trnsf", "0", CVAR_ARCHIVE );
 
 	r_rmx_coronas = ri.Cvar_Get( "r_rmx_coronas", "1", CVAR_ARCHIVE );
