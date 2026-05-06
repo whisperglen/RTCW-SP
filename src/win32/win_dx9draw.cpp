@@ -189,48 +189,67 @@ void qdx_texobj_upload(BOOL createNew, int id, BOOL usemips, int miplvl, int for
 	res = tex->LockRect(miplvl, &lr, NULL, 0);
 	if (SUCCEEDED(res))
 	{
-		int elems = width * height;
 		if (dxfmt == D3DFMT_A8R8G8B8)
 		{
-			uint32_t *out = (uint32_t*)lr.pBits;
-			const byte *in = (const byte*)data;
-			for (int i = 0; i < elems; i++, out++, in += 4)
+			uint8_t* outRow = (uint8_t*)lr.pBits;
+			const byte* in = (const byte*)data;
+			for (int y = 0; y < height; y++)
 			{
-				*out = D3DCOLOR_ARGB(in[3], in[0], in[1], in[2]);
+				uint32_t* out = (uint32_t*)outRow;
+				for (int x = 0; x < width; x++, out++, in += 4)
+				{
+					*out = D3DCOLOR_ARGB(in[3], in[0], in[1], in[2]);
+				}
+				outRow += lr.Pitch; // Safely advance by the driver-specified byte width
 			}
 		}
 		else if (dxfmt == D3DFMT_X8R8G8B8)
 		{
-			uint32_t *out = (uint32_t*)lr.pBits;
-			const byte *in = (const byte*)data;
-			for (int i = 0; i < elems; i++, out++, in += 4)
+			uint8_t* outRow = (uint8_t*)lr.pBits;
+			const byte* in = (const byte*)data;
+			for (int y = 0; y < height; y++)
 			{
-				*out = D3DCOLOR_XRGB(in[0], in[1], in[2]);
+				uint32_t* out = (uint32_t*)outRow;
+				for (int x = 0; x < width; x++, out++, in += 4)
+				{
+					*out = D3DCOLOR_XRGB(in[0], in[1], in[2]);
+				}
+				outRow += lr.Pitch;
 			}
 		}
 		else if (dxfmt == D3DFMT_A4R4G4B4)
 		{
-			uint16_t *out = (uint16_t*)lr.pBits;
-			const byte *in = (const byte*)data;
-			for (int i = 0; i < elems; i++, out++, in += 4)
+			uint8_t* outRow = (uint8_t*)lr.pBits;
+			const byte* in = (const byte*)data;
+			for (int y = 0; y < height; y++)
 			{
-				UINT r = (in[0] * 15 / 255) << 8;
-				UINT g = (in[1] * 15 / 255) << 4;
-				UINT b = (in[2] * 15 / 255) << 0;
-				UINT a = (in[3] * 15 / 255) << 12;
-				*out = (a | r | g | b);
+				uint16_t* out = (uint16_t*)outRow;
+				for (int x = 0; x < width; x++, out++, in += 4)
+				{
+					UINT r = (in[0] * 15 / 255) << 8;
+					UINT g = (in[1] * 15 / 255) << 4;
+					UINT b = (in[2] * 15 / 255) << 0;
+					UINT a = (in[3] * 15 / 255) << 12;
+					*out = (a | r | g | b);
+				}
+				outRow += lr.Pitch;
 			}
 		}
 		else if (dxfmt == D3DFMT_R5G6B5)
 		{
-			uint16_t *out = (uint16_t*)lr.pBits;
-			const byte *in = (const byte*)data;
-			for (int i = 0; i < elems; i++, out++, in += 4)
+			uint8_t* outRow = (uint8_t*)lr.pBits;
+			const byte* in = (const byte*)data;
+			for (int y = 0; y < height; y++)
 			{
-				UINT r = (in[0] * 31 / 255) << 11;
-				UINT g = (in[1] * 63 / 255) << 5;
-				UINT b = (in[2] * 31 / 255) << 0;
-				*out = (r | g | b);
+				uint16_t* out = (uint16_t*)outRow;
+				for (int x = 0; x < width; x++, out++, in += 4)
+				{
+					UINT r = (in[0] * 31 / 255) << 11;
+					UINT g = (in[1] * 63 / 255) << 5;
+					UINT b = (in[2] * 31 / 255) << 0;
+					*out = (r | g | b);
+				}
+				outRow += lr.Pitch;
 			}
 		}
 		else if (dxfmt == D3DFMT_DXT5)
@@ -245,10 +264,16 @@ void qdx_texobj_upload(BOOL createNew, int id, BOOL usemips, int miplvl, int for
 		else
 		{
 			qassert(FALSE);
-			//well if we do not know the fmmt, elembits is zero, so nothing is set
-			memset(lr.pBits, 0, (elems * elembits) / 8);
+			// Safe clear using Pitch
+			uint8_t* outRow = (uint8_t*)lr.pBits;
+			int rowBytes = (width * elembits) / 8;
+			for (int y = 0; y < height; y++) {
+				memset(outRow, 0, rowBytes);
+				outRow += lr.Pitch;
+			}
 		}
-		tex->UnlockRect(0);
+
+		tex->UnlockRect(miplvl);
 	}
 	else
 	{
@@ -2248,7 +2273,7 @@ void qdx_assert_failed_str(const char* expression, const char* function, unsigne
 		else
 			ri.Printf(PRINT_ERROR, "assert failed: %s in %s:%d %s\n", expression, function, line, fn);
 #else
-		ri.Error(ERR_FATAL, "assert failed: %s in %s:%d %s\n", expression, function, line, fn);
+		ri.Error(PRINT_ERROR, "assert failed: %s in %s:%d %s\n", expression, function, line, fn);
 #endif
 	}
 }
