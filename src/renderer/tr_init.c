@@ -228,6 +228,7 @@ cvar_t  *r_aabb_mergedist;
 cvar_t  *r_aabb_culling;
 cvar_t  *r_pvs_maxhops;
 cvar_t  *r_gpu_uv_trnsf;
+cvar_t  *r_novertex_colors;
 
 cvar_t  *r_rmx_coronas;
 cvar_t  *r_rmx_dynamiclight;
@@ -1194,6 +1195,7 @@ void R_Register( void ) {
 	r_aabb_culling = ri.Cvar_Get( "r_aabb_culling", "0", CVAR_ARCHIVE );
 	r_pvs_maxhops = ri.Cvar_Get( "r_pvs_maxhops", "0", CVAR_ARCHIVE );
 	r_gpu_uv_trnsf = ri.Cvar_Get( "r_gpu_uv_trnsf", "0", CVAR_ARCHIVE );
+	r_novertex_colors = ri.Cvar_Get("r_novertex_colors", "0", CVAR_ARCHIVE);
 
 	r_rmx_coronas = ri.Cvar_Get( "r_rmx_coronas", "1", CVAR_ARCHIVE );
 	r_rmx_dynamiclight = ri.Cvar_Get( "r_rmx_dynamiclight", "1", CVAR_ARCHIVE );

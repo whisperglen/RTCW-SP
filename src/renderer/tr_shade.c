@@ -780,81 +780,90 @@ ComputeColors
 static void ComputeColors( shaderStage_t *pStage ) {
 	int i;
 
+	qboolean colorskip = !backEnd.projection2D && r_novertex_colors->integer;
+	
 	//
 	// rgbGen
 	//
-	switch ( pStage->rgbGen )
+	if (colorskip)
 	{
-	case CGEN_IDENTITY:
-		memset( tess.svars.colors, 0xff, tess.numVertexes * 4 );
-		break;
-	default:
-	case CGEN_IDENTITY_LIGHTING:
-		memset( tess.svars.colors, tr.identityLightByte, tess.numVertexes * 4 );
-		break;
-	case CGEN_LIGHTING_DIFFUSE:
-		RB_CalcDiffuseColor( ( unsigned char * ) tess.svars.colors );
-		break;
-	case CGEN_EXACT_VERTEX:
-		memcpy( tess.svars.colors, tess.vertexColors, tess.numVertexes * sizeof( tess.vertexColors[0] ) );
-		break;
-	case CGEN_CONST:
-		for ( i = 0; i < tess.numVertexes; i++ ) {
-			*(int *)tess.svars.colors[i] = *(int *)pStage->constantColor;
-		}
-		break;
-	case CGEN_VERTEX:
-		if ( tr.identityLight == 1 ) {
-			memcpy( tess.svars.colors, tess.vertexColors, tess.numVertexes * sizeof( tess.vertexColors[0] ) );
-		} else
-		{
-			for ( i = 0; i < tess.numVertexes; i++ )
-			{
-				tess.svars.colors[i][0] = tess.vertexColors[i][0] * tr.identityLight;
-				tess.svars.colors[i][1] = tess.vertexColors[i][1] * tr.identityLight;
-				tess.svars.colors[i][2] = tess.vertexColors[i][2] * tr.identityLight;
-				tess.svars.colors[i][3] = tess.vertexColors[i][3];
-			}
-		}
-		break;
-	case CGEN_ONE_MINUS_VERTEX:
-		if ( tr.identityLight == 1 ) {
-			for ( i = 0; i < tess.numVertexes; i++ )
-			{
-				tess.svars.colors[i][0] = 255 - tess.vertexColors[i][0];
-				tess.svars.colors[i][1] = 255 - tess.vertexColors[i][1];
-				tess.svars.colors[i][2] = 255 - tess.vertexColors[i][2];
-			}
-		} else
-		{
-			for ( i = 0; i < tess.numVertexes; i++ )
-			{
-				tess.svars.colors[i][0] = ( 255 - tess.vertexColors[i][0] ) * tr.identityLight;
-				tess.svars.colors[i][1] = ( 255 - tess.vertexColors[i][1] ) * tr.identityLight;
-				tess.svars.colors[i][2] = ( 255 - tess.vertexColors[i][2] ) * tr.identityLight;
-			}
-		}
-		break;
-	case CGEN_FOG:
-	{
-		fog_t       *fog;
-
-		fog = tr.world->fogs + tess.fogNum;
-
-		for ( i = 0; i < tess.numVertexes; i++ ) {
-			*( int * )&tess.svars.colors[i] = fog->colorInt;
-		}
+		memset(tess.svars.colors, 0xff, tess.numVertexes * 4);
 	}
-	break;
-	case CGEN_WAVEFORM:
-		RB_CalcWaveColor( &pStage->rgbWave, ( unsigned char * ) tess.svars.colors );
+	else
+	{
+		switch ( pStage->rgbGen )
+		{
+		case CGEN_IDENTITY:
+			memset( tess.svars.colors, 0xff, tess.numVertexes * 4 );
+			break;
+		default:
+		case CGEN_IDENTITY_LIGHTING:
+			memset( tess.svars.colors, tr.identityLightByte, tess.numVertexes * 4 );
+			break;
+		case CGEN_LIGHTING_DIFFUSE:
+			RB_CalcDiffuseColor( ( unsigned char * ) tess.svars.colors );
+			break;
+		case CGEN_EXACT_VERTEX:
+			memcpy( tess.svars.colors, tess.vertexColors, tess.numVertexes * sizeof( tess.vertexColors[0] ) );
+			break;
+		case CGEN_CONST:
+			for ( i = 0; i < tess.numVertexes; i++ ) {
+				*(int *)tess.svars.colors[i] = *(int *)pStage->constantColor;
+			}
+			break;
+		case CGEN_VERTEX:
+			if ( tr.identityLight == 1 ) {
+				memcpy( tess.svars.colors, tess.vertexColors, tess.numVertexes * sizeof( tess.vertexColors[0] ) );
+			} else
+			{
+				for ( i = 0; i < tess.numVertexes; i++ )
+				{
+					tess.svars.colors[i][0] = tess.vertexColors[i][0] * tr.identityLight;
+					tess.svars.colors[i][1] = tess.vertexColors[i][1] * tr.identityLight;
+					tess.svars.colors[i][2] = tess.vertexColors[i][2] * tr.identityLight;
+					tess.svars.colors[i][3] = tess.vertexColors[i][3];
+				}
+			}
+			break;
+		case CGEN_ONE_MINUS_VERTEX:
+			if ( tr.identityLight == 1 ) {
+				for ( i = 0; i < tess.numVertexes; i++ )
+				{
+					tess.svars.colors[i][0] = 255 - tess.vertexColors[i][0];
+					tess.svars.colors[i][1] = 255 - tess.vertexColors[i][1];
+					tess.svars.colors[i][2] = 255 - tess.vertexColors[i][2];
+				}
+			} else
+			{
+				for ( i = 0; i < tess.numVertexes; i++ )
+				{
+					tess.svars.colors[i][0] = ( 255 - tess.vertexColors[i][0] ) * tr.identityLight;
+					tess.svars.colors[i][1] = ( 255 - tess.vertexColors[i][1] ) * tr.identityLight;
+					tess.svars.colors[i][2] = ( 255 - tess.vertexColors[i][2] ) * tr.identityLight;
+				}
+			}
+			break;
+		case CGEN_FOG:
+		{
+			fog_t       *fog;
+
+			fog = tr.world->fogs + tess.fogNum;
+
+			for ( i = 0; i < tess.numVertexes; i++ ) {
+				*( int * )&tess.svars.colors[i] = fog->colorInt;
+			}
+		}
 		break;
-	case CGEN_ENTITY:
-		RB_CalcColorFromEntity( ( unsigned char * ) tess.svars.colors );
-		break;
-	case CGEN_ONE_MINUS_ENTITY:
-		RB_CalcColorFromOneMinusEntity( ( unsigned char * ) tess.svars.colors );
-		break;
+		case CGEN_WAVEFORM:
+			RB_CalcWaveColor( &pStage->rgbWave, ( unsigned char * ) tess.svars.colors );
+			break;
+		case CGEN_ENTITY:
+			RB_CalcColorFromEntity( ( unsigned char * ) tess.svars.colors );
+			break;
+		case CGEN_ONE_MINUS_ENTITY:
+			RB_CalcColorFromOneMinusEntity( ( unsigned char * ) tess.svars.colors );
+			break;
+		}
 	}
 
 	//
@@ -1011,20 +1020,23 @@ static void ComputeColors( shaderStage_t *pStage ) {
 	//
 	// fog adjustment for colors to fade out as fog increases
 	//
-	if ( tess.fogNum ) {
-		switch ( pStage->adjustColorsForFog )
-		{
-		case ACFF_MODULATE_RGB:
-			RB_CalcModulateColorsByFog( ( unsigned char * ) tess.svars.colors );
-			break;
-		case ACFF_MODULATE_ALPHA:
-			RB_CalcModulateAlphasByFog( ( unsigned char * ) tess.svars.colors );
-			break;
-		case ACFF_MODULATE_RGBA:
-			RB_CalcModulateRGBAsByFog( ( unsigned char * ) tess.svars.colors );
-			break;
-		case ACFF_NONE:
-			break;
+	if(!colorskip)
+	{
+		if ( tess.fogNum ) {
+			switch ( pStage->adjustColorsForFog )
+			{
+			case ACFF_MODULATE_RGB:
+				RB_CalcModulateColorsByFog( ( unsigned char * ) tess.svars.colors );
+				break;
+			case ACFF_MODULATE_ALPHA:
+				RB_CalcModulateAlphasByFog( ( unsigned char * ) tess.svars.colors );
+				break;
+			case ACFF_MODULATE_RGBA:
+				RB_CalcModulateRGBAsByFog( ( unsigned char * ) tess.svars.colors );
+				break;
+			case ACFF_NONE:
+				break;
+			}
 		}
 	}
 }

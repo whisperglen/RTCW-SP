@@ -907,7 +907,7 @@ static qboolean ParseStage( shaderStage_t *stage, char **text ) {
 			}
 
 			if ( !Q_stricmp( token, "environment" ) ) {
-				stage->bundle[0].tcGen = TCGEN_ENVIRONMENT_MAPPED;
+				stage->bundle[0].tcGen = TCGEN_IDENTITY;// TCGEN_ENVIRONMENT_MAPPED;
 			} else if ( !Q_stricmp( token, "firerisenv" ) )    {
 				stage->bundle[0].tcGen = TCGEN_FIRERISEENV_MAPPED;
 			} else if ( !Q_stricmp( token, "lightmap" ) )    {
