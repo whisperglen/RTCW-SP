@@ -886,6 +886,8 @@ void RB_DrawSun( void ) {
 #ifdef FUSED_WORLD_CAMERA
 	qdx_matrix_set(D3DTS_WORLD, backEnd.viewParms.world.modelMatrix);
 	qdx_matrix_mul(D3DTS_WORLD, &mat);
+	D3DXMatrixIdentity(&mat);
+	qdx_matrix_set(D3DTS_VIEW, &mat);
 #else
 	qdx_matrix_set(D3DTS_WORLD, &mat.m[0][0]);
 	qdx_matrix_set(D3DTS_VIEW, &qdx.camera.m[0][0]);
@@ -907,7 +909,7 @@ void RB_DrawSun( void ) {
 	//qglDepthRange( 1.0, 1.0 );
 	// WG: the sun does not draw with depth 1; it does if I change z comp function to D3DCMP_GREATER
 	//   I see similar results with a 3rd party ogl->dx9 wrapper
-	qdx_depthrange(0.9, 1);
+	qdx_depthrange(0, 1);
 	//IDirect3DDevice9_SetRenderState( qdx.device, D3DRS_ZFUNC, D3DCMP_ALWAYS );
 
 	color[0] = color[1] = color[2] = color[3] = 255;

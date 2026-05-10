@@ -2943,54 +2943,77 @@ BuildShaderChecksumLookup
 ====================
 */
 static void BuildShaderChecksumLookup( void ) {
-	char *p = s_shaderText, *pOld;
-	char *token;
-	unsigned short int checksum;
-	int numShaderStringPointers = 0;
+    char *p = s_shaderText, *pOld;
+    char *token;
+    unsigned short int checksum;
+    int numShaderStringPointers = 0;
 
-	// initialize the checksums
-	memset( shaderChecksumLookup, 0, sizeof( shaderChecksumLookup ) );
+    // initialize the checksums
+    memset( shaderChecksumLookup, 0, sizeof( shaderChecksumLookup ) );
 
-	if ( !p ) {
-		return;
-	}
+    if ( !p ) {
+        return;
+    }
 
-	// loop for all labels
-	while ( 1 ) {
+    // loop for all labels
+    while ( 1 ) {
 
-		pOld = p;
+        pOld = p;
 
-		token = COM_ParseExt( &p, qtrue );
-		if ( token[0] == 0 ) {
-			break;
-		}
+        token = COM_ParseExt( &p, qtrue );
+        if ( token[0] == 0 ) {
+            break;
+        }
 
-		if ( !Q_stricmp( token, "{" ) ) {
+        if ( !Q_stricmp( token, "{" ) ) {
+#if 0
 			// skip braced section
 			SkipBracedSection( &p );
-			continue;
-		}
+#else
+            // BUGFIX: SkipBracedSection fails here because the outer '{' 
+            // is already consumed, causing its depth counter to abort early.
+            // We manually skip the braced block starting at depth 1.
+			// MAJOR CAVEAT: the common.shader file has a bug, a close brace is on a commented line,
+			//   which breaks parsing altogether; it needs to be fixed!!
+            int depth = 1;
+			do {
+				token = COM_ParseExt(&p, qtrue);
+				if (token[0] == 0)
+					break;
 
-		// get it's checksum
-		checksum = generateHashValue( token );
+				if (token[1] == 0) {
+					if (token[0] == '{') {
+						depth++;
+					}
+					else if (token[0] == '}') {
+						depth--;
+					}
+				}
+			} while (depth && *p);
+#endif
+            continue;
+        }
 
-		// if it's not currently used
-		if ( !shaderChecksumLookup[checksum].pStr ) {
-			shaderChecksumLookup[checksum].pStr = pOld;
-		} else {
-			// create a new list item
-			shaderStringPointer_t *newStrPtr;
+        // get it's checksum
+        checksum = generateHashValue( token );
 
-			if ( numShaderStringPointers >= MAX_SHADER_STRING_POINTERS ) {
-				ri.Error( ERR_DROP, "MAX_SHADER_STRING_POINTERS exceeded, too many shaders" );
-			}
+        // if it's not currently used
+        if ( !shaderChecksumLookup[checksum].pStr ) {
+            shaderChecksumLookup[checksum].pStr = pOld;
+        } else {
+            // create a new list item
+            shaderStringPointer_t *newStrPtr;
+
+            if ( numShaderStringPointers >= MAX_SHADER_STRING_POINTERS ) {
+                ri.Error( ERR_DROP, "MAX_SHADER_STRING_POINTERS exceeded, too many shaders" );
+            }
 
 			newStrPtr = &shaderStringPointerList[numShaderStringPointers++]; //ri.Hunk_Alloc( sizeof( shaderStringPointer_t ), h_low );
-			newStrPtr->pStr = pOld;
-			newStrPtr->next = shaderChecksumLookup[checksum].next;
-			shaderChecksumLookup[checksum].next = newStrPtr;
-		}
-	}
+            newStrPtr->pStr = pOld;
+            newStrPtr->next = shaderChecksumLookup[checksum].next;
+            shaderChecksumLookup[checksum].next = newStrPtr;
+        }
+    }
 }
 // done.
 
