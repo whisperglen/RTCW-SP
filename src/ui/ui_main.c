@@ -736,7 +736,7 @@ void _UI_Refresh( int realtime ) {
 	if ( Menu_Count() > 0 ) {
 		uiMenuCommand_t mymenu = _UI_GetActiveMenu();
 		if ( mymenu != UIMENU_BRIEFING ) {
-			UI_DrawHandlePic( uiInfo.uiDC.cursorx - 16, uiInfo.uiDC.cursory - 16, 32, 32, uiInfo.uiDC.Assets.cursor );
+			UI_DrawHandlePic( uiInfo.uiDC.cursorx - 13, uiInfo.uiDC.cursory - 13, 32, 32, uiInfo.uiDC.Assets.cursor );
 		}
 	}
 
