@@ -9,8 +9,16 @@ Will it work? Who knows, let's find out!
 ### WIP:  
 - translate OGL calls to DX9: 90% (some debug drawcalls still remain)
 - add camera: 100%
-- tinker with the geometry to get stable hashes: 70% (we have stable hashes with r_novis, need optimisation)
-- convert dynamic lights to T&L: 90% (dynamic lights [torches, fireplaces, flamethrower] are sent via DX9 lights [max. 8], coronas are sent as Remix sphere lights)
+- tinker with the geometry to get stable hashes: 90%
+  - r_novis no longer necessary
+  - added aabb splitting of the geometry-batches for brushes
+  - TODO: do this split for props too (it's a bit more complicated) figure out if possible
+- convert dynamic lights to T&L: 80%
+  - dynamic lights [torches, fireplaces, flamethrower] are done
+  - coronas are done
+  - both can be modified from Alt-C menu
+  - TODO: allow switching coronas to cylinder light
+  - TODO: add support to drop new lights
 
 ### Notable engine cvars (many of these are already configured in autoexec.cfg for Remix):
 - r_rmx_flashlight (default "0") activates a flashlight ingame; Usage: bind v "toggle r_rmx_flashlight"
@@ -22,10 +30,11 @@ Will it work? Who knows, let's find out!
 - r_pvs_maxhops (default "0"): set to "1", this will reduce light leaking in remix when using r_aabb_culling
 - r_aabb_mergedist (default "0"): set to "0" upto "10" or more, to reduce geometry splitting of r_aabb_culling (closeby surfaces are merged even if not touching)
 - r_gpu_uv_trnsf (default "0"): set to "1" so that animated textures do not change remix hashes, even more, now remix picks-up on animation
+- r_novertex_colors (default "0"): set to "1" to disable vertex coloring for dynamic meshes, remix works better like this
 - r_swapInterval (default "1"): controls VSYNC; "1" is VSYNC-ON, "0" is VSYNC-OFF
 - r_systemdll (default "0"): set only on command line; a value of "1" loads the system's d3d9.dll, and ignores any d3d9.dll present in the executable's current dir
 
-Keep these disabled (already done in autoexec.cfg)
+**Keep these disabled (already done in autoexec.cfg)**
 - r_flares (default "1"): should be "0", superseeded by r_rmx_coronas
 - cg_coronas (default "1"): set to "2" to send all coronas to renderer -since coronas are converted into remix lights, this avoids the pop-in effect
 - r_dynamiclight (default "1"): should be "0", superseeded by r_rmx_dynamiclight
@@ -33,7 +42,7 @@ Keep these disabled (already done in autoexec.cfg)
 - r_wolffog (default "1"): set to "0" to disable ingame fog (there may still be geometry with fog texture applied, those will not be disabled)
 - r_nomipmaps (default "0"): set to "1" to disable mipmap creation for all textures
 
-Not really relevant for remix
+**Not really relevant for remix**
 - r_multisample (default "4"): controls multisample antialiasing
 - r_ext_texture_filter_anisotropic (default "0"): was disabled in OGL mode, it can now be set to 1,2,4,8,16 with Texture filter "trilinear" (r_textureMode "GL_LINEAR_MIPMAP_LINEAR") to allow anisotropy for texture minification filter (when textured object gets farther/smaller)
 
