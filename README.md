@@ -20,7 +20,7 @@ Will it work? Who knows, let's find out!
 - r_novis (default "0"): keep on "0" and only set to "1" when you do a capture in remix: this will draw the whole map, but will tank FPS when r_aabb_culling is 1
 - r_aabb_culling (default "0"): set to "1", and keep r_novis "0" -this will help to split map geometry in remix
 - r_pvs_maxhops (default "0"): set to "1", this will reduce light leaking in remix when using r_aabb_culling
-- r_aabb_mergedist (default "10"): set to "0" upto "10" or more, to reduce geometry splitting of r_aabb_culling (closeby surfaces are merged even if not touching)
+- r_aabb_mergedist (default "0"): set to "0" upto "10" or more, to reduce geometry splitting of r_aabb_culling (closeby surfaces are merged even if not touching)
 - r_gpu_uv_trnsf (default "0"): set to "1" so that animated textures do not change remix hashes, even more, now remix picks-up on animation
 - r_swapInterval (default "1"): controls VSYNC; "1" is VSYNC-ON, "0" is VSYNC-OFF
 - r_systemdll (default "0"): set only on command line; a value of "1" loads the system's d3d9.dll, and ignores any d3d9.dll present in the executable's current dir

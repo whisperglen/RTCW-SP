@@ -1191,7 +1191,7 @@ void R_Register( void ) {
 	r_showimgui = ri.Cvar_Get( "r_showimgui", "0", CVAR_TEMP );
 	r_nomeshanim = ri.Cvar_Get( "r_nomeshanim", "0", CVAR_ARCHIVE );
 	r_gpuskinning = ri.Cvar_Get( "r_gpuskinning", "0", CVAR_ARCHIVE );
-	r_aabb_mergedist = ri.Cvar_Get( "r_aabb_mergedist", "10", CVAR_ARCHIVE );
+	r_aabb_mergedist = ri.Cvar_Get( "r_aabb_mergedist", "0", CVAR_ARCHIVE );
 	r_aabb_culling = ri.Cvar_Get( "r_aabb_culling", "0", CVAR_ARCHIVE );
 	r_pvs_maxhops = ri.Cvar_Get( "r_pvs_maxhops", "0", CVAR_ARCHIVE );
 	r_gpu_uv_trnsf = ri.Cvar_Get( "r_gpu_uv_trnsf", "0", CVAR_ARCHIVE );
